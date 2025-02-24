@@ -20,7 +20,7 @@ const companies = [
   },
   {
     name: "Corelynx Solutions Private Limited",
-    duration: "Jun 2015 — Sep 2017",
+    duration: "June 2015 — September 2017",
     location: "Kolkata, India",
     position: "Programmer Analyst",
   },
