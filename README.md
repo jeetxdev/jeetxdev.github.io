@@ -5,13 +5,11 @@
 - React
 - Vite
 - Tailwindcss
-- Zustand
 
 ## Fonts used
 
 - Poppins
 - Lora
-- Fira Code
 
 ## Demo link
 

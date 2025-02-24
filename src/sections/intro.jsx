@@ -1,6 +1,7 @@
 import profileImg from "/profile.jpeg";
 import clsx from "clsx";
 import { FaGithub, FaLinkedin } from "react-icons/fa6";
+import { TbBrandLeetcode } from "react-icons/tb";
 
 export default function Intro() {
   return (
@@ -36,6 +37,17 @@ export default function Intro() {
               </a>
               <a href="https://www.linkedin.com/in/jeetm" target="_blank">
                 <FaLinkedin
+                  className={clsx(
+                    "size-6",
+                    "cursor-pointer",
+                    "opacity-60",
+                    "max-md:opacity-100",
+                    "hover:opacity-100",
+                  )}
+                />
+              </a>
+              <a href="https://leetcode.com/u/jeetdev1/" target="_blank">
+                <TbBrandLeetcode
                   className={clsx(
                     "size-6",
                     "cursor-pointer",
