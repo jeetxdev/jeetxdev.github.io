@@ -38,7 +38,7 @@ const Experience = () => {
           {experience.map((job, idx) => (
             <motion.div
               key={idx}
-              className="bg-white/70 backdrop-blur-md dark:bg-white/10 p-6 rounded-xl shadow-sm"
+              className="bg-white/30 dark:bg-white/10 backdrop-filter backdrop-blur-md backdrop-opacity-50 p-6 rounded-xl shadow-sm"
               initial={{opacity: 0, y: 20}}
               whileInView={{opacity: 1, y: 0}}
               transition={{duration: 0.4, delay: idx * 0.1}}

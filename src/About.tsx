@@ -9,7 +9,7 @@ const About = () => {
         transition={{duration: 0.6}}
       >
         <h3 className="text-2xl font-semibold mb-4">About Me</h3>
-        <p className="text-lg max-w-3xl">
+        <p className="text-base max-w-3xl">
           I'm a passionate web developer who’s been in the game since 2015, thriving on clean code, snappy UIs, and
           meaningful digital experiences. Whether I’m shipping features, building a custom UI lib, or mentoring devs
           — I bring the same energy: build smart, build well.

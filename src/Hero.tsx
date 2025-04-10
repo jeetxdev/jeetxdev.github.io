@@ -11,17 +11,17 @@ const Hero = () => {
         transition={{duration: 0.6}}
       >
         <h1 className="text-4xl md:text-6xl font-bold mb-4">Jeet Mukherjee</h1>
-        <h2 className="text-xl md:text-2xl font-medium text-green-600 mb-6">Senior Technical Specialist</h2>
-        <p className="max-w-2xl text-lg">
+        <h2 className="text-xl md:text-2xl font-medium text-green-600 mb-6">Fullstack Developer</h2>
+        <p className="max-w-2xl text-base">
           Web Developer with {Math.floor(new Date().getFullYear() - 2015)} years of experience in building responsive,
           high-performance web apps. Skilled in
           React, Node.js, PHP, and mentoring teams.
         </p>
-        <div className="mt-6 flex gap-4">
-          <Button asChild variant={"ghost"}>
+        <div className="mt-6 flex flex-col sm:flex-row gap-4">
+          <Button asChild variant={"ghost"} className={'w-full sm:w-auto'}>
             <a
               href="mailto:jeetmukherjee100@gmail.com"
-              className="w-full sm:w-auto inline-flex items-center justify-center bg-gradient-to-tr from-green-500 to-lime-400 text-white font-semibold px-5 py-3 hover:scale-105 transition-transform shadow-lg"
+              className="bg-gradient-to-tr from-green-500 to-lime-400 text-white font-semibold hover:scale-105 hover:text-white transition-transform"
             >
               <MailIcon className="w-4 h-4 mr-2"/> Email Me
             </a>
