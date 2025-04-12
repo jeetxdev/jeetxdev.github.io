@@ -1,8 +1,8 @@
 import {Button} from '@/components/ui/button';
 import {
-    FileTextIcon, Sun, Moon
+  FileTextIcon, Sun, Moon
 } from 'lucide-react';
-import { useTheme } from "@/components/theme-provider"
+import {useTheme} from "@/components/theme-provider"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,7 +16,7 @@ import Skills from "@/Skills.tsx";
 import Projects from "@/Projects.tsx";
 
 export default function App() {
-  const { setTheme } = useTheme()
+  const {setTheme} = useTheme()
   return (<main
     className="relative min-h-screen  px-4 md:px-12 lg:px-24 py-16 overflow-hidden">
     <div className="absolute inset-0 z-0">
@@ -38,8 +38,9 @@ export default function App() {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" size="icon">
-              <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-              <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+              <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0"/>
+              <Moon
+                className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100"/>
               <span className="sr-only">Toggle theme</span>
             </Button>
           </DropdownMenuTrigger>
@@ -56,14 +57,14 @@ export default function App() {
           </DropdownMenuContent>
         </DropdownMenu>
         <Button variant="outline" asChild>
-          <a href="/JEET_MUKHERJEE_RESUME.pdf" download>
+          <a href="/Jeet_M_resume.pdf" download>
             <FileTextIcon className="w-4 h-4 mr-2"/> Resume
           </a>
         </Button>
       </div>
 
       {/* Hero Section */}
-      <Hero />
+      <Hero/>
 
       {/* About Section */}
       <About/>
