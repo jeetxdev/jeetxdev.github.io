@@ -25,7 +25,9 @@ export default function Home() {
 
       <footer className="bg-muted/30 py-8 border-t">
         <div className="max-w-6xl mx-auto px-4 text-center">
-          <p className="text-muted-foreground">© 2025 Jeet Mukherjee.</p>
+          <p className="text-muted-foreground text-sm">
+            © 2025 Jeet Mukherjee.
+          </p>
         </div>
       </footer>
     </>

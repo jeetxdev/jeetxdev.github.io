@@ -47,18 +47,9 @@ const Navigation = () => {
       }`}
     >
       <div className="max-w-6xl mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="text-xl font-bold text-blue-600"
-          >
-            JM
-          </motion.div>
-
+        <div className="flex items-center h-16">
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
+          <div className="hidden md:flex items-center justify-center space-x-8 flex-1">
             {navItems.map((item, index) => (
               <motion.button
                 key={item.name}

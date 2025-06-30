@@ -1,7 +1,5 @@
 import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
 import { FaGithub, FaLinkedin } from "react-icons/fa";
-import { HiMail } from "react-icons/hi";
 import Image from "next/image";
 
 const Intro = () => {
@@ -33,7 +31,7 @@ const Intro = () => {
                 className="w-full"
               />
             </motion.div>
-            <h1 className="text-5xl md:text-7xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            <h1 className="text-5xl md:text-7xl font-bold mb-4 bg-gradient-to-r from-blue-700 dark:from-blue-600 to-purple-600 bg-clip-text text-transparent">
               Jeet Mukherjee
             </h1>
             <h2 className="text-2xl md:text-3xl font-semibold text-muted-foreground mb-6">
@@ -48,8 +46,10 @@ const Intro = () => {
             className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto leading-relaxed"
           >
             I am a full-stack web developer with{" "}
-            <span className="text-blue-600 font-semibold">10 years</span> of
-            experience working across the MERN stack. I build scalable apps
+            <span className="bg-gradient-to-r from-blue-700 dark:from-blue-600 to-purple-600 font-semibold bg-clip-text text-transparent">
+              10 years
+            </span>{" "}
+            of experience working across the MERN stack. I build scalable apps
             end-to-end — clean APIs, responsive UIs, and everything in between.
             Currently, I am a Senior Technical Specialist at DigitalAPICraft,
             focused on developing enterprise platforms using modern tech. I
