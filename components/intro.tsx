@@ -24,7 +24,7 @@ const Intro = () => {
               className="w-36 h-36 mx-auto mb-6 rounded-full relative overflow-hidden"
             >
               <Image
-                src="/profile.jpg"
+                src={"/profile.JPG"}
                 alt="Jeet Mukherjee"
                 width={128}
                 height={128}
