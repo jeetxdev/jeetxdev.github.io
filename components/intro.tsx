@@ -31,7 +31,7 @@ const Intro = () => {
                 className="w-full"
               />
             </motion.div>
-            <h1 className="text-5xl md:text-7xl font-bold mb-4 bg-gradient-to-r from-blue-700 dark:from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            <h1 className="text-5xl md:text-7xl pb-2 font-bold mb-4 bg-gradient-to-r from-blue-700 dark:from-blue-600 to-purple-600 bg-clip-text text-transparent">
               Jeet Mukherjee
             </h1>
             <h2 className="text-2xl md:text-3xl font-semibold text-muted-foreground mb-6">

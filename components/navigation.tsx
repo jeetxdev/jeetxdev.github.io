@@ -28,12 +28,42 @@ const Navigation = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const scrollToSection = (href: string) => {
-    const element = document.querySelector(href);
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth" });
+  // Handle mobile scroll behavior
+  useEffect(() => {
+    // Prevent body scroll when mobile menu is open
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
     }
+
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [isMobileMenuOpen]);
+
+  const scrollToSection = (href: string) => {
+    // Close mobile menu first
     setIsMobileMenuOpen(false);
+
+    // Small delay to ensure menu is closed before scrolling
+    setTimeout(() => {
+      const element = document.querySelector(href);
+      if (element) {
+        // Get the navigation height to offset the scroll
+        const navHeight = 64; // 16 * 4 = 64px (h-16)
+
+        // Get element position relative to viewport
+        const elementPosition = element.getBoundingClientRect().top;
+        const offsetPosition = elementPosition + window.pageYOffset - navHeight;
+
+        // Use scrollTo for better mobile compatibility
+        window.scrollTo({
+          top: offsetPosition,
+          behavior: "smooth",
+        });
+      }
+    }, 100);
   };
 
   return (

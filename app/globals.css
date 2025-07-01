@@ -121,11 +121,21 @@
     @apply bg-background text-foreground;
     scroll-behavior: smooth;
     overflow-x: hidden;
+    -webkit-overflow-scrolling: touch; /* For iOS smooth scrolling */
   }
 
   html {
     scroll-behavior: smooth;
     overflow-x: hidden;
+    -webkit-overflow-scrolling: touch; /* For iOS smooth scrolling */
+  }
+
+  /* Improve mobile scrolling */
+  @media (max-width: 768px) {
+    html,
+    body {
+      scroll-padding-top: 64px; /* Account for fixed navigation */
+    }
   }
 }
 
