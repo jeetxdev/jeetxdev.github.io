@@ -43,7 +43,7 @@ const Intro = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4, duration: 0.8 }}
-            className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto leading-relaxed"
+            className="text-xl md:text-xl text-muted-foreground mb-8 max-w-3xl mx-auto leading-relaxed"
           >
             I am a full-stack web developer with{" "}
             <span className="bg-gradient-to-r from-blue-700 dark:from-blue-600 to-purple-600 font-semibold bg-clip-text text-transparent">
