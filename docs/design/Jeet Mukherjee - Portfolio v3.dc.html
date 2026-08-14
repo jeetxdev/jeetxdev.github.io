@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Public+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" />
+<style>
+  body { margin: 0; background: #060912; color: #e7ecf7; font-family: "Public Sans", system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  a { color: #7ad6ee; text-decoration: none; }
+  a:hover { color: #e7ecf7; }
+  ::selection { background: rgba(122,214,238,.28); }
+  :focus-visible { outline: 2px solid #7ad6ee; outline-offset: 3px; }
+  [data-reveal] { opacity: 0; transform: translateY(16px); transition: opacity .8s cubic-bezier(.2,.7,.2,1), transform .8s cubic-bezier(.2,.7,.2,1); }
+  [data-reveal].in { opacity: 1; transform: none; }
+  @keyframes float1 { 0%,100% { transform: translate(0,0) scale(1) } 50% { transform: translate(4%,-5%) scale(1.1) } }
+  @keyframes caret { 0%,49% { opacity: 1 } 50%,100% { opacity: 0 } }
+  @media (max-width: 900px) {
+    [data-hero-grid] { gap: 32px !important; }
+    [data-portrait-col] { justify-self: start !important; }
+  }
+  @media (max-width: 720px) {
+    [data-shell] { padding-left: 18px !important; padding-right: 18px !important; }
+    [data-nav] { gap: 4px !important; font-size: 13px !important; }
+    [data-nav] a { padding: 8px 10px !important; }
+    [data-header] { top: 8px !important; padding: 10px 10px 10px 14px !important; }
+    [data-job] { grid-template-columns: 1fr !important; gap: 16px !important; padding: 24px 20px !important; }
+    [data-job-rail] { display: flex !important; align-items: baseline !important; gap: 10px !important; flex-wrap: wrap !important; }
+    [data-job-rail] > * { margin-top: 0 !important; }
+    [data-job-year] { font-size: 24px !important; }
+    [data-contact] { padding: 36px 22px !important; }
+    [data-cta] { padding: 16px 18px !important; font-size: 12.5px !important; }
+    [data-portrait-col] { flex-direction: column !important; }
+    [data-portrait] { width: 108px !important; height: 138px !important; }
+    [data-stats] { flex-direction: row !important; }
+    [data-code] { font-size: 12px !important; }
+    [data-code-wrap] { padding: 16px 14px 20px !important; }
+  }
+  @media (max-width: 420px) {
+    [data-routes] { font-size: 11.5px !important; }
+    [data-meta] { width: 100% !important; margin-left: 0 !important; }
+  }
+  @media (prefers-reduced-motion: reduce) { *, *::before { animation: none !important; transition: none !important } [data-reveal] { opacity: 1; transform: none } }
+</style>
+</helmet>
+<div style="position: relative; min-height: 100vh; overflow: hidden; background: #060912;">
+
+  <div aria-hidden="true" style="position: fixed; inset: 0; pointer-events: none; z-index: 0;">
+    <div data-glow="1" style="position: absolute; top: -14%; left: -6%; width: 640px; height: 640px; border-radius: 50%; background: radial-gradient(circle at 40% 40%, rgba(58,110,235,.42), rgba(58,110,235,0) 68%); filter: blur(30px); animation: float1 19s ease-in-out infinite;"></div>
+    <div data-glow="2" style="position: absolute; top: 8%; right: -10%; width: 700px; height: 700px; border-radius: 50%; background: radial-gradient(circle at 55% 45%, rgba(122,214,238,.26), rgba(122,214,238,0) 66%); filter: blur(36px); animation: float1 25s ease-in-out infinite reverse;"></div>
+    <div data-glow="3" style="position: absolute; bottom: -22%; left: 26%; width: 720px; height: 720px; border-radius: 50%; background: radial-gradient(circle at 50% 50%, rgba(139,123,255,.24), rgba(139,123,255,0) 70%); filter: blur(40px); animation: float1 31s ease-in-out infinite;"></div>
+    <div style="position: absolute; inset: 0; background-image: linear-gradient(rgba(255,255,255,.028) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.028) 1px, transparent 1px); background-size: 72px 72px; mask-image: radial-gradient(120% 80% at 50% 0%, #000 20%, transparent 78%); -webkit-mask-image: radial-gradient(120% 80% at 50% 0%, #000 20%, transparent 78%);"></div>
+  </div>
+
+  <div data-progress style="position: fixed; top: 0; left: 0; height: 2px; width: 0%; background: linear-gradient(90deg, #7ad6ee, #8b7bff); z-index: 20;"></div>
+
+  <div data-shell style="position: relative; z-index: 1; padding: 0 28px 0;">
+    <div style="max-width: 1060px; margin: 0 auto;">
+
+      <header data-header style="position: sticky; top: 14px; z-index: 10; display: flex; align-items: center; justify-content: space-between; gap: 18px; flex-wrap: wrap; margin-top: 18px; padding: 12px 12px 12px 18px; border-radius: 16px; border: 1px solid rgba(255,255,255,.09); background: rgba(12,17,31,.6); backdrop-filter: blur(20px) saturate(140%); -webkit-backdrop-filter: blur(20px) saturate(140%); box-shadow: 0 20px 40px -34px rgba(0,0,0,.9);">
+        <div style="display: flex; align-items: center; gap: 11px; font-family: 'Space Grotesk', sans-serif; font-weight: 500; font-size: 15px; letter-spacing: -0.01em;">
+          <span style="width: 8px; height: 8px; border-radius: 50%; background: #57e39b; box-shadow: 0 0 12px rgba(87,227,155,.9);"></span>
+          Jeet Mukherjee
+          <span style="color: #7b8aa8; font-weight: 400;">/ full-stack</span>
+        </div>
+        <nav data-nav style="display: flex; align-items: center; gap: 8px; font-size: 14px;">
+          <a href="#playground" style="padding: 9px 14px; border-radius: 10px; color: #a9b6cf;" style-hover="background: rgba(255,255,255,.07); color: #e7ecf7;">Playground</a>
+          <a href="#work" style="padding: 9px 14px; border-radius: 10px; color: #a9b6cf;" style-hover="background: rgba(255,255,255,.07); color: #e7ecf7;">Work</a>
+          <a href="https://www.jeetm.dev/resume.pdf" style="padding: 9px 14px; border-radius: 10px; color: #a9b6cf;" style-hover="background: rgba(255,255,255,.07); color: #e7ecf7;">Résumé</a>
+          <a href="mailto:jeetmukherjee100@gmail.com" style="padding: 10px 16px; border-radius: 10px; background: linear-gradient(180deg, rgba(122,214,238,.95), rgba(88,178,236,.95)); color: #061021; font-weight: 600; transition: transform .2s ease, filter .2s ease;" style-hover="transform: translateY(-1px); filter: brightness(1.1);">Get in touch</a>
+        </nav>
+      </header>
+
+      <section style="padding: 92px 0 0;">
+        <div data-reveal style="display: inline-flex; align-items: center; gap: 9px; padding: 7px 14px; border-radius: 999px; border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.045); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #a9b6cf; letter-spacing: 0.02em;">
+          <span style="width: 6px; height: 6px; border-radius: 50%; background: #57e39b;"></span>
+          available · senior roles &amp; select freelance
+        </div>
+        <h1 data-reveal style="margin: 24px 0 0; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: clamp(42px, 7.4vw, 92px); line-height: 0.98; letter-spacing: -0.04em; max-width: 17ch; background: linear-gradient(170deg, #ffffff 18%, #9fb2d6 92%); -webkit-background-clip: text; background-clip: text; color: transparent;">Ten years of making the whole stack behave.</h1>
+        <div data-hero-grid style="display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 40px; margin-top: 40px; align-items: start;">
+          <div data-reveal>
+            <p style="margin: 0; font-size: 19px; line-height: 1.65; color: #c3cde2; max-width: 46ch; text-wrap: pretty;">I build web apps end to end — clean APIs on one side, responsive UIs on the other, and all the unglamorous glue in between. Currently Senior Technical Specialist at <strong style="font-weight: 600; color: #e7ecf7;">DigitalAPICraft</strong>, shipping enterprise platforms for banks that really, <em style="font-style: normal; color: #7ad6ee;">really</em> care about uptime.</p>
+            <p style="margin: 16px 0 0; font-size: 19px; line-height: 1.65; color: #8b9ab5; max-width: 46ch; text-wrap: pretty;">I like well-named variables, problems that touch real users, and the small thrill of deleting code.</p>
+            <div style="display: flex; gap: 10px; margin-top: 28px; flex-wrap: wrap; font-family: 'JetBrains Mono', monospace; font-size: 13px;">
+              <a href="https://github.com/jeetxdev" style="padding: 11px 16px; border-radius: 10px; border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.05); color: #d4dcec;" style-hover="border-color: rgba(122,214,238,.55); color: #fff;">github/jeetxdev</a>
+              <a href="https://www.linkedin.com/in/jeetm" style="padding: 11px 16px; border-radius: 10px; border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.05); color: #d4dcec;" style-hover="border-color: rgba(122,214,238,.55); color: #fff;">linkedin/jeetm</a>
+              <span style="padding: 11px 16px; border-radius: 10px; border: 1px dashed rgba(255,255,255,.14); color: #7b8aa8;">Bangalore, IN</span>
+            </div>
+          </div>
+          <div data-reveal data-portrait-col style="display: flex; gap: 16px; align-items: flex-start; justify-self: end;">
+            <img data-portrait src="https://www.jeetm.dev/profile.JPG" alt="Jeet Mukherjee" style="width: 132px; height: 168px; object-fit: cover; border-radius: 16px; border: 1px solid rgba(255,255,255,.12); box-shadow: 0 30px 60px -34px rgba(0,0,0,.95);" />
+            <div data-stats style="display: flex; flex-direction: column; gap: 10px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #8b9ab5;">
+              <div style="padding: 12px 14px; border-radius: 12px; border: 1px solid rgba(255,255,255,.09); background: rgba(255,255,255,.04); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);">
+                <div style="font-size: 22px; color: #e7ecf7; font-family: 'Space Grotesk', sans-serif; letter-spacing: -0.02em;">10 yrs</div>
+                shipping to production
+              </div>
+              <div style="padding: 12px 14px; border-radius: 12px; border: 1px solid rgba(255,255,255,.09); background: rgba(255,255,255,.04); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);">
+                <div style="font-size: 22px; color: #e7ecf7; font-family: 'Space Grotesk', sans-serif; letter-spacing: -0.02em;">fintech</div>
+                banks, APIs, dashboards
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="playground" style="padding: 104px 0 0;">
+        <div data-reveal style="display: flex; align-items: baseline; gap: 14px;">
+          <h2 style="margin: 0; font-family: 'JetBrains Mono', monospace; font-weight: 400; font-size: 12.5px; letter-spacing: 0.16em; text-transform: uppercase; color: #7b8aa8;">The short version, as an API</h2>
+          <span style="flex: 1; height: 1px; background: rgba(255,255,255,.09);"></span>
+        </div>
+        <div data-reveal style="margin-top: 22px; border-radius: 18px; border: 1px solid rgba(255,255,255,.1); background: rgba(10,15,28,.62); backdrop-filter: blur(22px) saturate(140%); -webkit-backdrop-filter: blur(22px) saturate(140%); box-shadow: 0 40px 80px -60px rgba(0,0,0,1); overflow: hidden;">
+          <div data-routes style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 14px 16px; border-bottom: 1px solid rgba(255,255,255,.08); background: rgba(255,255,255,.025);">
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #57e39b; padding: 4px 8px; border-radius: 6px; background: rgba(87,227,155,.1);">GET</span>
+            <sc-for list="{{ routes }}" as="route" hint-placeholder-count="4">
+              <sc-if value="{{ route.active }}" hint-placeholder-val="{{ false }}">
+                <button type="button" onClick="{{ route.select }}" style="cursor: pointer; font-family: 'JetBrains Mono', monospace; font-size: 12.5px; padding: 6px 11px; border-radius: 8px; border: 1px solid rgba(122,214,238,.5); background: rgba(122,214,238,.14); color: #d6f4fd;">{{ route.path }}</button>
+              </sc-if>
+              <sc-if value="{{ route.idle }}" hint-placeholder-val="{{ true }}">
+                <button type="button" onClick="{{ route.select }}" style="cursor: pointer; font-family: 'JetBrains Mono', monospace; font-size: 12.5px; padding: 6px 11px; border-radius: 8px; border: 1px solid rgba(255,255,255,.1); background: transparent; color: #8b9ab5;" style-hover="border-color: rgba(255,255,255,.24); color: #e7ecf7;">{{ route.path }}</button>
+              </sc-if>
+            </sc-for>
+            <span data-meta style="margin-left: auto; display: flex; align-items: center; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #7b8aa8;">
+              <span>{{ status }}</span>
+              <span>·</span>
+              <span>{{ timing }}</span>
+            </span>
+          </div>
+          <div data-code-wrap style="padding: 20px 22px 24px; overflow-x: auto;">{{ codeBlock }}</div>
+        </div>
+        <p data-reveal style="margin: 14px 0 0; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #6f7d99;">Yes, it's really streaming — the whole panel is ~60 lines of vanilla JS.</p>
+      </section>
+
+      <section id="work" style="padding: 104px 0 0;">
+        <div data-reveal style="display: flex; align-items: baseline; gap: 14px;">
+          <h2 style="margin: 0; font-family: 'JetBrains Mono', monospace; font-weight: 400; font-size: 12.5px; letter-spacing: 0.16em; text-transform: uppercase; color: #7b8aa8;">Where I've been</h2>
+          <span style="flex: 1; height: 1px; background: rgba(255,255,255,.09);"></span>
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #5f6d88;">4 teams · 10 yrs</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 16px; margin-top: 30px;">
+          <sc-for list="{{ jobs }}" as="job" hint-placeholder-count="4">
+            <article data-reveal data-job style="display: grid; grid-template-columns: 150px 1fr; gap: 30px; padding: 28px 30px; border-radius: 18px; border: 1px solid rgba(255,255,255,.08); background: rgba(255,255,255,.035); backdrop-filter: blur(18px) saturate(130%); -webkit-backdrop-filter: blur(18px) saturate(130%); transition: transform .3s cubic-bezier(.2,.7,.2,1), border-color .3s ease, background .3s ease;" style-hover="transform: translateY(-3px); border-color: rgba(122,214,238,.34); background: rgba(255,255,255,.055);">
+              <div data-job-rail style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #6f7d99;">
+                <div data-job-year style="font-family: 'Space Grotesk', sans-serif; font-size: 30px; font-weight: 500; letter-spacing: -0.03em; color: #e7ecf7; line-height: 1;">{{ job.from }}</div>
+                <div style="margin-top: 4px; color: #7ad6ee;">{{ job.to }}</div>
+                <div style="margin-top: 10px;">{{ job.place }}</div>
+              </div>
+              <div>
+                <h3 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 24px; font-weight: 500; letter-spacing: -0.02em; color: #f2f5fb;">{{ job.role }}</h3>
+                <div style="margin-top: 5px; font-size: 16px; color: #8b9ab5;">{{ job.company }}</div>
+                <ul style="margin: 18px 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 10px;">
+                  <sc-for list="{{ job.points }}" as="point" hint-placeholder-count="3">
+                    <li style="display: grid; grid-template-columns: 18px 1fr; gap: 2px; font-size: 16px; line-height: 1.6; color: #c3cde2;">
+                      <span style="color: #4f6ea8;">▸</span>
+                      <span>{{ point }}</span>
+                    </li>
+                  </sc-for>
+                </ul>
+                <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 18px; font-family: 'JetBrains Mono', monospace; font-size: 11.5px;">
+                  <sc-for list="{{ job.tech }}" as="t" hint-placeholder-count="6">
+                    <span style="padding: 5px 10px; border-radius: 999px; border: 1px solid rgba(255,255,255,.08); background: rgba(255,255,255,.03); color: #8b9ab5;">{{ t }}</span>
+                  </sc-for>
+                </div>
+              </div>
+            </article>
+          </sc-for>
+        </div>
+      </section>
+
+      <section style="padding: 104px 0 120px;">
+        <div data-reveal data-contact style="position: relative; overflow: hidden; padding: 56px 44px; border-radius: 24px; border: 1px solid rgba(255,255,255,.1); background: linear-gradient(150deg, rgba(122,214,238,.1), rgba(139,123,255,.08) 60%, rgba(255,255,255,.03)); backdrop-filter: blur(24px) saturate(140%); -webkit-backdrop-filter: blur(24px) saturate(140%);">
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 40px; align-items: center;">
+            <div>
+              <h2 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: clamp(32px, 4.4vw, 50px); line-height: 1.04; letter-spacing: -0.035em; color: #f4f7fc;">Got something worth building?</h2>
+              <p style="margin: 16px 0 0; font-size: 18px; line-height: 1.6; color: #a9b6cf; max-width: 40ch;">A role to fill, a product to ship, or just an opinion about state management — all welcome.</p>
+              <div style="display: flex; flex-wrap: wrap; gap: 7px; margin-top: 22px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #8b9ab5;">
+                <span style="padding: 6px 12px; border-radius: 999px; border: 1px solid rgba(255,255,255,.12);">scalable web apps</span>
+                <span style="padding: 6px 12px; border-radius: 999px; border: 1px solid rgba(255,255,255,.12);">microservices</span>
+                <span style="padding: 6px 12px; border-radius: 999px; border: 1px solid rgba(255,255,255,.12);">mentoring</span>
+                <span style="padding: 6px 12px; border-radius: 999px; border: 1px solid rgba(255,255,255,.12);">open source</span>
+              </div>
+            </div>
+            <a data-cta href="mailto:jeetmukherjee100@gmail.com" style="justify-self: start; display: inline-flex; align-items: center; gap: 12px; padding: 18px 26px; border-radius: 14px; background: linear-gradient(180deg, rgba(122,214,238,.96), rgba(88,178,236,.96)); color: #061021; font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 500; box-shadow: 0 24px 50px -30px rgba(122,214,238,.7); transition: transform .25s cubic-bezier(.2,.7,.2,1), filter .25s ease;" style-hover="transform: translateY(-3px); filter: brightness(1.08);">jeetmukherjee100@gmail.com <span style="font-size: 18px;">→</span></a>
+          </div>
+        </div>
+        <footer style="display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-top: 24px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #5f6d88;">
+          <span>© 2025 Jeet Mukherjee</span>
+          <span>built by hand, deployed with nerve</span>
+        </footer>
+      </section>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;detail&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;full&quot;,&quot;condensed&quot;],&quot;default&quot;:&quot;full&quot;,&quot;tsType&quot;:&quot;\&quot;full\&quot; | \&quot;condensed\&quot;&quot;,&quot;section&quot;:&quot;Content&quot;},&quot;$preview&quot;:{&quot;width&quot;:1180,&quot;height&quot;:900}}">
+const PAYLOADS = {
+  "/whoami": `{
+  "name": "Jeet Mukherjee",
+  "role": "Senior Full-Stack Developer",
+  "title": "Senior Technical Specialist @ DigitalAPICraft",
+  "based": "Bangalore, India",
+  "years_shipping": 10,
+  "domains": ["fintech", "developer platforms", "research tooling"],
+  "available": true
+}`,
+  "/stack": `{
+  "frontend": ["React.js", "Next.js", "Redux", "TypeScript", "Tailwind CSS", "Styled Components"],
+  "backend": ["Node.js", "Express.js", "PHP", "Laravel", "CodeIgniter"],
+  "data": ["PostgreSQL", "MySQL"],
+  "craft": ["REST API design", "component architecture", "performance", "CI/CD", "Docker"],
+  "favourite_tool": "a well-named variable"
+}`,
+  "/experience": `[
+  { "company": "DigitalAPICraft",        "role": "Senior Technical Specialist", "since": 2022 },
+  { "company": "i-Link Research",        "role": "IT Application Developer",    "since": 2018 },
+  { "company": "Techno Exponent",        "role": "Software Developer",          "since": 2017 },
+  { "company": "Corelynx Solutions",     "role": "Program Analyst",             "since": 2015 }
+]`,
+  "/contact": `{
+  "email": "jeetmukherjee100@gmail.com",
+  "github": "github.com/jeetxdev",
+  "linkedin": "linkedin.com/in/jeetm",
+  "resume": "jeetm.dev/resume.pdf",
+  "open_to": ["senior roles", "select freelance work", "state management arguments"]
+}`
+};
+const COLORS = { key: "#7ad6ee", str: "#8ee6b4", num: "#f0c274", bool: "#c3a6ff", punct: "#5f7295", plain: "#c3cde2" };
+
+class Component extends DCLogic {
+  state = { route: "/whoami", shown: 0, ms: 0 };
+
+  componentDidMount() {
+    const io = new IntersectionObserver(es => es.forEach(e => {
+      if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); }
+    }), { rootMargin: "-6% 0px -6%" });
+    document.querySelectorAll("[data-reveal]").forEach((el, i) => {
+      el.style.transitionDelay = (i % 3) * 80 + "ms";
+      io.observe(el);
+    });
+    this._io = io;
+
+    const bar = document.querySelector("[data-progress]");
+    this._scroll = () => {
+      const max = document.documentElement.scrollHeight - innerHeight;
+      if (bar) bar.style.width = (max > 0 ? (scrollY / max) * 100 : 0) + "%";
+    };
+    addEventListener("scroll", this._scroll, { passive: true });
+
+    const glows = [...document.querySelectorAll("[data-glow]")];
+    this._move = e => {
+      const x = e.clientX / innerWidth - 0.5, y = e.clientY / innerHeight - 0.5;
+      glows.forEach((g, i) => { g.style.translate = `${x * (26 + i * 12)}px ${y * (18 + i * 10)}px`; });
+    };
+    this._reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (!this._reduced && matchMedia("(hover: hover)").matches) addEventListener("mousemove", this._move);
+
+    this.stream();
+  }
+
+  componentWillUnmount() {
+    if (this._io) this._io.disconnect();
+    removeEventListener("scroll", this._scroll);
+    removeEventListener("mousemove", this._move);
+    clearInterval(this._t);
+  }
+
+  stream() {
+    clearInterval(this._t);
+    const total = PAYLOADS[this.state.route].length;
+    if (this._reduced) { this.setState({ shown: total, ms: 28 }); return; }
+    this.setState({ shown: 0, ms: 0 });
+    const started = performance.now();
+    this._t = setInterval(() => {
+      this.setState(s => {
+        const next = Math.min(total, s.shown + 7);
+        if (next >= total) { clearInterval(this._t); return { shown: total, ms: Math.round(performance.now() - started) }; }
+        return { shown: next, ms: Math.round(performance.now() - started) };
+      });
+    }, 16);
+  }
+
+  pick(route) {
+    if (route === this.state.route) return;
+    this.setState({ route }, () => this.stream());
+  }
+
+  tokens(line) {
+    const out = [];
+    const re = /("[^"\\]*"\s*:)|("[^"\\]*")|(-?\d+\.?\d*)|(true|false|null)|([{}\[\],])|(\s+)|(.)/g;
+    let m;
+    while ((m = re.exec(line))) {
+      const color = m[1] ? COLORS.key : m[2] ? COLORS.str : m[3] ? COLORS.num
+        : m[4] ? COLORS.bool : m[5] ? COLORS.punct : COLORS.plain;
+      out.push([m[0], color]);
+    }
+    return out;
+  }
+
+  renderVals() {
+    const src = PAYLOADS[this.state.route];
+    const visible = src.slice(0, this.state.shown);
+    const done = this.state.shown >= src.length;
+    const lines = visible.split("\n").map((line, li) =>
+      React.createElement("div", { key: li, style: { whiteSpace: "pre", minHeight: "1.55em" } },
+        this.tokens(line).map(([txt, color], ti) =>
+          React.createElement("span", { key: ti, style: { color } }, txt)
+        ),
+        !done && li === visible.split("\n").length - 1
+          ? React.createElement("span", { style: { display: "inline-block", width: "7px", height: "1em", background: "#7ad6ee", verticalAlign: "-2px", animation: "caret 1s steps(1) infinite" } })
+          : null
+      )
+    );
+    const codeBlock = React.createElement("div", {
+      "data-code": "",
+      style: { fontFamily: "'JetBrains Mono', monospace", fontSize: "13.5px", lineHeight: 1.55, minHeight: "236px" }
+    }, lines);
+
+    const jobs = [
+      { role: "Senior Technical Specialist", company: "DigitalAPICraft Private Limited", from: "2022", to: "— now", place: "Bangalore, IN",
+        tech: ["React.js", "Redux", "Next.js", "TypeScript", "Tailwind CSS", "Styled Components"],
+        points: [
+          "Built and maintained React fintech dashboards inside the Fiserv AppMarket, used daily by enterprise banking partners.",
+          "Shipped an embedded API explorer that lets clients visualise and test APIs right in the browser.",
+          "Wrapped API products in developer-friendly UIs with product and API teams, cutting partner onboarding time.",
+          "Raised maintainability and performance with reusable component patterns, lazy loading and sane state management.",
+          "Contributed to internal API-documentation tooling, trimming manual testing and tightening release cycles."
+        ] },
+      { role: "IT Application Developer", company: "i-Link Research Solutions", from: "2018", to: "— 2022", place: "Bangalore, IN",
+        tech: ["React.js", "PHP", "MySQL", "jQuery", "CodeIgniter", "REST API"],
+        points: [
+          "Owned requirements through delivery for applications across several company websites.",
+          "Added multilingual support and prepared the web-services framework for cross-market launches.",
+          "Extended the in-house admin portal and campaign management system — PHP MVC back end, React front end.",
+          "Built REST APIs on CodeIgniter and MySQL for the mobile apps."
+        ] },
+      { role: "Software Developer", company: "Techno Exponent", from: "2017", to: "— 2018", place: "Kolkata, IN",
+        tech: ["JavaScript", "PHP", "MySQL", "Laravel", "Bootstrap", "REST API"],
+        points: [
+          "Designed a merchant portal end to end, from login flow to financial report generation.",
+          "Built an e-commerce site with a team of five, pulling per-seller listings via the Amazon Marketplace API.",
+          "Turned mock-ups into HTML, JavaScript, AJAX and JSON; kept it working across Chrome, Firefox and Safari."
+        ] },
+      { role: "Program Analyst", company: "Corelynx Solutions", from: "2015", to: "— 2017", place: "Kolkata, IN",
+        tech: ["JavaScript", "PHP", "MySQL", "jQuery", "CodeIgniter", "Git"],
+        points: [
+          "Researched and prototyped new technology for ConvergeHub CRM.",
+          "Implemented back-end APIs for the Android and iOS apps, plus a Swagger UI documentation site.",
+          "Added Dropbox-style storage with sync to Dropbox, Google Drive and Box.",
+          "Built a Zapier app for the CRM and a Mailchimp-powered campaign management system."
+        ] }
+    ];
+    const detail = this.props.detail ?? "full";
+
+    return {
+      codeBlock,
+      status: done ? "200 OK" : "streaming…",
+      timing: (this.state.ms || 0) + " ms",
+      routes: Object.keys(PAYLOADS).map(p => ({
+        path: p, active: p === this.state.route, idle: p !== this.state.route,
+        select: () => this.pick(p)
+      })),
+      jobs: jobs.map(j => ({ ...j, points: detail === "condensed" ? j.points.slice(0, 2) : j.points }))
+    };
+  }
+}
+</script>
+</body>
+</html>
