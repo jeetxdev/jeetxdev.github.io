@@ -8,7 +8,7 @@ export const PAYLOADS: Record<Route, string> = {
   "role": "Senior Full-Stack Developer",
   "title": "Assoc, Frontend Engineer @ Standard Chartered Bank",
   "based": "Bangalore, India",
-  "years_shipping": 10,
+  "years_shipping": 11,
   "domains": ["fintech", "banking", "developer platforms"],
   "available": true
 }`,
@@ -20,11 +20,11 @@ export const PAYLOADS: Record<Route, string> = {
   "favourite_tool": "a well-named variable"
 }`,
   "/experience": `[
-  { "company": "Standard Chartered Bank", "role": "Assoc, Frontend Engineer",     "since": 2025 },
-  { "company": "DigitalAPICraft",         "role": "Senior Technical Specialist", "since": 2022 },
-  { "company": "i-Link Research",         "role": "IT Application Developer",    "since": 2018 },
-  { "company": "Techno Exponent",         "role": "Software Developer",          "since": 2017 },
-  { "company": "Corelynx Solutions",      "role": "Program Analyst",             "since": 2015 }
+  { "company": "Standard Chartered", "role": "Assoc, Frontend Engineer",    "from": 2025, "to": "now" },
+  { "company": "DigitalAPICraft",    "role": "Senior Technical Specialist", "from": 2022, "to": 2025 },
+  { "company": "i-Link Research",    "role": "IT Application Developer",    "from": 2018, "to": 2022 },
+  { "company": "Techno Exponent",    "role": "Software Developer",          "from": 2017, "to": 2018 },
+  { "company": "Corelynx Solutions", "role": "Program Analyst",             "from": 2015, "to": 2017 }
 ]`,
   "/contact": `{
   "email": "jeetmukherjee100@gmail.com",

@@ -11,7 +11,7 @@ export type Job = {
 export const JOBS: Job[] = [
   {
     role: "Assoc, Frontend Engineer",
-    company: "Standard Chartered Bank",
+    company: "Standard Chartered",
     from: "2025",
     to: "— now",
     place: "Bangalore, IN",
@@ -26,7 +26,14 @@ export const JOBS: Job[] = [
     from: "2022",
     to: "— 2025",
     place: "Bangalore, IN",
-    tech: ["React.js", "Redux", "Next.js", "TypeScript", "Tailwind CSS", "Styled Components"],
+    tech: [
+      "React.js",
+      "Redux",
+      "Next.js",
+      "TypeScript",
+      "Tailwind CSS",
+      "Styled Components",
+    ],
     points: [
       "Built and maintained React fintech dashboards inside the Fiserv AppMarket, used daily by enterprise banking partners.",
       "Shipped an embedded API explorer that lets clients visualise and test APIs right in the browser.",

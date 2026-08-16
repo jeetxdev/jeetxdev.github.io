@@ -8,7 +8,10 @@ export function Hero() {
         data-reveal
         className="glass-pill inline-flex items-center gap-[9px] rounded-full px-[14px] py-[7px] font-mono text-[12px] tracking-[0.02em] text-text-muted"
       >
-        <span aria-hidden="true" className="h-[6px] w-[6px] rounded-full bg-success" />
+        <span
+          aria-hidden="true"
+          className="h-[6px] w-[6px] rounded-full bg-success"
+        />
         available · senior roles &amp; select freelance
       </div>
 
@@ -16,25 +19,25 @@ export function Hero() {
         data-reveal
         className="text-gradient-hero mt-6 max-w-[17ch] font-display text-[clamp(42px,7.4vw,92px)] leading-[0.98] font-bold tracking-[-0.04em]"
       >
-        Ten years of making the whole stack behave.
+        Eleven years of making the whole stack behave.
       </h1>
 
       <div className="mt-10 grid grid-cols-[repeat(auto-fit,minmax(290px,1fr))] items-start gap-10 max-[901px]:gap-8">
         <div data-reveal>
           <p className="max-w-[46ch] text-[19px] leading-[1.65] text-text-soft [text-wrap:pretty]">
-            I build web apps end to end — clean APIs on one side, responsive
-            UIs on the other, and all the unglamorous glue in between.
-            Currently Assoc, Frontend Engineer at{" "}
+            I build web apps end to end — clean APIs on one side, responsive UIs
+            on the other, and all the unglamorous glue in between. Currently
+            Assoc, Frontend Engineer at{" "}
             <strong className="font-semibold text-ink">
-              Standard Chartered Bank
+              Standard Chartered
             </strong>
             , building banking platforms that{" "}
             <em className="not-italic text-accent">really, really</em> care
             about uptime.
           </p>
           <p className="mt-4 max-w-[46ch] text-[19px] leading-[1.65] text-text-dim [text-wrap:pretty]">
-            I like well-named variables, problems that touch real users, and
-            the small thrill of deleting code.
+            I like well-named variables, problems that touch real users, and the
+            small thrill of deleting code.
           </p>
           <div className="mt-7 flex flex-wrap gap-[10px] font-mono text-[13px]">
             <a
@@ -73,7 +76,7 @@ export function Hero() {
           <div className="flex flex-1 flex-col gap-[10px] font-mono text-[12px] text-text-dim">
             <div className="glass-stat rounded-xl px-[14px] py-3">
               <div className="font-display text-[22px] tracking-[-0.02em] text-ink-bright">
-                10 yrs
+                11 yrs
               </div>
               shipping to production
             </div>

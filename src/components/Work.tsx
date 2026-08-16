@@ -4,7 +4,7 @@ import { SectionLabel } from "./SectionLabel";
 export function Work() {
   return (
     <section id="work" className="pt-[104px]">
-      <SectionLabel meta={`${JOBS.length} teams · 10 yrs`}>
+      <SectionLabel meta={`${JOBS.length} teams · 11 yrs`}>
         Where I&rsquo;ve been
       </SectionLabel>
 

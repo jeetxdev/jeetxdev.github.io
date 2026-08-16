@@ -36,7 +36,7 @@ export function Header() {
           rel="noopener noreferrer"
           className={NAV_LINK_CLASS}
         >
-          Résumé
+          Resume
         </a>
         <a
           href="mailto:jeetmukherjee100@gmail.com"
