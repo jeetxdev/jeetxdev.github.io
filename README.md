@@ -1,6 +1,6 @@
 # jeetm.dev
 
-Jeet Mukherjee's personal portfolio — a single-page site built with Vite, React and TypeScript,
+Jeet Mukherjee's personal portfolio - a single-page site built with Vite, React and TypeScript,
 styled with Tailwind CSS v4.
 
 ## Getting started
@@ -14,7 +14,7 @@ Open [http://localhost:5173](http://localhost:5173) to see the site. Vite hot-re
 
 ## Scripts
 
-- `npm run dev` — start the dev server.
-- `npm run build` — type-check and build the static site into `dist/`.
-- `npm run preview` — serve the production build locally.
-- `npm run lint` — run ESLint.
+- `npm run dev` - start the dev server.
+- `npm run build` - type-check and build the static site into `dist/`.
+- `npm run preview` - serve the production build locally.
+- `npm run lint` - run ESLint.

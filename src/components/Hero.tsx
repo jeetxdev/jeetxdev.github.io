@@ -1,3 +1,6 @@
+import { DitherPortrait } from "./DitherPortrait";
+import { HeroSignals } from "./HeroSignals";
+
 const LINK_CHIP_CLASS =
   "rounded-[10px] border border-white/[0.12] bg-white/5 px-4 py-[11px] text-ink transition-colors duration-200 hover:border-accent/[0.55] hover:text-white";
 
@@ -25,7 +28,7 @@ export function Hero() {
       <div className="mt-10 grid grid-cols-[repeat(auto-fit,minmax(290px,1fr))] items-start gap-10 max-[901px]:gap-8">
         <div data-reveal>
           <p className="max-w-[46ch] text-[19px] leading-[1.65] text-text-soft [text-wrap:pretty]">
-            I build web apps end to end — clean APIs on one side, responsive UIs
+            I build web apps end to end - clean APIs on one side, responsive UIs
             on the other, and all the unglamorous glue in between. Currently
             Assoc, Frontend Engineer at{" "}
             <strong className="font-semibold text-ink">
@@ -66,27 +69,12 @@ export function Hero() {
           data-reveal
           className="flex items-stretch justify-self-end gap-4 max-[901px]:w-full max-[901px]:justify-self-stretch"
         >
-          <img
-            src="/profile.jpg"
+          <DitherPortrait
+            src="/profile.jpeg"
             alt="Jeet Mukherjee"
-            width={132}
-            height={168}
-            className="h-auto min-h-[168px] w-[132px] shrink-0 rounded-2xl border border-white/[0.12] object-cover shadow-[0_30px_60px_-34px_rgba(0,0,0,0.95)] max-[721px]:min-h-[138px] max-[721px]:w-[108px]"
+            className="min-h-[168px] w-[132px] shrink-0 self-stretch max-[721px]:min-h-[138px] max-[721px]:w-[108px]"
           />
-          <div className="flex flex-1 flex-col gap-[10px] font-mono text-[12px] text-text-dim">
-            <div className="glass-stat rounded-xl px-[14px] py-3">
-              <div className="font-display text-[22px] tracking-[-0.02em] text-ink-bright">
-                11 yrs
-              </div>
-              shipping to production
-            </div>
-            <div className="glass-stat rounded-xl px-[14px] py-3">
-              <div className="font-display text-[22px] tracking-[-0.02em] text-ink-bright">
-                fintech
-              </div>
-              banks, APIs, dashboards
-            </div>
-          </div>
+          <HeroSignals />
         </div>
       </div>
     </section>

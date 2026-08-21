@@ -56,7 +56,10 @@ export function Playground() {
     <section id="playground" className="pt-[104px]">
       <SectionLabel>The short version, as an API</SectionLabel>
 
-      <div data-reveal className="glass-panel mt-[22px] overflow-hidden rounded-[18px]">
+      <div
+        data-reveal
+        className="glass-panel mt-[22px] overflow-hidden rounded-[18px]"
+      >
         <div
           data-routes
           className="flex flex-wrap items-center gap-2 border-b border-white/[0.08] bg-white/[0.025] px-4 py-[14px]"
@@ -115,8 +118,12 @@ export function Playground() {
         </div>
       </div>
 
-      <p data-reveal className="mt-[14px] font-mono text-[12px] text-text-faint">
-        Yes, it&rsquo;s really streaming — the whole panel is ~60 lines of vanilla JS.
+      <p
+        data-reveal
+        className="mt-[14px] font-mono text-[12px] text-text-faint"
+      >
+        Yes, it&rsquo;s really streaming - the whole panel is ~60 lines of
+        vanilla JS.
       </p>
     </section>
   );

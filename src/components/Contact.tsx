@@ -1,3 +1,5 @@
+import { LocalTime } from "./LocalTime";
+
 const INTERESTS = [
   "scalable web apps",
   "microservices",
@@ -19,8 +21,8 @@ export function Contact() {
               Got something worth building?
             </h2>
             <p className="mt-4 max-w-[40ch] text-[18px] leading-[1.6] text-text-muted">
-              A role to fill, a product to ship, or just an opinion about
-              state management — all welcome.
+              A role to fill, a product to ship, or just an opinion about state
+              management - all welcome.
             </p>
             <div className="mt-[22px] flex flex-wrap gap-[7px] font-mono text-[12px] text-text-dim">
               {INTERESTS.map((interest) => (
@@ -34,13 +36,16 @@ export function Contact() {
             </div>
           </div>
 
-          <a
-            data-cta
-            href="mailto:jeetmukherjee100@gmail.com"
-            className="cta-gradient-accent inline-flex items-center gap-3 justify-self-start rounded-[14px] px-[26px] py-[18px] font-mono text-[15px] font-medium max-[721px]:px-[18px] max-[721px]:py-4 max-[721px]:text-[12.5px]"
-          >
-            jeetmukherjee100@gmail.com <span className="text-[18px]">→</span>
-          </a>
+          <div className="justify-self-start">
+            <a
+              data-cta
+              href="mailto:jeetmukherjee100@gmail.com"
+              className="cta-gradient-accent inline-flex items-center gap-3 rounded-[14px] px-[26px] py-[18px] font-mono text-[15px] font-medium max-[721px]:px-[18px] max-[721px]:py-4 max-[721px]:text-[12.5px]"
+            >
+              jeetmukherjee100@gmail.com <span className="text-[18px]">→</span>
+            </a>
+            <LocalTime />
+          </div>
         </div>
       </div>
 

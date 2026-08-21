@@ -1,70 +1,144 @@
 import { JOBS } from "@/data/jobs";
 import { SectionLabel } from "./SectionLabel";
 
+const OLDEST = Number(JOBS[JOBS.length - 1].from);
+const YEARS = new Date().getFullYear() - OLDEST;
+
+/**
+ * Roles hang off one continuous spine rather than sitting in five detached
+ * cards - the same "eleven years, no gaps" idea the hero tenure bar draws,
+ * paid off at full length. Everything ramps with `depth` (0 = current role,
+ * 1 = oldest): the node, the card surface and the type all step back as the
+ * work recedes, so the current role reads as current without being shouted.
+ */
 export function Work() {
+  const last = JOBS.length - 1;
+
   return (
     <section id="work" className="pt-[104px]">
-      <SectionLabel meta={`${JOBS.length} teams · 11 yrs`}>
+      <SectionLabel meta={`${JOBS.length} teams · ${YEARS} yrs`}>
         Where I&rsquo;ve been
       </SectionLabel>
 
-      <div className="mt-[30px] flex flex-col gap-4">
-        {JOBS.map((job) => (
-          <article
-            key={job.company}
-            data-reveal
-            data-job
-            className="glass-card grid grid-cols-[150px_1fr] gap-[30px] rounded-[18px] px-[30px] py-7 max-[721px]:grid-cols-1 max-[721px]:gap-4 max-[721px]:px-5 max-[721px]:py-6"
-          >
-            <div
-              data-job-rail
-              className="font-mono text-[12px] text-text-faint max-[721px]:flex max-[721px]:flex-wrap max-[721px]:items-baseline max-[721px]:gap-[10px]"
+      <div className="relative mt-[34px]">
+        <span
+          aria-hidden="true"
+          className="job-spine absolute top-0 bottom-0 left-[84px] w-px -translate-x-1/2 max-[721px]:left-[53px]"
+        />
+
+        {JOBS.map((job, index) => {
+          const depth = index / last;
+          const live = index === 0;
+
+          return (
+            <article
+              key={job.company}
+              data-reveal
+              className="relative grid grid-cols-[68px_32px_1fr] pb-[18px] last:pb-0 max-[721px]:grid-cols-[44px_18px_1fr]"
             >
+              <div className="min-w-0 pt-[3px] text-right font-mono text-[11.5px]">
+                <div
+                  className="font-display text-[30px] leading-none font-medium tracking-[-0.03em] max-[721px]:text-[17px]"
+                  style={{ color: `rgba(242, 245, 251, ${1 - depth * 0.4})` }}
+                >
+                  {job.from}
+                </div>
+                <div
+                  className="mt-[6px] max-[721px]:mt-[4px] max-[721px]:text-[10.5px]"
+                  style={{
+                    color: live
+                      ? "var(--color-accent)"
+                      : `rgba(111, 125, 153, ${1 - depth * 0.3})`,
+                  }}
+                >
+                  {job.to}
+                </div>
+              </div>
+
+              <div className="flex justify-center">
+                <span
+                  aria-hidden="true"
+                  className={
+                    live
+                      ? "job-node job-node-live mt-[9px] h-[11px] w-[11px] max-[721px]:mt-[3px] max-[721px]:h-[9px] max-[721px]:w-[9px]"
+                      : "job-node mt-[11px] h-[7px] w-[7px] max-[721px]:mt-[5px] max-[721px]:h-[6px] max-[721px]:w-[6px]"
+                  }
+                  style={
+                    live
+                      ? undefined
+                      : {
+                          borderColor: `rgba(122, 214, 238, ${(
+                            0.5 -
+                            depth * 0.3
+                          ).toFixed(2)})`,
+                        }
+                  }
+                />
+              </div>
+
               <div
-                data-job-year
-                className="font-display text-[30px] leading-none font-medium tracking-[-0.03em] text-ink-bright max-[721px]:text-[24px]"
+                className="job-card rounded-[16px] px-[26px] py-[22px] max-[721px]:px-[18px] max-[721px]:py-[18px]"
+                style={{
+                  "--job-border": `rgba(255, 255, 255, ${(
+                    0.14 -
+                    depth * 0.09
+                  ).toFixed(3)})`,
+                  "--job-bg": `rgba(255, 255, 255, ${(
+                    0.05 -
+                    depth * 0.028
+                  ).toFixed(3)})`,
+                } as React.CSSProperties}
               >
-                {job.from}
-              </div>
-              <div className="mt-1 text-accent max-[721px]:mt-0">{job.to}</div>
-              <div className="mt-[10px] max-[721px]:mt-0">{job.place}</div>
-            </div>
+                <h3
+                  className="m-0 font-display text-[22px] font-medium tracking-[-0.02em] max-[721px]:text-[19px]"
+                  style={{ color: `rgba(242, 245, 251, ${1 - depth * 0.28})` }}
+                >
+                  {job.role}
+                </h3>
 
-            <div>
-              <h3 className="m-0 font-display text-[24px] font-medium tracking-[-0.02em] text-[#f2f5fb]">
-                {job.role}
-              </h3>
-              <div className="mt-[5px] text-[16px] text-text-dim">
-                {job.company}
-              </div>
-
-              <ul className="mt-[18px] flex list-none flex-col gap-[10px] p-0">
-                {job.points.map((point) => (
-                  <li
-                    key={point}
-                    className="grid grid-cols-[18px_1fr] gap-x-0.5 text-[16px] leading-[1.6] text-text-soft"
-                  >
-                    <span aria-hidden="true" className="text-marker">
-                      ▸
-                    </span>
-                    <span>{point}</span>
-                  </li>
-                ))}
-              </ul>
-
-              <div className="mt-[18px] flex flex-wrap gap-[6px] font-mono text-[11.5px]">
-                {job.tech.map((t) => (
+                <div className="mt-[6px] flex flex-wrap items-baseline gap-x-[10px] gap-y-[2px]">
                   <span
-                    key={t}
-                    className="rounded-full border border-white/[0.08] bg-white/[0.03] px-[10px] py-[5px] text-text-dim"
+                    className="text-[16px] max-[721px]:text-[15px]"
+                    style={{ color: `rgba(139, 154, 181, ${1 - depth * 0.2})` }}
                   >
-                    {t}
+                    {job.company}
                   </span>
-                ))}
+                  <span className="font-mono text-[11.5px] text-text-faintest">
+                    {job.place}
+                  </span>
+                </div>
+
+                <ul className="mt-[16px] flex list-none flex-col gap-[10px] p-0">
+                  {job.points.map((point) => (
+                    <li
+                      key={point}
+                      className="grid grid-cols-[20px_1fr] text-[16px] leading-[1.6] max-[721px]:text-[15px]"
+                      style={{
+                        color: `rgba(195, 205, 226, ${1 - depth * 0.22})`,
+                      }}
+                    >
+                      <span
+                        aria-hidden="true"
+                        className="mt-[0.72em] block h-px w-[9px]"
+                        style={{
+                          background: `rgba(79, 110, 168, ${1 - depth * 0.35})`,
+                        }}
+                      />
+                      <span>{point}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                <div
+                  className="mt-[16px] font-mono text-[11.5px] leading-[1.7] lowercase"
+                  style={{ color: `rgba(139, 154, 181, ${1 - depth * 0.16})` }}
+                >
+                  {job.tech.join(" · ")}
+                </div>
               </div>
-            </div>
-          </article>
-        ))}
+            </article>
+          );
+        })}
       </div>
     </section>
   );

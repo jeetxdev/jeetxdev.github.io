@@ -5,9 +5,11 @@ import { Playground } from "@/components/Playground";
 import { Work } from "@/components/Work";
 import { Contact } from "@/components/Contact";
 import { useReveal } from "@/hooks/useReveal";
+import { useDisableContextMenu } from "@/hooks/useDisableContextMenu";
 
 export function App() {
   useReveal();
+  useDisableContextMenu();
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-bg">
