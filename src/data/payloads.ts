@@ -30,7 +30,7 @@ export const PAYLOADS: Record<Route, string> = {
   "email": "jeetmukherjee100@gmail.com",
   "github": "github.com/jeetxdev",
   "linkedin": "linkedin.com/in/jeetm",
-  "resume": "jeetm.dev/resume.pdf",
+  "resume": "${window.location.host}/resume.pdf",
   "open_to": ["senior roles", "select freelance work", "state management arguments"]
 }`,
 };

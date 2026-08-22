@@ -4,6 +4,7 @@ import { Hero } from "@/components/Hero";
 import { Playground } from "@/components/Playground";
 import { Work } from "@/components/Work";
 import { Contact } from "@/components/Contact";
+import { SideRail } from "@/components/SideRail";
 import { useReveal } from "@/hooks/useReveal";
 import { useDisableContextMenu } from "@/hooks/useDisableContextMenu";
 
@@ -12,9 +13,10 @@ export function App() {
   useDisableContextMenu();
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-bg">
+    <div className="relative min-h-screen bg-bg">
       <Background />
       <ProgressRail />
+      <SideRail />
 
       <div className="relative z-[1] px-7 max-[721px]:px-[18px]">
         <div className="mx-auto max-w-[1060px]">

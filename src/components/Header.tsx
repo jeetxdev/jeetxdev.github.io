@@ -8,6 +8,7 @@ export function Header() {
     <header
       className={cn(
         "glass-header sticky top-[14px] z-10 mt-[18px] flex flex-wrap items-center justify-between gap-[18px] rounded-2xl py-3 pr-3 pl-[18px]",
+        "rail:static",
         "max-[721px]:top-2 max-[721px]:gap-[10px] max-[721px]:px-[10px] max-[721px]:py-[10px]",
       )}
     >

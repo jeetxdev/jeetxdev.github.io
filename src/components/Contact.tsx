@@ -9,7 +9,7 @@ const INTERESTS = [
 
 export function Contact() {
   return (
-    <section className="pt-[104px] pb-[120px]">
+    <section id="contact" className="pt-[104px] pb-[120px]">
       <div
         data-reveal
         data-contact
