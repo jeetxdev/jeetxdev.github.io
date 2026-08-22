@@ -8,9 +8,13 @@ import { useEffect } from "react";
  *
  * This is a deterrent, not protection: anything the page ships is still one
  * devtools panel or one `view-source:` away.
+ *
+ * Disabled during local development so inspecting elements stays convenient.
  */
 export function useDisableContextMenu() {
   useEffect(() => {
+    if (import.meta.env.DEV) return;
+
     const onContextMenu = (e: MouseEvent) => {
       const target = e.target as HTMLElement | null;
       if (target?.closest("input, textarea, [contenteditable='true']")) return;
