@@ -28,6 +28,11 @@
   --color-code-number: #f0c274;
   --color-code-bool: #c3a6ff;
   --color-code-punct: #5f7295;
+
+  /* Narrowest viewport where the 1060px column still leaves a gutter wide
+     enough for the side rail plus its labels. Below this the header stays
+     sticky and the rail stays hidden. */
+  --breakpoint-rail: 1240px;
 }
 
 @layer base {

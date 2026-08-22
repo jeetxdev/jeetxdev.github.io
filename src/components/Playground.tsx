@@ -261,8 +261,8 @@ export function Playground() {
       </div>
 
       <p data-reveal className="mt-[14px] font-mono text-[12px] text-text-faint">
-        Yes, it&rsquo;s really streaming - the whole panel is ~60 lines of
-        vanilla JS.
+        There&rsquo;s no server behind this. The stream is staged; the frame
+        budget isn&rsquo;t.
       </p>
     </section>
   );

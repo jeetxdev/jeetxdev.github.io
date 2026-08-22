@@ -6,7 +6,7 @@ const LINK_CHIP_CLASS =
 
 export function Hero() {
   return (
-    <section className="pt-[92px]">
+    <section id="hero" className="pt-[92px]">
       <div
         data-reveal
         className="glass-pill inline-flex items-center gap-[9px] rounded-full px-[14px] py-[7px] font-mono text-[12px] tracking-[0.02em] text-text-muted"
@@ -28,17 +28,17 @@ export function Hero() {
       <div className="mt-10 grid grid-cols-[repeat(auto-fit,minmax(290px,1fr))] items-start gap-10 max-[901px]:gap-8">
         <div data-reveal>
           <p className="max-w-[46ch] text-[19px] leading-[1.65] text-text-soft [text-wrap:pretty]">
-            I build web apps end to end - clean APIs on one side, responsive UIs
-            on the other, and all the unglamorous glue in between. Currently
-            Assoc, Frontend Engineer at{" "}
+            Mostly I build the parts users touch - lately the banking
+            interfaces at{" "}
             <strong className="font-semibold text-ink">
               Standard Chartered
             </strong>
-            , building banking platforms that{" "}
-            <em className="not-italic text-accent">really, really</em> care
-            about uptime.
+            , where a dropdown that misbehaves is a customer who gives up{" "}
+            <em className="not-italic text-accent">three steps in</em>. I&rsquo;ve
+            spent enough time behind the API (Node, Express, Postgres, PHP) to
+            know whose fault usually is.
           </p>
-          <p className="mt-4 max-w-[46ch] text-[19px] leading-[1.65] text-text-dim [text-wrap:pretty]">
+          <p className="mt-[18px] max-w-[46ch] text-[17px] leading-[1.6] text-text-dim [text-wrap:pretty]">
             I like well-named variables, problems that touch real users, and the
             small thrill of deleting code.
           </p>
