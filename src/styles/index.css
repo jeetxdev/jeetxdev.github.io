@@ -74,16 +74,16 @@
   }
 
   /* Ambient background glows (§0) */
+  /* Softness comes from the gradient stops rather than filter: blur(), which
+     had to be rasterised at full size on every frame of the float animation. */
   .bg-glow {
     position: absolute;
     border-radius: 50%;
-    filter: blur(var(--glow-blur));
     animation: float1 var(--glow-duration) ease-in-out infinite
       var(--glow-direction, normal);
   }
 
   .bg-glow-1 {
-    --glow-blur: 30px;
     --glow-duration: 19s;
     top: -14%;
     left: -6%;
@@ -92,12 +92,12 @@
     background: radial-gradient(
       circle at 40% 40%,
       rgba(58, 110, 235, 0.42),
-      rgba(58, 110, 235, 0) 68%
+      rgba(58, 110, 235, 0.2) 38%,
+      rgba(58, 110, 235, 0) 72%
     );
   }
 
   .bg-glow-2 {
-    --glow-blur: 36px;
     --glow-duration: 25s;
     --glow-direction: reverse;
     top: 8%;
@@ -107,12 +107,12 @@
     background: radial-gradient(
       circle at 55% 45%,
       rgba(122, 214, 238, 0.26),
-      rgba(122, 214, 238, 0) 66%
+      rgba(122, 214, 238, 0.12) 38%,
+      rgba(122, 214, 238, 0) 70%
     );
   }
 
   .bg-glow-3 {
-    --glow-blur: 40px;
     --glow-duration: 31s;
     bottom: -22%;
     left: 26%;
@@ -121,7 +121,8 @@
     background: radial-gradient(
       circle at 50% 50%,
       rgba(139, 123, 255, 0.24),
-      rgba(139, 123, 255, 0) 70%
+      rgba(139, 123, 255, 0.11) 40%,
+      rgba(139, 123, 255, 0) 74%
     );
   }
 
@@ -163,11 +164,13 @@
     box-shadow: 0 20px 40px -34px rgba(0, 0, 0, 0.9);
   }
 
+  /* No backdrop-filter here, deliberately. This panel streams text, and a live
+     blur behind content that mutates every frame is Safari's worst case: it
+     re-rasterises the whole panel per character. The backdrop is only soft
+     radial gradients, so an opaque tint reads almost identically. */
   .glass-panel {
     border: 1px solid rgba(255, 255, 255, 0.1);
-    background: rgba(10, 15, 28, 0.62);
-    backdrop-filter: blur(22px) saturate(140%);
-    -webkit-backdrop-filter: blur(22px) saturate(140%);
+    background: rgba(10, 15, 28, 0.72);
     box-shadow: 0 40px 80px -60px rgba(0, 0, 0, 1);
   }
 
