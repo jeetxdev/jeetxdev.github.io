@@ -1,5 +1,6 @@
 import { Fragment } from "react";
 import { JOBS } from "@/data/jobs";
+import { withAlpha } from "@/lib/utils";
 
 /**
  * The working stack, grouped by layer rather than listed flat - the
@@ -30,6 +31,10 @@ const CAREER_START = TIMELINE[0].from;
 const CAREER_YEARS = new Date().getFullYear() - CAREER_START;
 const CURRENT = TIMELINE[TIMELINE.length - 1];
 const CURRENT_YEAR_OF = new Date().getFullYear() - CURRENT.from + 1;
+
+/** Tenure segments brighten toward the present, oldest role faintest. */
+const SEGMENT_MIN_ALPHA = 0.22;
+const SEGMENT_ALPHA_SPAN = 0.72;
 
 /**
  * The panel beside the hero portrait: what the work is built with, and
@@ -71,10 +76,11 @@ export function HeroSignals() {
               }`}
               style={{
                 flexGrow: Math.max(0.5, entry.to - entry.from),
-                background: `rgba(122, 214, 238, ${(
-                  0.22 +
-                  (index / (TIMELINE.length - 1)) * 0.72
-                ).toFixed(2)})`,
+                background: withAlpha(
+                  "var(--color-accent)",
+                  SEGMENT_MIN_ALPHA +
+                    (index / (TIMELINE.length - 1)) * SEGMENT_ALPHA_SPAN,
+                ),
               }}
               className="rounded-full transition-[filter] duration-200 hover:brightness-125"
             />

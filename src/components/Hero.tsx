@@ -2,7 +2,7 @@ import { DitherPortrait } from "./DitherPortrait";
 import { HeroSignals } from "./HeroSignals";
 
 const LINK_CHIP_CLASS =
-  "rounded-[10px] border border-white/[0.12] bg-white/5 px-4 py-[11px] text-ink transition-colors duration-200 hover:border-accent/[0.55] hover:text-white";
+  "rounded-[10px] border border-line-strong bg-surface px-4 py-[11px] text-ink transition-colors duration-200 hover:border-accent/[0.55] hover:text-ink-brightest";
 
 export function Hero() {
   return (
@@ -59,7 +59,7 @@ export function Hero() {
             >
               linkedin/jeetm
             </a>
-            <span className="rounded-[10px] border border-dashed border-white/[0.14] px-4 py-[11px] text-text-dimmer">
+            <span className="rounded-[10px] border border-dashed border-line-strong px-4 py-[11px] text-text-dimmer">
               Bangalore, IN
             </span>
           </div>

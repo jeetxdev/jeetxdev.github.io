@@ -19,6 +19,30 @@
     <meta property="og:type" content="website" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <title>Jeet Mukherjee - Senior Full-Stack Developer</title>
+
+    <!-- Resolves the theme before first paint so a stored light choice never
+         flashes the dark palette. The storage key and attribute are duplicated
+         from src/lib/theme.ts because this has to run ahead of the bundle. -->
+    <script>
+      (function () {
+        var theme = "dark";
+        try {
+          var stored = localStorage.getItem("jeetxdev-theme");
+          theme =
+            stored === "light" || stored === "dark"
+              ? stored
+              : matchMedia("(prefers-color-scheme: dark)").matches
+                ? "dark"
+                : "light";
+        } catch {
+          /* Blocked storage: fall through to the dark default. */
+        }
+        document.documentElement.setAttribute("data-theme", theme);
+        document
+          .querySelector('meta[name="theme-color"]')
+          ?.setAttribute("content", theme === "light" ? "#f4f7fc" : "#060912");
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

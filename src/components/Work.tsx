@@ -1,8 +1,31 @@
+import type { CSSProperties } from "react";
 import { JOBS } from "@/data/jobs";
+import { withAlpha } from "@/lib/utils";
 import { SectionLabel } from "./SectionLabel";
 
 const OLDEST = Number(JOBS[JOBS.length - 1].from);
 const YEARS = new Date().getFullYear() - OLDEST;
+
+/**
+ * How much of each element survives at the oldest role. Everything fades
+ * toward the page background rather than toward a fixed colour, so the ramp
+ * holds in both themes.
+ */
+const FADE_FLOOR = {
+  year: 0.6,
+  date: 0.7,
+  node: 0.4,
+  cardBorder: 0.36,
+  cardSurface: 0.44,
+  role: 0.72,
+  company: 0.8,
+  point: 0.78,
+  marker: 0.65,
+  tech: 0.84,
+} as const;
+
+/** 1 at the current role, easing to the element's floor at the oldest. */
+const fade = (depth: number, floor: number) => 1 - depth * (1 - floor);
 
 /**
  * Roles hang off one continuous spine rather than sitting in five detached
@@ -39,7 +62,12 @@ export function Work() {
               <div className="min-w-0 pt-[3px] text-right font-mono text-[11.5px]">
                 <div
                   className="font-display text-[30px] leading-none font-medium tracking-[-0.03em] max-[721px]:text-[17px]"
-                  style={{ color: `rgba(242, 245, 251, ${1 - depth * 0.4})` }}
+                  style={{
+                    color: withAlpha(
+                      "var(--color-ink-brightest)",
+                      fade(depth, FADE_FLOOR.year),
+                    ),
+                  }}
                 >
                   {job.from}
                 </div>
@@ -48,7 +76,10 @@ export function Work() {
                   style={{
                     color: live
                       ? "var(--color-accent)"
-                      : `rgba(111, 125, 153, ${1 - depth * 0.3})`,
+                      : withAlpha(
+                          "var(--color-text-faint)",
+                          fade(depth, FADE_FLOOR.date),
+                        ),
                   }}
                 >
                   {job.to}
@@ -67,10 +98,10 @@ export function Work() {
                     live
                       ? undefined
                       : {
-                          borderColor: `rgba(122, 214, 238, ${(
-                            0.5 -
-                            depth * 0.3
-                          ).toFixed(2)})`,
+                          borderColor: withAlpha(
+                            "var(--color-accent)",
+                            0.5 * fade(depth, FADE_FLOOR.node),
+                          ),
                         }
                   }
                 />
@@ -79,19 +110,24 @@ export function Work() {
               <div
                 className="job-card rounded-[16px] px-[26px] py-[22px] max-[721px]:px-[18px] max-[721px]:py-[18px]"
                 style={{
-                  "--job-border": `rgba(255, 255, 255, ${(
-                    0.14 -
-                    depth * 0.09
-                  ).toFixed(3)})`,
-                  "--job-bg": `rgba(255, 255, 255, ${(
-                    0.05 -
-                    depth * 0.028
-                  ).toFixed(3)})`,
-                } as React.CSSProperties}
+                  "--job-border": withAlpha(
+                    "var(--color-line-strong)",
+                    fade(depth, FADE_FLOOR.cardBorder),
+                  ),
+                  "--job-bg": withAlpha(
+                    "var(--color-surface)",
+                    fade(depth, FADE_FLOOR.cardSurface),
+                  ),
+                } as CSSProperties}
               >
                 <h3
                   className="m-0 font-display text-[22px] font-medium tracking-[-0.02em] max-[721px]:text-[19px]"
-                  style={{ color: `rgba(242, 245, 251, ${1 - depth * 0.28})` }}
+                  style={{
+                    color: withAlpha(
+                      "var(--color-ink-brightest)",
+                      fade(depth, FADE_FLOOR.role),
+                    ),
+                  }}
                 >
                   {job.role}
                 </h3>
@@ -99,7 +135,12 @@ export function Work() {
                 <div className="mt-[6px] flex flex-wrap items-baseline gap-x-[10px] gap-y-[2px]">
                   <span
                     className="text-[16px] max-[721px]:text-[15px]"
-                    style={{ color: `rgba(139, 154, 181, ${1 - depth * 0.2})` }}
+                    style={{
+                      color: withAlpha(
+                        "var(--color-text-dim)",
+                        fade(depth, FADE_FLOOR.company),
+                      ),
+                    }}
                   >
                     {job.company}
                   </span>
@@ -114,14 +155,20 @@ export function Work() {
                       key={point}
                       className="grid grid-cols-[20px_1fr] text-[16px] leading-[1.6] max-[721px]:text-[15px]"
                       style={{
-                        color: `rgba(195, 205, 226, ${1 - depth * 0.22})`,
+                        color: withAlpha(
+                          "var(--color-text-soft)",
+                          fade(depth, FADE_FLOOR.point),
+                        ),
                       }}
                     >
                       <span
                         aria-hidden="true"
                         className="mt-[0.72em] block h-px w-[9px]"
                         style={{
-                          background: `rgba(79, 110, 168, ${1 - depth * 0.35})`,
+                          background: withAlpha(
+                            "var(--color-marker)",
+                            fade(depth, FADE_FLOOR.marker),
+                          ),
                         }}
                       />
                       <span>{point}</span>
@@ -131,7 +178,12 @@ export function Work() {
 
                 <div
                   className="mt-[16px] font-mono text-[11.5px] leading-[1.7] lowercase"
-                  style={{ color: `rgba(139, 154, 181, ${1 - depth * 0.16})` }}
+                  style={{
+                    color: withAlpha(
+                      "var(--color-text-dim)",
+                      fade(depth, FADE_FLOOR.tech),
+                    ),
+                  }}
                 >
                   {job.tech.join(" · ")}
                 </div>

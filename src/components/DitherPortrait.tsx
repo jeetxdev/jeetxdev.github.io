@@ -1,14 +1,40 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
+import { useResolvedTheme } from "@/hooks/useTheme";
+import type { ResolvedTheme } from "@/lib/theme";
 
-/** Duotone ramp, shadow → accent → highlight, matched to the site palette. */
-const RAMP = [
-  [6, 9, 18],
-  [24, 64, 92],
-  [90, 175, 205],
-  [214, 244, 253],
-] as const;
+type Duotone = {
+  /** Shadow → accent → highlight. Index 0 is always the darkest ink. */
+  ramp: readonly (readonly number[])[];
+  /**
+   * The vignette exists to sink the leafy background into the page, so it has
+   * to fade toward whichever end of the ramp the page itself sits at: the
+   * shadows on dark, the highlights on light.
+   */
+  vignetteToHighlight: boolean;
+};
+
+const DUOTONES: Record<ResolvedTheme, Duotone> = {
+  dark: {
+    ramp: [
+      [6, 9, 18],
+      [24, 64, 92],
+      [90, 175, 205],
+      [214, 244, 253],
+    ],
+    vignetteToHighlight: false,
+  },
+  light: {
+    ramp: [
+      [10, 28, 46],
+      [38, 110, 142],
+      [144, 190, 212],
+      [244, 247, 252],
+    ],
+    vignetteToHighlight: true,
+  },
+} as const;
 
 /** Ordered 4x4 Bayer matrix - regular halftone texture instead of noise. */
 const BAYER = [
@@ -64,6 +90,7 @@ function paintPass(
   sampler: HTMLCanvasElement,
   cell: number,
   phase: number | null,
+  duotone: Duotone,
 ) {
   const width = canvas.clientWidth;
   const height = canvas.clientHeight;
@@ -104,7 +131,8 @@ function paintPass(
 
   // One path per level, so a fine pass costs four fillStyle switches instead
   // of one per cell - cheap enough to repaint on every ambient frame.
-  const paths = RAMP.map(() => new Path2D());
+  const { ramp, vignetteToHighlight } = duotone;
+  const paths = ramp.map(() => new Path2D());
 
   for (let y = 0; y < rows; y += 1) {
     for (let x = 0; x < cols; x += 1) {
@@ -115,7 +143,10 @@ function paintPass(
       const dx = (x / cols - 0.5) / 0.5;
       const dy = (y / rows - VIGNETTE_CENTER_Y) / 0.66;
       const falloff = clamp01(1.12 - VIGNETTE_STRENGTH * Math.hypot(dx, dy));
-      const value = clamp01((luma - TONE_FLOOR) / TONE_SPAN) * falloff;
+      const lit = clamp01((luma - TONE_FLOOR) / TONE_SPAN);
+      const value = vignetteToHighlight
+        ? 1 - (1 - lit) * falloff
+        : lit * falloff;
 
       let threshold = (BAYER[y % 4][x % 4] + 0.5) / 16;
       if (bandY !== null) {
@@ -126,10 +157,10 @@ function paintPass(
         threshold -= Math.exp(-((delta / BAND_WIDTH) ** 2)) * BAND_LIFT + breath;
       }
 
-      const scaled = value * (RAMP.length - 1);
+      const scaled = value * (ramp.length - 1);
       const floor = Math.floor(scaled);
       const level = Math.min(
-        RAMP.length - 1,
+        ramp.length - 1,
         floor + (scaled - floor > threshold ? 1 : 0),
       );
 
@@ -138,7 +169,7 @@ function paintPass(
   }
 
   paths.forEach((path, index) => {
-    const [r, g, b] = RAMP[index];
+    const [r, g, b] = ramp[index];
     ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
     ctx.fill(path);
   });
@@ -158,7 +189,11 @@ type DitherPortraitProps = {
  */
 export function DitherPortrait({ src, alt, className }: DitherPortraitProps) {
   const reducedMotion = useReducedMotion();
+  const theme = useResolvedTheme();
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  // Held in a ref so a theme switch repaints in place rather than changing
+  // `repaint`'s identity, which would restart the decode from coarse blocks.
+  const duotoneRef = useRef(DUOTONES[theme]);
   const imageRef = useRef<HTMLImageElement>(null);
   const samplerRef = useRef<HTMLCanvasElement | null>(null);
   const cellRef = useRef(DECODE_STEPS[0]);
@@ -181,11 +216,17 @@ export function DitherPortrait({ src, alt, className }: DitherPortraitProps) {
         samplerRef.current,
         cellRef.current,
         phaseRef.current,
+        duotoneRef.current,
       );
     } catch {
       setFailed(true);
     }
   }, []);
+
+  useEffect(() => {
+    duotoneRef.current = DUOTONES[theme];
+    repaint();
+  }, [repaint, theme]);
 
   useEffect(() => {
     setCanHover(window.matchMedia("(hover: hover)").matches);
@@ -299,7 +340,7 @@ export function DitherPortrait({ src, alt, className }: DitherPortraitProps) {
       onBlur={() => setDeveloped(false)}
       onClick={() => !canHover && setDeveloped((prev) => !prev)}
       className={cn(
-        "group relative block cursor-pointer overflow-hidden rounded-2xl border border-white/[0.12] bg-white/[0.03] shadow-[0_30px_60px_-34px_rgba(0,0,0,0.95)] transition-colors duration-300 hover:border-accent/[0.45]",
+        "group relative block cursor-pointer overflow-hidden rounded-2xl border border-line-strong bg-surface shadow-[0_30px_60px_-34px_var(--shadow-color-deep)] transition-colors duration-300 hover:border-accent/[0.45]",
         className,
       )}
     >
@@ -336,7 +377,7 @@ export function DitherPortrait({ src, alt, className }: DitherPortraitProps) {
       <span
         aria-hidden="true"
         className={cn(
-          "pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent pt-6 pb-2 text-center font-mono text-[10px] tracking-[0.06em] text-text-muted transition-opacity duration-300",
+          "portrait-scrim pointer-events-none absolute inset-x-0 bottom-0 pt-6 pb-2 text-center font-mono text-[10px] tracking-[0.06em] text-text-muted transition-opacity duration-300",
           showPhoto ? "opacity-0" : "opacity-100",
         )}
       >

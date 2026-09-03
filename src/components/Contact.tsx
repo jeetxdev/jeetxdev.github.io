@@ -28,7 +28,7 @@ export function Contact() {
               {INTERESTS.map((interest) => (
                 <span
                   key={interest}
-                  className="rounded-full border border-white/[0.12] px-3 py-[6px]"
+                  className="rounded-full border border-line-strong px-3 py-[6px]"
                 >
                   {interest}
                 </span>
