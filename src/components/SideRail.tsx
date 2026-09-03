@@ -53,15 +53,15 @@ export function SideRail() {
               className={cn(
                 "h-[7px] w-[7px] rounded-full transition-all duration-300",
                 isActive
-                  ? "scale-125 bg-accent shadow-[0_0_12px_rgba(122,214,238,0.85)]"
-                  : "bg-white/25 group-hover:bg-white/60",
+                  ? "scale-125 bg-accent shadow-[0_0_12px_var(--color-accent)]"
+                  : "bg-text-faintest group-hover:bg-text-dim",
               )}
             />
           </a>
         );
       })}
 
-      <span aria-hidden="true" className="my-[10px] mr-[3px] h-8 w-px bg-white/[0.12]" />
+      <span aria-hidden="true" className="my-[10px] mr-[3px] h-8 w-px bg-line-strong" />
 
       <a
         href={CONTACT_EMAIL}

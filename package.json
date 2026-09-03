@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "typeCheck": "tsc --noEmit"
   },
   "dependencies": {
     "@fontsource/jetbrains-mono": "^5.2.5",

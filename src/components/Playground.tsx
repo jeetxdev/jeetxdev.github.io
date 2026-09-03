@@ -204,7 +204,7 @@ export function Playground() {
       >
         <div
           data-routes
-          className="flex flex-wrap items-center gap-2 border-b border-white/[0.08] bg-white/[0.025] px-4 py-[14px]"
+          className="flex flex-wrap items-center gap-2 border-b border-line bg-surface px-4 py-[14px]"
         >
           <span className="rounded-md bg-success/10 px-2 py-1 font-mono text-[12px] text-success">
             GET
@@ -218,8 +218,8 @@ export function Playground() {
               className={cn(
                 "cursor-pointer rounded-lg px-[11px] py-[6px] font-mono text-[12.5px] transition-colors duration-200 max-[421px]:text-[11.5px]",
                 r === route
-                  ? "border border-accent/50 bg-accent/[0.14] text-[#d6f4fd]"
-                  : "border border-white/10 bg-transparent text-text-dim hover:border-white/[0.24] hover:text-ink",
+                  ? "border border-accent/50 bg-accent/[0.14] text-accent"
+                  : "border border-line bg-transparent text-text-dim hover:border-line-strong hover:text-ink",
               )}
             >
               {r}

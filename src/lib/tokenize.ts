@@ -20,9 +20,12 @@ export type Token = { text: string; color: string };
  */
 export function tokenizeLine(line: string): Token[] {
   const tokens: Token[] = [];
-  let match: RegExpExecArray | null;
   TOKEN_RE.lastIndex = 0;
-  while ((match = TOKEN_RE.exec(line))) {
+  for (
+    let match = TOKEN_RE.exec(line);
+    match !== null;
+    match = TOKEN_RE.exec(line)
+  ) {
     const color = match[1]
       ? TOKEN_COLORS.key
       : match[2]

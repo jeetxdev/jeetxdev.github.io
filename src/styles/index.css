@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Dark is the default palette; every value below is overridden wholesale by
+   the [data-theme="light"] block further down. Components and utilities only
+   ever reference these names, never a literal colour. */
 @theme {
   --font-display: "Space Grotesk", sans-serif;
   --font-body: "Public Sans", system-ui, sans-serif;
@@ -29,10 +32,103 @@
   --color-code-bool: #c3a6ff;
   --color-code-punct: #5f7295;
 
+  /* Surfaces and hairlines. Translucent so the ambient glows still read
+     through the glass ladder; components mix these down with `transparent`
+     rather than reaching for raw white or black. */
+  --color-line: rgba(255, 255, 255, 0.09);
+  --color-line-strong: rgba(255, 255, 255, 0.14);
+  --color-surface: rgba(255, 255, 255, 0.035);
+  --color-surface-hover: rgba(255, 255, 255, 0.055);
+  --color-grid-line: rgba(255, 255, 255, 0.028);
+
+  /* Opaque backdrops for the two panels that cannot afford a live blur. */
+  --color-header-bg: rgba(12, 17, 31, 0.6);
+  --color-panel-bg: rgba(10, 15, 28, 0.72);
+  /* Fully opaque: menus overlay page content, not just the ambient glows. */
+  --color-menu-bg: #0e1421;
+
+  --color-hero-from: #ffffff;
+  --color-hero-to: #9fb2d6;
+
   /* Narrowest viewport where the 1060px column still leaves a gutter wide
      enough for the side rail plus its labels. Below this the header stays
      sticky and the rail stays hidden. */
   --breakpoint-rail: 1240px;
+}
+
+/* Raw "r, g, b" triplets, not --color-* tokens, because these are consumed as
+   gradient stops. A stop written with color-mix() resolves to color(srgb ...),
+   and Chrome then interpolates the gradient without premultiplying, turning
+   these soft glows into hard-edged discs. rgba() keeps the falloff. */
+:root {
+  --glow-1-rgb: 58, 110, 235;
+  --glow-2-rgb: 122, 214, 238;
+  --glow-3-rgb: 139, 123, 255;
+  --accent-rgb: 122, 214, 238;
+  --accent-2-rgb: 139, 123, 255;
+  --surface-rgb: 255, 255, 255;
+  --scrim-rgb: 6, 9, 18;
+
+  --glow-opacity: 1;
+  --shadow-color: rgba(0, 0, 0, 0.9);
+  --shadow-color-deep: rgba(0, 0, 0, 1);
+  --selection-strength: 28%;
+  color-scheme: dark;
+}
+
+/* Light theme. The ink/paper roles swap, and the accents darken because a
+   pale cyan that reads as bright on near-black disappears on near-white. */
+[data-theme="light"] {
+  --color-bg: #f4f7fc;
+  --color-ink: #16203a;
+  --color-ink-bright: #0d1528;
+  --color-ink-brightest: #070d1c;
+  --color-text-soft: #2e3a55;
+  --color-text-muted: #435071;
+  --color-text-dim: #556282;
+  --color-text-dimmer: #64708f;
+  --color-text-faint: #737f9c;
+  --color-text-faintest: #838ea9;
+
+  --color-accent: #0e7fa6;
+  --color-accent-strong: #0a63a3;
+  --color-accent-2: #5a45d6;
+  --color-on-accent: #f4fbff;
+  --color-success: #0d8f56;
+  --color-marker: #8296bb;
+
+  --color-code-key: #0b6f96;
+  --color-code-string: #16794b;
+  --color-code-number: #96570f;
+  --color-code-bool: #6236c9;
+  --color-code-punct: #7b88a4;
+
+  --color-line: rgba(13, 21, 40, 0.12);
+  --color-line-strong: rgba(13, 21, 40, 0.2);
+  --color-surface: rgba(13, 21, 40, 0.035);
+  --color-surface-hover: rgba(13, 21, 40, 0.06);
+  --color-grid-line: rgba(13, 21, 40, 0.045);
+
+  --color-header-bg: rgba(255, 255, 255, 0.72);
+  --color-panel-bg: rgba(255, 255, 255, 0.86);
+  --color-menu-bg: #ffffff;
+
+  --color-hero-from: #0b1224;
+  --color-hero-to: #4a5e86;
+
+  --glow-1-rgb: 111, 155, 255;
+  --glow-2-rgb: 82, 200, 232;
+  --glow-3-rgb: 157, 143, 255;
+  --accent-rgb: 14, 127, 166;
+  --accent-2-rgb: 90, 69, 214;
+  --surface-rgb: 13, 21, 40;
+  --scrim-rgb: 244, 247, 252;
+
+  --glow-opacity: 0.4;
+  --shadow-color: rgba(23, 33, 58, 0.18);
+  --shadow-color-deep: rgba(23, 33, 58, 0.26);
+  --selection-strength: 22%;
+  color-scheme: light;
 }
 
 @layer base {
@@ -47,6 +143,9 @@
     font-family: var(--font-body);
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
+    transition:
+      background-color 0.3s ease,
+      color 0.3s ease;
   }
 
   a {
@@ -55,7 +154,11 @@
   }
 
   ::selection {
-    background: rgba(122, 214, 238, 0.28);
+    background: color-mix(
+      in srgb,
+      var(--color-accent) var(--selection-strength),
+      transparent
+    );
   }
 
   :focus-visible {
@@ -84,6 +187,7 @@
   .bg-glow {
     position: absolute;
     border-radius: 50%;
+    opacity: var(--glow-opacity);
     animation: float1 var(--glow-duration) ease-in-out infinite
       var(--glow-direction, normal);
   }
@@ -96,9 +200,9 @@
     height: 640px;
     background: radial-gradient(
       circle at 40% 40%,
-      rgba(58, 110, 235, 0.42),
-      rgba(58, 110, 235, 0.2) 38%,
-      rgba(58, 110, 235, 0) 72%
+      rgba(var(--glow-1-rgb), 0.42),
+      rgba(var(--glow-1-rgb), 0.2) 38%,
+      rgba(var(--glow-1-rgb), 0) 72%
     );
   }
 
@@ -111,9 +215,9 @@
     height: 700px;
     background: radial-gradient(
       circle at 55% 45%,
-      rgba(122, 214, 238, 0.26),
-      rgba(122, 214, 238, 0.12) 38%,
-      rgba(122, 214, 238, 0) 70%
+      rgba(var(--glow-2-rgb), 0.26),
+      rgba(var(--glow-2-rgb), 0.12) 38%,
+      rgba(var(--glow-2-rgb), 0) 70%
     );
   }
 
@@ -125,9 +229,9 @@
     height: 720px;
     background: radial-gradient(
       circle at 50% 50%,
-      rgba(139, 123, 255, 0.24),
-      rgba(139, 123, 255, 0.11) 40%,
-      rgba(139, 123, 255, 0) 74%
+      rgba(var(--glow-3-rgb), 0.24),
+      rgba(var(--glow-3-rgb), 0.11) 40%,
+      rgba(var(--glow-3-rgb), 0) 74%
     );
   }
 
@@ -135,8 +239,8 @@
     position: absolute;
     inset: 0;
     background-image:
-      linear-gradient(rgba(255, 255, 255, 0.028) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255, 255, 255, 0.028) 1px, transparent 1px);
+      linear-gradient(var(--color-grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--color-grid-line) 1px, transparent 1px);
     background-size: 72px 72px;
     -webkit-mask-image: radial-gradient(
       120% 80% at 50% 0%,
@@ -162,11 +266,11 @@
 
   /* Glass elevation ladder */
   .glass-header {
-    border: 1px solid rgba(255, 255, 255, 0.09);
-    background: rgba(12, 17, 31, 0.6);
+    border: 1px solid var(--color-line);
+    background: var(--color-header-bg);
     backdrop-filter: blur(20px) saturate(140%);
     -webkit-backdrop-filter: blur(20px) saturate(140%);
-    box-shadow: 0 20px 40px -34px rgba(0, 0, 0, 0.9);
+    box-shadow: 0 20px 40px -34px var(--shadow-color);
   }
 
   /* No backdrop-filter here, deliberately. This panel streams text, and a live
@@ -174,14 +278,20 @@
      re-rasterises the whole panel per character. The backdrop is only soft
      radial gradients, so an opaque tint reads almost identically. */
   .glass-panel {
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    background: rgba(10, 15, 28, 0.72);
-    box-shadow: 0 40px 80px -60px rgba(0, 0, 0, 1);
+    border: 1px solid var(--color-line);
+    background: var(--color-panel-bg);
+    box-shadow: 0 40px 80px -60px var(--shadow-color-deep);
+  }
+
+  .menu-surface {
+    border: 1px solid var(--color-line);
+    background: var(--color-menu-bg);
+    box-shadow: 0 24px 48px -28px var(--shadow-color-deep);
   }
 
   .glass-card {
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    background: rgba(255, 255, 255, 0.035);
+    border: 1px solid var(--color-line);
+    background: var(--color-surface);
     backdrop-filter: blur(18px) saturate(130%);
     -webkit-backdrop-filter: blur(18px) saturate(130%);
     transition:
@@ -192,8 +302,8 @@
 
   .glass-card:hover {
     transform: translateY(-3px);
-    border-color: rgba(122, 214, 238, 0.34);
-    background: rgba(255, 255, 255, 0.055);
+    border-color: color-mix(in srgb, var(--color-accent) 34%, transparent);
+    background: var(--color-surface-hover);
   }
 
   /* Work timeline (§work) - one spine, cards that recede with age */
@@ -201,8 +311,8 @@
     background: linear-gradient(
       180deg,
       transparent 0,
-      rgba(255, 255, 255, 0.12) 18px,
-      rgba(255, 255, 255, 0.12) calc(100% - 80px),
+      var(--color-line-strong) 18px,
+      var(--color-line-strong) calc(100% - 80px),
       transparent 100%
     );
   }
@@ -210,14 +320,15 @@
   .job-node {
     position: relative;
     border-radius: 50%;
-    border: 1px solid rgba(122, 214, 238, 0.5);
+    border: 1px solid color-mix(in srgb, var(--color-accent) 50%, transparent);
     background: var(--color-bg);
   }
 
   .job-node-live {
     border-color: var(--color-accent);
     background: var(--color-accent);
-    box-shadow: 0 0 0 4px rgba(122, 214, 238, 0.09);
+    box-shadow: 0 0 0 4px
+      color-mix(in srgb, var(--color-accent) 9%, transparent);
   }
 
   .job-node-live::after {
@@ -230,8 +341,8 @@
   }
 
   .job-card {
-    border: 1px solid var(--job-border, rgba(255, 255, 255, 0.08));
-    background: var(--job-bg, rgba(255, 255, 255, 0.035));
+    border: 1px solid var(--job-border, var(--color-line-strong));
+    background: var(--job-bg, var(--color-surface));
     backdrop-filter: blur(18px) saturate(130%);
     -webkit-backdrop-filter: blur(18px) saturate(130%);
     transition:
@@ -242,31 +353,31 @@
 
   .job-card:hover {
     transform: translateY(-2px);
-    border-color: rgba(122, 214, 238, 0.34);
-    background: rgba(255, 255, 255, 0.055);
+    border-color: color-mix(in srgb, var(--color-accent) 34%, transparent);
+    background: var(--color-surface-hover);
   }
 
   .glass-pill {
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    background: rgba(255, 255, 255, 0.045);
+    border: 1px solid var(--color-line);
+    background: var(--color-surface);
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
   }
 
   .glass-stat {
-    border: 1px solid rgba(255, 255, 255, 0.09);
-    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--color-line);
+    background: var(--color-surface);
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
   }
 
   .glass-contact {
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--color-line);
     background: linear-gradient(
       150deg,
-      rgba(122, 214, 238, 0.1),
-      rgba(139, 123, 255, 0.08) 60%,
-      rgba(255, 255, 255, 0.03)
+      rgba(var(--accent-rgb), 0.1),
+      rgba(var(--accent-2-rgb), 0.08) 60%,
+      rgba(var(--surface-rgb), 0.03)
     );
     backdrop-filter: blur(24px) saturate(140%);
     -webkit-backdrop-filter: blur(24px) saturate(140%);
@@ -274,7 +385,11 @@
 
   /* Gradient text / buttons */
   .text-gradient-hero {
-    background: linear-gradient(170deg, #ffffff 18%, #9fb2d6 92%);
+    background: linear-gradient(
+      170deg,
+      var(--color-hero-from) 18%,
+      var(--color-hero-to) 92%
+    );
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -283,8 +398,8 @@
   .btn-gradient-accent {
     background: linear-gradient(
       180deg,
-      rgba(122, 214, 238, 0.95),
-      rgba(88, 178, 236, 0.95)
+      var(--color-accent),
+      var(--color-accent-strong)
     );
     color: var(--color-on-accent);
     transition:
@@ -300,11 +415,12 @@
   .cta-gradient-accent {
     background: linear-gradient(
       180deg,
-      rgba(122, 214, 238, 0.96),
-      rgba(88, 178, 236, 0.96)
+      var(--color-accent),
+      var(--color-accent-strong)
     );
     color: var(--color-on-accent);
-    box-shadow: 0 24px 50px -30px rgba(122, 214, 238, 0.7);
+    box-shadow: 0 24px 50px -30px
+      color-mix(in srgb, var(--color-accent) 70%, transparent);
     transition:
       transform 0.25s cubic-bezier(0.2, 0.7, 0.2, 1),
       filter 0.25s ease;
@@ -313,6 +429,14 @@
   .cta-gradient-accent:hover {
     transform: translateY(-3px);
     filter: brightness(1.08);
+  }
+
+  .portrait-scrim {
+    background: linear-gradient(
+      0deg,
+      rgba(var(--scrim-rgb), 0.78),
+      rgba(var(--scrim-rgb), 0)
+    );
   }
 
   .caret {
