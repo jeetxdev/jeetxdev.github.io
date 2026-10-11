@@ -65,20 +65,17 @@ export function Work() {
                   >
                     <span
                       aria-hidden="true"
-                      className={cn(
-                        "inline-block w-3 shrink-0 text-muted transition-transform duration-150 group-hover:text-accent motion-reduce:transition-none",
-                        isOpen && "rotate-90",
-                      )}
+                      className="w-7 shrink-0 text-[13px] font-normal text-muted group-hover:text-accent"
                     >
-                      ▸
+                      {isOpen ? "[-]" : "[+]"}
                     </span>
                     {job.company}
                   </button>
                 </h3>
-                <p className="pl-5 font-mono text-[13px] text-muted">
+                <p className="pl-9 font-mono text-[13px] text-muted">
                   {job.role} · {job.place}
                 </p>
-                <div id={detailsId} hidden={!isOpen} className="pl-5">
+                <div id={detailsId} hidden={!isOpen} className="pl-9">
                   <ul className="mt-4 max-w-measure list-['-_'] space-y-2 pl-4 text-[1.05rem] leading-relaxed">
                     {job.points.map((point) => (
                       <li key={point}>{point}</li>
