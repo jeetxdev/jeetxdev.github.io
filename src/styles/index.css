@@ -120,21 +120,21 @@ button {
   text-decoration-thickness: 2px;
 }
 
-/* The terminal stays dark in both themes, so it re-scopes the palette.
+/* Day gives the terminal a Solarized Light base with the site's green accent.
+   Text colours are darkened from Solarized to pass WCAG AA on both surfaces.
    Hard offset shadow reads as a printed window, not a floating card. */
 [data-theme="light"] .term-window {
-  --paper: #22201c;
-  --surface: #2c2924;
-  --ink: #ece6da;
-  --muted: #a39b8c;
-  --accent: #5cc995;
-  --on-accent: #161410;
-  --danger: #f08a5d;
-  --rule: #3d3832;
-  border-color: #22201c;
-  box-shadow: 8px 8px 0 #0f7a4a;
+  --paper: #fdf6e3;
+  --surface: #eee8d5;
+  --ink: #073642;
+  --muted: #4e6168;
+  --accent: #0f7a4a;
+  --on-accent: #fdf6e3;
+  --danger: #b03a10;
+  --rule: #ddd6c1;
+  border-color: var(--ink);
+  box-shadow: 8px 8px 0 var(--accent);
   color: var(--ink);
-  color-scheme: dark;
 }
 
 [data-theme="dark"] .term-window {
