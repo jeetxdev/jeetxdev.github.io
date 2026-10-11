@@ -195,8 +195,11 @@ export function Terminal({ active, setTheme }: TerminalProps) {
 
   const suggestion = suggestFor(input, history.current);
 
-  // Like zsh: the first press lists the matches, each further press fills in the next one.
-  const complete = (backward: boolean) => {
+  /**
+   * Like zsh, Tab's first press lists the matches and each further press fills in the next one.
+   * `fillFirst` skips the list and fills in the first match straight away.
+   */
+  const complete = (backward: boolean, fillFirst = false) => {
     const cycle = tabCycle.current;
     if (cycle) {
       const step = backward ? -1 : 1;
@@ -208,6 +211,9 @@ export function Terminal({ active, setTheme }: TerminalProps) {
     const matches =
       input.trim() === "" ? COMMAND_NAMES : COMPLETIONS.filter((c) => c.startsWith(input));
     if (matches.length === 1) {
+      setInput(matches[0]);
+    } else if (matches.length > 1 && fillFirst) {
+      tabCycle.current = { matches, index: 0 };
       setInput(matches[0]);
     } else if (matches.length > 1) {
       const prefix = commonPrefix(matches);
@@ -232,6 +238,7 @@ export function Terminal({ active, setTheme }: TerminalProps) {
     const caretAtEnd = field.selectionStart === input.length && field.selectionEnd === input.length;
     const isArrow = event.key === "ArrowUp" || event.key === "ArrowDown";
     // With no history yet, the arrows would do nothing, so they step through commands like Tab.
+    // Their first press fills in the first command, without printing the list.
     const arrowCompletes = isArrow && past.length === 0;
     if (event.key !== "Tab" && !arrowCompletes && !MODIFIER_KEYS.has(event.key)) {
       tabCycle.current = null;
@@ -242,7 +249,7 @@ export function Terminal({ active, setTheme }: TerminalProps) {
       setInput(suggestion);
     } else if (arrowCompletes) {
       event.preventDefault();
-      complete(event.key === "ArrowUp");
+      complete(event.key === "ArrowUp", true);
     } else if (event.key === "ArrowUp") {
       event.preventDefault();
       historyIndex.current = Math.max(0, historyIndex.current - 1);
