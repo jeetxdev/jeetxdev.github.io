@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#060912" />
+    <meta name="theme-color" content="#faf8f5" />
     <meta
       name="description"
       content="Jeet Mukherjee - senior full-stack developer in Bangalore, India. Eleven years shipping React/Node platforms for fintech and developer tooling."
@@ -17,15 +17,15 @@
       content="Eleven years of making the whole stack behave. React, Node, and API platforms for fintech and banking."
     />
     <meta property="og:type" content="website" />
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon.svg?v=2" type="image/svg+xml" />
     <title>Jeet Mukherjee - Senior Full-Stack Developer</title>
 
-    <!-- Resolves the theme before first paint so a stored light choice never
-         flashes the dark palette. The storage key and attribute are duplicated
+    <!-- Resolves the theme before first paint so a stored choice never
+         flashes the wrong palette. The storage key and attribute are duplicated
          from src/lib/theme.ts because this has to run ahead of the bundle. -->
     <script>
       (function () {
-        var theme = "dark";
+        var theme = "light";
         try {
           var stored = localStorage.getItem("jeetxdev-theme");
           theme =
@@ -35,12 +35,12 @@
                 ? "dark"
                 : "light";
         } catch {
-          /* Blocked storage: fall through to the dark default. */
+          /* Blocked storage: keep the light default. */
         }
         document.documentElement.setAttribute("data-theme", theme);
         document
           .querySelector('meta[name="theme-color"]')
-          ?.setAttribute("content", theme === "light" ? "#f4f7fc" : "#060912");
+          ?.setAttribute("content", theme === "light" ? "#faf8f5" : "#161410");
       })();
     </script>
   </head>
