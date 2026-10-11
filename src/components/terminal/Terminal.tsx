@@ -38,6 +38,19 @@ function commonPrefix(words: string[]): string {
   });
 }
 
+/**
+ * zsh-autosuggestions style: the newest matching history entry wins, then the
+ * known commands. Only a strictly longer match is worth showing.
+ */
+function suggestFor(input: string, past: string[]): string {
+  if (input.trim() === "") return "";
+  const extendsInput = (candidate: string) => candidate.length > input.length && candidate.startsWith(input);
+  for (let i = past.length - 1; i >= 0; i--) {
+    if (extendsInput(past[i])) return past[i];
+  }
+  return COMPLETIONS.find(extendsInput) ?? "";
+}
+
 function lastLoginLine(): string {
   const now = new Date();
   return `Last login: ${now.toDateString()} ${now.toTimeString().slice(0, 5)} on ttys001`;
@@ -170,10 +183,17 @@ export function Terminal({ active, setTheme }: TerminalProps) {
     submit(command);
   };
 
+  const suggestion = suggestFor(input, history.current);
+
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     cancelIntro();
     const past = history.current;
-    if (event.key === "ArrowUp" && past.length) {
+    const field = event.currentTarget;
+    const caretAtEnd = field.selectionStart === input.length && field.selectionEnd === input.length;
+    if ((event.key === "ArrowRight" || event.key === "End") && suggestion && caretAtEnd) {
+      event.preventDefault();
+      setInput(suggestion);
+    } else if (event.key === "ArrowUp" && past.length) {
       event.preventDefault();
       historyIndex.current = Math.max(0, historyIndex.current - 1);
       setInput(past[historyIndex.current]);
@@ -262,18 +282,29 @@ export function Terminal({ active, setTheme }: TerminalProps) {
                 <span className="text-accent">{PROMPT_USER}</span>:~$
                 <span className="sr-only"> Terminal command</span>
               </label>
-              <input
-                id="term-input"
-                ref={inputRef}
-                className="term-input min-w-0 flex-1 text-ink"
-                type="text"
-                spellCheck={false}
-                autoCapitalize="off"
-                aria-describedby="term-help"
-                value={input}
-                onChange={(event) => setInput(event.target.value)}
-                onKeyDown={onKeyDown}
-              />
+              {/* The ghost repeats the typed text invisibly, so the suggested rest
+                  starts exactly where the typed text ends. */}
+              <div className="relative min-w-0 flex-1">
+                <div
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-0 overflow-hidden whitespace-pre"
+                >
+                  <span className="invisible">{input}</span>
+                  <span className="text-muted opacity-60">{suggestion.slice(input.length)}</span>
+                </div>
+                <input
+                  id="term-input"
+                  ref={inputRef}
+                  className="term-input relative w-full text-ink"
+                  type="text"
+                  spellCheck={false}
+                  autoCapitalize="off"
+                  aria-describedby="term-help"
+                  value={input}
+                  onChange={(event) => setInput(event.target.value)}
+                  onKeyDown={onKeyDown}
+                />
+              </div>
             </form>
           </div>
 

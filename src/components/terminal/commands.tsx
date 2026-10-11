@@ -82,7 +82,7 @@ function showHelp(): CommandResult {
         </div>,
       ])}
     </div>,
-    muted("Tab completes. ↑ and ↓ walk your history."),
+    muted("Tab completes. → accepts the faded suggestion. ↑ and ↓ walk your history."),
   ];
 }
 
