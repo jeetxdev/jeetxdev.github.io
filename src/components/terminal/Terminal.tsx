@@ -16,7 +16,7 @@ import { Prompt, RUN_ATTRIBUTE, RunLink } from "./TerminalBits";
 
 const TYPE_DELAY_MS = 70;
 const INTRO_DELAY_MS = 700;
-const INTRO_COMMAND = "whoami";
+const INTRO_COMMAND = "fastfetch";
 /** Space left above a command's prompt line when its output is scrolled into view. */
 const PROMPT_SCROLL_OFFSET_PX = 8;
 /** Time to print one line of output, so long output streams in like a real terminal. */
@@ -27,7 +27,7 @@ const FALLBACK_LINE_HEIGHT_PX = 24;
 /** Matches a mouse or trackpad. On touch screens, focus would open the keyboard over the terminal. */
 const FINE_POINTER_QUERY = "(pointer: fine)";
 
-const CHIP_COMMANDS = ["whoami", "ls work/", "cat stack.json", "contact", "resume", "help"];
+const CHIP_COMMANDS = ["fastfetch", "whoami", "ls work/", "cat stack.json", "contact", "resume", "help"];
 const CHIP_CLASS = "border border-rule bg-paper px-2.5 py-1 hover:border-accent hover:text-accent";
 
 type Entry = {
@@ -233,7 +233,7 @@ export function Terminal({ active, setTheme }: TerminalProps) {
     inputRef.current?.focus({ preventScroll: true });
   }, []);
 
-  // Types `whoami` once on arrival, unless the visitor prefers no motion.
+  // Types `fastfetch` once on arrival, unless the visitor prefers no motion.
   useEffect(() => {
     if (prefersReducedMotion()) return;
     let typed = 0;

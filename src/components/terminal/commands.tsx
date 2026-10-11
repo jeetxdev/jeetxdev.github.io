@@ -9,9 +9,11 @@ import {
   LINKEDIN_LABEL,
   LINKEDIN_URL,
   NAME,
+  PROMPT_USER,
   RESUME_LINK_PROPS,
   STACK,
 } from "@/data/profile";
+import { PORTRAIT_ASCII } from "@/data/portraitAscii";
 import type { Theme } from "@/lib/theme";
 import { Bio } from "../Bio";
 import { RunLink, TermLink } from "./TerminalBits";
@@ -36,8 +38,16 @@ const PROSE_CLASS = "max-w-[60ch] font-sans text-[16px] leading-relaxed";
 const NEXT_ROW_CLASS = "flex flex-wrap gap-x-4 pt-2 text-muted";
 const THEME_NAMES: Record<string, Theme> = { day: "light", night: "dark" };
 
+/** The stack line has room for a few names, so it shows the first ones from each layer. */
+const FETCH_STACK = STACK.slice(0, 3).flatMap(({ tools }) => tools.slice(0, 2));
+/** fastfetch ends with the terminal palette. These are the terminal's own colours. */
+const PALETTE_CLASSES = ["text-ink", "text-muted", "text-accent", "text-danger", "text-rule", "text-surface"];
+/** Typed for real by some visitors, so it runs fastfetch as the real tool's ancestor. */
+const ALIASES: Record<string, string> = { neofetch: "fastfetch" };
+
 const COMMANDS: Record<string, Command> = {
   help: { describe: "list commands", run: showHelp },
+  fastfetch: { describe: "system info, about me", run: showFetch },
   whoami: { describe: "who is this", run: showWhoami },
   ls: { describe: "list files", example: "ls work/", run: listFiles },
   cat: { describe: "print a file, e.g. cat stack.json", example: "cat stack.json", run: catFile },
@@ -52,6 +62,7 @@ export const COMMAND_NAMES = Object.keys(COMMANDS);
 
 export const COMPLETIONS = [
   "help",
+  "fastfetch",
   "whoami",
   "ls",
   "ls work/",
@@ -101,6 +112,61 @@ function profile(): ReactNode {
       </div>
     </div>
   );
+}
+
+function fetchRow(label: string, value: ReactNode): ReactNode {
+  return (
+    <div key={label} className="grid grid-cols-[5.5rem_1fr]">
+      <span className="font-bold text-accent">{label}</span>
+      <span>{value}</span>
+    </div>
+  );
+}
+
+function showFetch(): CommandResult {
+  return [
+    <div className="flex gap-8 pt-1">
+      <pre
+        aria-hidden="true"
+        className="hidden shrink-0 text-[9px] leading-[1.2] text-accent sm:block"
+      >
+        {PORTRAIT_ASCII}
+      </pre>
+      <div className="min-w-0">
+        <div className="font-bold">
+          <span className="text-accent">{PROMPT_USER.split("@")[0]}</span>@
+          <span className="text-accent">{PROMPT_USER.split("@")[1]}</span>
+        </div>
+        <div aria-hidden="true" className="text-muted">
+          {"-".repeat(PROMPT_USER.length)}
+        </div>
+        {fetchRow("Name", NAME)}
+        {fetchRow("Role", "Senior full-stack developer")}
+        {fetchRow("Uptime", "11 yrs · no gaps")}
+        {fetchRow("Host", JOBS[0].company)}
+        {fetchRow("Domain", "fintech, banking, developer platforms")}
+        {fetchRow("Stack", FETCH_STACK.join(", "))}
+        {fetchRow("Editor", FAVOURITE_TOOL)}
+        {fetchRow(
+          "Status",
+          <>
+            <span className="text-accent">●</span> {AVAILABILITY}
+          </>,
+        )}
+        <div aria-hidden="true" className="pt-3 tracking-[-0.1em]">
+          {PALETTE_CLASSES.map((colour) => (
+            <span key={colour} className={colour}>
+              ███
+            </span>
+          ))}
+        </div>
+      </div>
+    </div>,
+    <div className={NEXT_ROW_CLASS}>
+      more: <RunLink command="cat about.txt" /> <RunLink command="ls work/" />{" "}
+      <RunLink command="contact" />
+    </div>,
+  ];
 }
 
 function showWhoami(): CommandResult {
@@ -254,7 +320,8 @@ function setTheme(args: string[], context: CommandContext): CommandResult {
 export function runCommand(command: string, context: CommandContext): CommandResult {
   if (command === "") return [];
   const parts = command.split(/\s+/);
-  const name = parts[0].toLowerCase();
+  const typed = parts[0].toLowerCase();
+  const name = ALIASES[typed] ?? typed;
   if (name === "sudo") {
     return [error("jeet is not in the sudoers file. This incident will be reported.")];
   }
