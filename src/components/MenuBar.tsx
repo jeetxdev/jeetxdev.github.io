@@ -18,17 +18,6 @@ export function MenuBar({ view, theme, onSwitchView, onToggleTheme }: MenuBarPro
         className="flex h-8 items-center gap-2 px-3 font-mono text-[12px] sm:gap-4 sm:px-5"
       >
         <span className="pr-1 font-bold">jeet</span>
-        {/* Each view offers only the way out to the other one. */}
-        {view === "terminal" ? (
-          <button type="button" className="view-cta" onClick={() => onSwitchView("page")}>
-            <span className="sm:hidden">Regular page →</span>
-            <span className="hidden sm:inline">View as a regular page →</span>
-          </button>
-        ) : (
-          <button type="button" className="view-cta" onClick={() => onSwitchView("terminal")}>
-            ← Back to terminal
-          </button>
-        )}
         <button
           type="button"
           className="menu-item"
@@ -44,6 +33,18 @@ export function MenuBar({ view, theme, onSwitchView, onToggleTheme }: MenuBarPro
         <a className="menu-item" href={RESUME_URL}>
           Résumé
         </a>
+        {/* Each view offers only the way out to the other one. It sits last
+            because its label changes width, and nothing clickable follows it. */}
+        {view === "terminal" ? (
+          <button type="button" className="view-cta" onClick={() => onSwitchView("page")}>
+            <span className="sm:hidden">Regular page →</span>
+            <span className="hidden sm:inline">View as a regular page →</span>
+          </button>
+        ) : (
+          <button type="button" className="view-cta" onClick={() => onSwitchView("terminal")}>
+            ← Back to terminal
+          </button>
+        )}
         <Clock />
       </nav>
     </header>
