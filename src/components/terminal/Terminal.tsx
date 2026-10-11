@@ -24,6 +24,8 @@ const STREAM_LINE_MS = 22;
 /** Pause between two output blocks. */
 const STREAM_GAP_MS = 30;
 const FALLBACK_LINE_HEIGHT_PX = 24;
+/** Matches a mouse or trackpad. On touch screens, focus would open the keyboard over the terminal. */
+const FINE_POINTER_QUERY = "(pointer: fine)";
 
 const CHIP_COMMANDS = ["whoami", "ls work/", "cat stack.json", "contact", "resume", "help"];
 const CHIP_CLASS = "border border-rule bg-paper px-2.5 py-1 hover:border-accent hover:text-accent";
@@ -224,6 +226,12 @@ export function Terminal({ active, setTheme }: TerminalProps) {
     historyIndex.current = history.current.length;
     execute(command);
   };
+
+  // Desktop visitors can type at once. Keyboard users leave with Esc, then Tab, as the help text says.
+  useEffect(() => {
+    if (!wasActive.current || !window.matchMedia(FINE_POINTER_QUERY).matches) return;
+    inputRef.current?.focus({ preventScroll: true });
+  }, []);
 
   // Types `whoami` once on arrival, unless the visitor prefers no motion.
   useEffect(() => {
