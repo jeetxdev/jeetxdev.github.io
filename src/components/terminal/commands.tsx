@@ -27,12 +27,7 @@ export type CommandContext = {
   setTheme: (theme: Theme) => void;
 };
 
-type Command = {
-  describe: string;
-  /** What `help` runs when its name is clicked, when the bare name needs an argument. */
-  example?: string;
-  run: (args: string[], context: CommandContext) => CommandResult;
-};
+type Command = (args: string[], context: CommandContext) => CommandResult;
 
 const PROSE_CLASS = "max-w-[60ch] font-sans text-[16px] leading-relaxed";
 const NEXT_ROW_CLASS = "flex flex-wrap gap-x-4 pt-2 text-muted";
@@ -46,16 +41,31 @@ const PALETTE_CLASSES = ["text-ink", "text-muted", "text-accent", "text-danger",
 const ALIASES: Record<string, string> = { neofetch: "fastfetch" };
 
 const COMMANDS: Record<string, Command> = {
-  help: { describe: "list commands", run: showHelp },
-  fastfetch: { describe: "system info, about me", run: showFetch },
-  whoami: { describe: "who is this", run: showWhoami },
-  ls: { describe: "list files", example: "ls work/", run: listFiles },
-  cat: { describe: "print a file, e.g. cat stack.json", example: "cat stack.json", run: catFile },
-  contact: { describe: "email and links", run: showContact },
-  resume: { describe: "download resume.pdf", run: showResume },
-  theme: { describe: "theme day | theme night", example: "theme night", run: setTheme },
-  clear: { describe: "clear the screen", run: () => CLEAR },
+  help: showHelp,
+  fastfetch: showFetch,
+  whoami: showWhoami,
+  ls: listFiles,
+  cat: catFile,
+  contact: showContact,
+  resume: showResume,
+  theme: setTheme,
+  clear: () => CLEAR,
 };
+
+/** `help` lists full commands by what they show, so visitors need not guess which file holds what. */
+const HELP_ROWS = [
+  { command: "fastfetch", describe: "quick overview" },
+  { command: "whoami", describe: "who I am" },
+  { command: "cat about.txt", describe: "about me" },
+  { command: "ls work/", describe: "work experience" },
+  { command: "cat stack.json", describe: "tech stack" },
+  { command: "contact", describe: "email and links" },
+  { command: "resume", describe: "download resume" },
+  { command: "theme day", describe: "light theme" },
+  { command: "theme night", describe: "dark theme" },
+  { command: "clear", describe: "clear screen" },
+  { command: "help", describe: "show this list" },
+];
 
 /** What Tab offers on an empty prompt, as zsh lists every command. */
 export const COMMAND_NAMES = Object.keys(COMMANDS);
@@ -86,13 +96,13 @@ function muted(message: ReactNode, className = ""): ReactNode {
 
 function showHelp(): CommandResult {
   return [
-    <div className="grid grid-cols-[8rem_1fr] gap-x-4 gap-y-0.5 sm:grid-cols-[9rem_1fr]">
-      {Object.entries(COMMANDS).map(([name, command]) => [
-        <div key={`${name}-run`}>
-          <RunLink command={command.example ?? name}>{name}</RunLink>
+    <div className="grid grid-cols-[7.5rem_1fr] gap-x-4 gap-y-0.5 sm:grid-cols-[10rem_1fr]">
+      {HELP_ROWS.map(({ command, describe }) => [
+        <div key={`${command}-run`}>
+          <RunLink command={command} />
         </div>,
-        <div key={`${name}-describe`} className="text-muted">
-          {command.describe}
+        <div key={`${command}-describe`} className="text-muted">
+          {describe}
         </div>,
       ])}
     </div>,
@@ -335,5 +345,5 @@ export function runCommand(command: string, context: CommandContext): CommandRes
       ),
     ];
   }
-  return entry.run(parts.slice(1), context);
+  return entry(parts.slice(1), context);
 }
