@@ -64,6 +64,13 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* On macOS, antialiased smoothing draws dark-on-light text visibly thinner,
+   so day mode keeps the default smoothing. */
+[data-theme="light"] body {
+  -webkit-font-smoothing: auto;
+  -moz-osx-font-smoothing: auto;
+}
+
 ::selection {
   background: var(--marker);
   color: var(--marker-ink);
