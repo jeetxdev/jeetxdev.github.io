@@ -1,508 +1,255 @@
 @import "tailwindcss";
 
-/* Dark is the default palette; every value below is overridden wholesale by
-   the [data-theme="light"] block further down. Components and utilities only
-   ever reference these names, never a literal colour. */
+/* `inline` makes every utility read the raw custom property at use-site, so
+   the terminal window can re-scope --paper, --ink and friends for its own
+   subtree and every utility inside it follows. */
+@theme inline {
+  --color-*: initial;
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-on-accent: var(--on-accent);
+  --color-marker: var(--marker);
+  --color-danger: var(--danger);
+  --color-rule: var(--rule);
+}
+
 @theme {
-  --font-display: "Space Grotesk", sans-serif;
-  --font-body: "Public Sans", system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", monospace;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --font-sans: "Source Sans 3", system-ui, sans-serif;
+  --font-serif: "Instrument Serif", Georgia, serif;
 
-  --color-bg: #060912;
-  --color-ink: #e7ecf7;
-  --color-ink-bright: #f2f5fb;
-  --color-ink-brightest: #f4f7fc;
-  --color-text-soft: #c3cde2;
-  --color-text-muted: #a9b6cf;
-  --color-text-dim: #8b9ab5;
-  --color-text-dimmer: #7b8aa8;
-  --color-text-faint: #6f7d99;
-  --color-text-faintest: #5f6d88;
-
-  --color-accent: #7ad6ee;
-  --color-accent-strong: #58b2ec;
-  --color-accent-2: #8b7bff;
-  --color-on-accent: #061021;
-  --color-success: #57e39b;
-  --color-marker: #4f6ea8;
-
-  --color-code-key: #7ad6ee;
-  --color-code-string: #8ee6b4;
-  --color-code-number: #f0c274;
-  --color-code-bool: #c3a6ff;
-  --color-code-punct: #5f7295;
-
-  /* Surfaces and hairlines. Translucent so the ambient glows still read
-     through the glass ladder; components mix these down with `transparent`
-     rather than reaching for raw white or black. */
-  --color-line: rgba(255, 255, 255, 0.09);
-  --color-line-strong: rgba(255, 255, 255, 0.14);
-  --color-surface: rgba(255, 255, 255, 0.035);
-  --color-surface-hover: rgba(255, 255, 255, 0.055);
-  --color-grid-line: rgba(255, 255, 255, 0.028);
-
-  /* Opaque backdrops for the two panels that cannot afford a live blur. */
-  --color-header-bg: rgba(12, 17, 31, 0.6);
-  --color-panel-bg: rgba(10, 15, 28, 0.72);
-  /* Fully opaque: menus overlay page content, not just the ambient glows. */
-  --color-menu-bg: #0e1421;
-
-  --color-hero-from: #ffffff;
-  --color-hero-to: #9fb2d6;
-
-  /* Narrowest viewport where the 1060px column still leaves a gutter wide
-     enough for the side rail plus its labels. Below this the header stays
-     sticky and the rail stays hidden. */
-  --breakpoint-rail: 1240px;
+  --container-page: 74rem;
+  --container-measure: 62ch;
 }
 
-/* Raw "r, g, b" triplets, not --color-* tokens, because these are consumed as
-   gradient stops. A stop written with color-mix() resolves to color(srgb ...),
-   and Chrome then interpolates the gradient without premultiplying, turning
-   these soft glows into hard-edged discs. rgba() keeps the falloff. */
-:root {
-  --glow-1-rgb: 58, 110, 235;
-  --glow-2-rgb: 122, 214, 238;
-  --glow-3-rgb: 139, 123, 255;
-  --accent-rgb: 122, 214, 238;
-  --accent-2-rgb: 139, 123, 255;
-  --surface-rgb: 255, 255, 255;
-  --scrim-rgb: 6, 9, 18;
-
-  --glow-opacity: 1;
-  --shadow-color: rgba(0, 0, 0, 0.9);
-  --shadow-color-deep: rgba(0, 0, 0, 1);
-  --selection-strength: 28%;
-  color-scheme: dark;
-}
-
-/* Light theme. The ink/paper roles swap, and the accents darken because a
-   pale cyan that reads as bright on near-black disappears on near-white. */
+:root,
 [data-theme="light"] {
-  --color-bg: #f4f7fc;
-  --color-ink: #16203a;
-  --color-ink-bright: #0d1528;
-  --color-ink-brightest: #070d1c;
-  --color-text-soft: #2e3a55;
-  --color-text-muted: #435071;
-  --color-text-dim: #556282;
-  --color-text-dimmer: #64708f;
-  --color-text-faint: #737f9c;
-  --color-text-faintest: #838ea9;
-
-  --color-accent: #0e7fa6;
-  --color-accent-strong: #0a63a3;
-  --color-accent-2: #5a45d6;
-  --color-on-accent: #f4fbff;
-  --color-success: #0d8f56;
-  --color-marker: #8296bb;
-
-  --color-code-key: #0b6f96;
-  --color-code-string: #16794b;
-  --color-code-number: #96570f;
-  --color-code-bool: #6236c9;
-  --color-code-punct: #7b88a4;
-
-  --color-line: rgba(13, 21, 40, 0.12);
-  --color-line-strong: rgba(13, 21, 40, 0.2);
-  --color-surface: rgba(13, 21, 40, 0.035);
-  --color-surface-hover: rgba(13, 21, 40, 0.06);
-  --color-grid-line: rgba(13, 21, 40, 0.045);
-
-  --color-header-bg: rgba(255, 255, 255, 0.72);
-  --color-panel-bg: rgba(255, 255, 255, 0.86);
-  --color-menu-bg: #ffffff;
-
-  --color-hero-from: #0b1224;
-  --color-hero-to: #4a5e86;
-
-  --glow-1-rgb: 111, 155, 255;
-  --glow-2-rgb: 82, 200, 232;
-  --glow-3-rgb: 157, 143, 255;
-  --accent-rgb: 14, 127, 166;
-  --accent-2-rgb: 90, 69, 214;
-  --surface-rgb: 13, 21, 40;
-  --scrim-rgb: 244, 247, 252;
-
-  --glow-opacity: 0.4;
-  --shadow-color: rgba(23, 33, 58, 0.18);
-  --shadow-color-deep: rgba(23, 33, 58, 0.26);
-  --selection-strength: 22%;
+  --paper: #faf8f5;
+  --surface: #f2eee6;
+  --ink: #22201c;
+  --muted: #6e675c;
+  --accent: #0f7a4a;
+  --on-accent: #faf8f5;
+  --marker: #f3e3a3;
+  --marker-ink: #22201c;
+  --danger: #9a3412;
+  --rule: #e4ddd1;
   color-scheme: light;
 }
 
-@layer base {
-  * {
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  body {
-    margin: 0;
-    background: var(--color-bg);
-    color: var(--color-ink);
-    font-family: var(--font-body);
-    -webkit-font-smoothing: antialiased;
-    text-rendering: optimizeLegibility;
-    transition:
-      background-color 0.3s ease,
-      color 0.3s ease;
-  }
-
-  a {
-    color: var(--color-accent);
-    text-decoration: none;
-  }
-
-  ::selection {
-    background: color-mix(
-      in srgb,
-      var(--color-accent) var(--selection-strength),
-      transparent
-    );
-  }
-
-  :focus-visible {
-    outline: 2px solid var(--color-accent);
-    outline-offset: 3px;
-  }
+[data-theme="dark"] {
+  --paper: #161410;
+  --surface: #1e1b16;
+  --ink: #ece6da;
+  --muted: #a39b8c;
+  --accent: #5cc995;
+  --on-accent: #161410;
+  --marker: #f3e3a3;
+  --marker-ink: #22201c;
+  --danger: #f08a5d;
+  --rule: #34302a;
+  color-scheme: dark;
 }
 
-@layer components {
-  [data-reveal] {
-    opacity: 0;
-    transform: translateY(16px);
-    transition:
-      opacity 0.8s cubic-bezier(0.2, 0.7, 0.2, 1),
-      transform 0.8s cubic-bezier(0.2, 0.7, 0.2, 1);
-  }
-
-  [data-reveal].is-revealed {
-    opacity: 1;
-    transform: none;
-  }
-
-  /* Ambient background glows (§0) */
-  /* Softness comes from the gradient stops rather than filter: blur(), which
-     had to be rasterised at full size on every frame of the float animation. */
-  .bg-glow {
-    position: absolute;
-    border-radius: 50%;
-    opacity: var(--glow-opacity);
-    animation: float1 var(--glow-duration) ease-in-out infinite
-      var(--glow-direction, normal);
-  }
-
-  .bg-glow-1 {
-    --glow-duration: 19s;
-    top: -14%;
-    left: -6%;
-    width: 640px;
-    height: 640px;
-    background: radial-gradient(
-      circle at 40% 40%,
-      rgba(var(--glow-1-rgb), 0.42),
-      rgba(var(--glow-1-rgb), 0.2) 38%,
-      rgba(var(--glow-1-rgb), 0) 72%
-    );
-  }
-
-  .bg-glow-2 {
-    --glow-duration: 25s;
-    --glow-direction: reverse;
-    top: 8%;
-    right: -10%;
-    width: 700px;
-    height: 700px;
-    background: radial-gradient(
-      circle at 55% 45%,
-      rgba(var(--glow-2-rgb), 0.26),
-      rgba(var(--glow-2-rgb), 0.12) 38%,
-      rgba(var(--glow-2-rgb), 0) 70%
-    );
-  }
-
-  .bg-glow-3 {
-    --glow-duration: 31s;
-    bottom: -22%;
-    left: 26%;
-    width: 720px;
-    height: 720px;
-    background: radial-gradient(
-      circle at 50% 50%,
-      rgba(var(--glow-3-rgb), 0.24),
-      rgba(var(--glow-3-rgb), 0.11) 40%,
-      rgba(var(--glow-3-rgb), 0) 74%
-    );
-  }
-
-  .bg-grid-overlay {
-    position: absolute;
-    inset: 0;
-    background-image:
-      linear-gradient(var(--color-grid-line) 1px, transparent 1px),
-      linear-gradient(90deg, var(--color-grid-line) 1px, transparent 1px);
-    background-size: 72px 72px;
-    -webkit-mask-image: radial-gradient(
-      120% 80% at 50% 0%,
-      #000 20%,
-      transparent 78%
-    );
-    mask-image: radial-gradient(120% 80% at 50% 0%, #000 20%, transparent 78%);
-  }
-
-  .progress-rail {
-    position: fixed;
-    top: 0;
-    left: 0;
-    height: 2px;
-    width: 0%;
-    z-index: 20;
-    background: linear-gradient(
-      90deg,
-      var(--color-accent),
-      var(--color-accent-2)
-    );
-  }
-
-  /* Glass elevation ladder */
-  .glass-header {
-    border: 1px solid var(--color-line);
-    background: var(--color-header-bg);
-    backdrop-filter: blur(20px) saturate(140%);
-    -webkit-backdrop-filter: blur(20px) saturate(140%);
-    box-shadow: 0 20px 40px -34px var(--shadow-color);
-  }
-
-  /* No backdrop-filter here, deliberately. This panel streams text, and a live
-     blur behind content that mutates every frame is Safari's worst case: it
-     re-rasterises the whole panel per character. The backdrop is only soft
-     radial gradients, so an opaque tint reads almost identically. */
-  .glass-panel {
-    border: 1px solid var(--color-line);
-    background: var(--color-panel-bg);
-    box-shadow: 0 40px 80px -60px var(--shadow-color-deep);
-  }
-
-  .menu-surface {
-    border: 1px solid var(--color-line);
-    background: var(--color-menu-bg);
-    box-shadow: 0 24px 48px -28px var(--shadow-color-deep);
-  }
-
-  .glass-card {
-    border: 1px solid var(--color-line);
-    background: var(--color-surface);
-    backdrop-filter: blur(18px) saturate(130%);
-    -webkit-backdrop-filter: blur(18px) saturate(130%);
-    transition:
-      transform 0.3s cubic-bezier(0.2, 0.7, 0.2, 1),
-      border-color 0.3s ease,
-      background 0.3s ease;
-  }
-
-  .glass-card:hover {
-    transform: translateY(-3px);
-    border-color: color-mix(in srgb, var(--color-accent) 34%, transparent);
-    background: var(--color-surface-hover);
-  }
-
-  /* Work timeline (§work) - one spine, cards that recede with age */
-  .job-spine {
-    background: linear-gradient(
-      180deg,
-      transparent 0,
-      var(--color-line-strong) 18px,
-      var(--color-line-strong) calc(100% - 80px),
-      transparent 100%
-    );
-  }
-
-  .job-node {
-    position: relative;
-    border-radius: 50%;
-    border: 1px solid color-mix(in srgb, var(--color-accent) 50%, transparent);
-    background: var(--color-bg);
-  }
-
-  .job-node-live {
-    border-color: var(--color-accent);
-    background: var(--color-accent);
-    box-shadow: 0 0 0 4px
-      color-mix(in srgb, var(--color-accent) 9%, transparent);
-  }
-
-  .job-node-live::after {
-    content: "";
-    position: absolute;
-    inset: -1px;
-    border-radius: 50%;
-    background: var(--color-accent);
-    animation: node-pulse 2.6s cubic-bezier(0.2, 0.7, 0.2, 1) infinite;
-  }
-
-  .job-card {
-    border: 1px solid var(--job-border, var(--color-line-strong));
-    background: var(--job-bg, var(--color-surface));
-    backdrop-filter: blur(18px) saturate(130%);
-    -webkit-backdrop-filter: blur(18px) saturate(130%);
-    transition:
-      transform 0.3s cubic-bezier(0.2, 0.7, 0.2, 1),
-      border-color 0.3s ease,
-      background 0.3s ease;
-  }
-
-  .job-card:hover {
-    transform: translateY(-2px);
-    border-color: color-mix(in srgb, var(--color-accent) 34%, transparent);
-    background: var(--color-surface-hover);
-  }
-
-  .glass-pill {
-    border: 1px solid var(--color-line);
-    background: var(--color-surface);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-  }
-
-  .glass-stat {
-    border: 1px solid var(--color-line);
-    background: var(--color-surface);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-  }
-
-  .glass-contact {
-    border: 1px solid var(--color-line);
-    background: linear-gradient(
-      150deg,
-      rgba(var(--accent-rgb), 0.1),
-      rgba(var(--accent-2-rgb), 0.08) 60%,
-      rgba(var(--surface-rgb), 0.03)
-    );
-    backdrop-filter: blur(24px) saturate(140%);
-    -webkit-backdrop-filter: blur(24px) saturate(140%);
-  }
-
-  /* Gradient text / buttons */
-  .text-gradient-hero {
-    background: linear-gradient(
-      170deg,
-      var(--color-hero-from) 18%,
-      var(--color-hero-to) 92%
-    );
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-  }
-
-  .btn-gradient-accent {
-    background: linear-gradient(
-      180deg,
-      var(--color-accent),
-      var(--color-accent-strong)
-    );
-    color: var(--color-on-accent);
-    transition:
-      transform 0.2s ease,
-      filter 0.2s ease;
-  }
-
-  .btn-gradient-accent:hover {
-    transform: translateY(-1px);
-    filter: brightness(1.1);
-  }
-
-  .cta-gradient-accent {
-    background: linear-gradient(
-      180deg,
-      var(--color-accent),
-      var(--color-accent-strong)
-    );
-    color: var(--color-on-accent);
-    box-shadow: 0 24px 50px -30px
-      color-mix(in srgb, var(--color-accent) 70%, transparent);
-    transition:
-      transform 0.25s cubic-bezier(0.2, 0.7, 0.2, 1),
-      filter 0.25s ease;
-  }
-
-  .cta-gradient-accent:hover {
-    transform: translateY(-3px);
-    filter: brightness(1.08);
-  }
-
-  .portrait-scrim {
-    background: linear-gradient(
-      0deg,
-      rgba(var(--scrim-rgb), 0.78),
-      rgba(var(--scrim-rgb), 0)
-    );
-  }
-
-  .caret {
-    display: inline-block;
-    width: 7px;
-    height: 1em;
-    background: var(--color-accent);
-    vertical-align: -2px;
-    animation: caret-blink 1s steps(1) infinite;
-  }
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-feature-settings: "kern", "liga";
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-@keyframes float1 {
-  0%,
-  100% {
-    transform: translate(0, 0) scale(1);
-  }
+::selection {
+  background: var(--marker);
+  color: var(--marker-ink);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+/* Headings receive focus only so screen readers land on the new view. */
+[tabindex="-1"]:focus {
+  outline: none;
+}
+
+button {
+  cursor: pointer;
+}
+
+.skip-link {
+  position: absolute;
+  left: 1rem;
+  top: -4rem;
+  z-index: 50;
+  padding: 0.6rem 1rem;
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+}
+
+.skip-link:focus {
+  top: 1rem;
+}
+
+.hl {
+  background: linear-gradient(transparent 12%, var(--marker) 12%, var(--marker) 88%, transparent 88%);
+  color: var(--marker-ink);
+  padding: 0 0.15em;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.ink-link {
+  text-decoration: underline;
+  text-decoration-color: var(--accent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.22em;
+  transition: color 160ms ease, text-decoration-thickness 160ms ease;
+}
+
+.ink-link:hover {
+  color: var(--accent);
+  text-decoration-thickness: 2px;
+}
+
+/* The terminal stays dark in both themes, so it re-scopes the palette.
+   Hard offset shadow reads as a printed window, not a floating card. */
+[data-theme="light"] .term-window {
+  --paper: #22201c;
+  --surface: #2c2924;
+  --ink: #ece6da;
+  --muted: #a39b8c;
+  --accent: #5cc995;
+  --on-accent: #161410;
+  --danger: #f08a5d;
+  --rule: #3d3832;
+  border-color: #22201c;
+  box-shadow: 8px 8px 0 #0f7a4a;
+  color: var(--ink);
+  color-scheme: dark;
+}
+
+[data-theme="dark"] .term-window {
+  --paper: #0c0b09;
+  --surface: #1a1814;
+  --rule: #2a2621;
+  box-shadow: 8px 8px 0 var(--accent);
+}
+
+.term-window .border-ink {
+  border-color: var(--rule);
+}
+
+.term-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 9999px;
+  border: 1px solid var(--muted);
+}
+
+.term-input {
+  caret-color: var(--accent);
+  background: transparent;
+  outline: none;
+}
+
+.term-run {
+  text-decoration: underline dotted;
+  text-decoration-color: var(--muted);
+  text-underline-offset: 0.2em;
+}
+
+.term-run:hover {
+  color: var(--accent);
+  text-decoration-color: var(--accent);
+}
+
+/* Atkinson-dithered 1-bit portrait, pre-rendered per theme so pixels stay sharp. */
+.dither img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  image-rendering: pixelated;
+}
+
+[data-theme="light"] .dither-night,
+[data-theme="dark"] .dither-day {
+  display: none;
+}
+
+.caret {
+  display: inline-block;
+  width: 0.55em;
+  height: 1em;
+  margin-left: 0.1em;
+  vertical-align: -0.12em;
+  background: var(--accent);
+  animation: blink 1.1s steps(1) infinite;
+}
+
+@keyframes blink {
   50% {
-    transform: translate(4%, -5%) scale(1.1);
-  }
-}
-
-@keyframes time-pulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.3;
-  }
-}
-
-@keyframes node-pulse {
-  0% {
-    transform: scale(1);
-    opacity: 0.5;
-  }
-  70%,
-  100% {
-    transform: scale(2.8);
     opacity: 0;
   }
 }
 
-@keyframes caret-blink {
-  0%,
-  49% {
-    opacity: 1;
-  }
-  50%,
-  100% {
-    opacity: 0;
+.reveal {
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 600ms ease, transform 600ms ease;
+}
+
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+.menu-item {
+  padding: 0.15rem 0.45rem;
+}
+
+.menu-item:hover {
+  background: var(--rule);
+}
+
+.view-cta {
+  padding: 0.15rem 0.55rem;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-weight: 500;
+}
+
+.view-cta:hover {
+  opacity: 0.9;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.001ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.001ms !important;
+  .caret {
+    animation: none;
   }
 
-  [data-reveal] {
+  .reveal {
     opacity: 1;
     transform: none;
+    transition: none;
+  }
+
+  .ink-link {
+    transition: none;
   }
 }

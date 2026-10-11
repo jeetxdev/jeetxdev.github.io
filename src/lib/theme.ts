@@ -1,55 +1,39 @@
-export const THEME_MODES = ["light", "system", "dark"] as const;
+export type Theme = "light" | "dark";
 
-/** What the visitor picked. `system` follows the OS preference live. */
-export type ThemeMode = (typeof THEME_MODES)[number];
-
-/** What actually gets painted, after `system` is resolved. */
-export type ResolvedTheme = "light" | "dark";
+/** The menu bar and the terminal both speak of day and night. */
+export const THEME_LABELS: Record<Theme, string> = {
+  light: "day",
+  dark: "night",
+};
 
 /** Kept in sync with the pre-paint script in index.html. */
 export const THEME_STORAGE_KEY = "jeetxdev-theme";
 export const THEME_ATTRIBUTE = "data-theme";
 
-export const DARK_SCHEME_QUERY = "(prefers-color-scheme: dark)";
-
 const THEME_COLOR_META_SELECTOR = 'meta[name="theme-color"]';
 
 /** Browser chrome tint, matched to each theme's page background. */
-const THEME_COLORS: Record<ResolvedTheme, string> = {
-  dark: "#060912",
-  light: "#f4f7fc",
+const THEME_COLORS: Record<Theme, string> = {
+  light: "#faf8f5",
+  dark: "#161410",
 };
 
-export function isThemeMode(value: unknown): value is ThemeMode {
-  return THEME_MODES.includes(value as ThemeMode);
+/** The pre-paint script already resolved the theme, so the attribute is the truth. */
+export function readPaintedTheme(): Theme {
+  return document.documentElement.getAttribute(THEME_ATTRIBUTE) === "dark"
+    ? "dark"
+    : "light";
 }
 
-export function readStoredMode(): ThemeMode {
+export function storeTheme(theme: Theme): void {
   try {
-    const stored = localStorage.getItem(THEME_STORAGE_KEY);
-    return isThemeMode(stored) ? stored : "system";
+    localStorage.setItem(THEME_STORAGE_KEY, theme);
   } catch {
-    return "system";
+    // Private browsing or blocked storage: the choice lasts for this visit only.
   }
 }
 
-export function storeMode(mode: ThemeMode): void {
-  try {
-    localStorage.setItem(THEME_STORAGE_KEY, mode);
-  } catch {
-    // Private browsing or blocked storage: the choice just will not persist.
-  }
-}
-
-export function getSystemTheme(): ResolvedTheme {
-  return window.matchMedia(DARK_SCHEME_QUERY).matches ? "dark" : "light";
-}
-
-export function resolveTheme(mode: ThemeMode): ResolvedTheme {
-  return mode === "system" ? getSystemTheme() : mode;
-}
-
-export function applyTheme(theme: ResolvedTheme): void {
+export function applyTheme(theme: Theme): void {
   document.documentElement.setAttribute(THEME_ATTRIBUTE, theme);
   document
     .querySelector(THEME_COLOR_META_SELECTOR)

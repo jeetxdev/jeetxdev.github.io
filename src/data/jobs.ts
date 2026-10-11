@@ -1,4 +1,6 @@
 export type Job = {
+  /** Folder name in the terminal, as in `cat work/<slug>`. */
+  slug: string;
   role: string;
   company: string;
   from: string;
@@ -10,10 +12,11 @@ export type Job = {
 
 export const JOBS: Job[] = [
   {
+    slug: "standard-chartered",
     role: "Assoc, Frontend Engineer",
     company: "Standard Chartered",
     from: "2025",
-    to: "- now",
+    to: "now",
     place: "Bangalore, IN",
     tech: ["React.js", "Redux", "CSS", "SCSS", "CI/CD", "Vite"],
     points: [
@@ -21,10 +24,11 @@ export const JOBS: Job[] = [
     ],
   },
   {
+    slug: "digitalapicraft",
     role: "Senior Technical Specialist",
     company: "DigitalAPICraft Private Limited",
     from: "2022",
-    to: "- 2025",
+    to: "2025",
     place: "Bangalore, IN",
     tech: [
       "React.js",
@@ -43,10 +47,11 @@ export const JOBS: Job[] = [
     ],
   },
   {
+    slug: "i-link",
     role: "IT Application Developer",
     company: "i-Link Research Solutions",
     from: "2018",
-    to: "- 2022",
+    to: "2022",
     place: "Bangalore, IN",
     tech: ["React.js", "PHP", "MySQL", "jQuery", "CodeIgniter", "REST API"],
     points: [
@@ -57,10 +62,11 @@ export const JOBS: Job[] = [
     ],
   },
   {
+    slug: "techno-exponent",
     role: "Software Developer",
     company: "Techno Exponent",
     from: "2017",
-    to: "- 2018",
+    to: "2018",
     place: "Kolkata, IN",
     tech: ["JavaScript", "PHP", "MySQL", "Laravel", "Bootstrap", "REST API"],
     points: [
@@ -70,10 +76,11 @@ export const JOBS: Job[] = [
     ],
   },
   {
+    slug: "corelynx",
     role: "Program Analyst",
     company: "Corelynx Solutions",
     from: "2015",
-    to: "- 2017",
+    to: "2017",
     place: "Kolkata, IN",
     tech: ["JavaScript", "PHP", "MySQL", "jQuery", "CodeIgniter", "Git"],
     points: [
