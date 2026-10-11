@@ -13,7 +13,7 @@ import {
   RESUME_LINK_PROPS,
   STACK,
 } from "@/data/profile";
-import { PORTRAIT_ASCII } from "@/data/portraitAscii";
+import { INITIALS_ASCII } from "@/data/initialsAscii";
 import type { Theme } from "@/lib/theme";
 import { Bio } from "../Bio";
 import { RunLink, TermLink } from "./TerminalBits";
@@ -128,9 +128,9 @@ function showFetch(): CommandResult {
     <div className="flex gap-8 pt-1">
       <pre
         aria-hidden="true"
-        className="hidden shrink-0 text-[9px] leading-[1.2] text-accent sm:block"
+        className="hidden shrink-0 pt-1 text-[1.3em] leading-[1.2] font-bold text-accent sm:block"
       >
-        {PORTRAIT_ASCII}
+        {INITIALS_ASCII}
       </pre>
       <div className="min-w-0">
         <div className="font-bold">
