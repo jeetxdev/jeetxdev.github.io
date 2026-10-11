@@ -19,6 +19,11 @@ const INTRO_DELAY_MS = 700;
 const INTRO_COMMAND = "whoami";
 /** Space left above a command's prompt line when its output is scrolled into view. */
 const PROMPT_SCROLL_OFFSET_PX = 8;
+/** Time to print one line of output, so long output streams in like a real terminal. */
+const STREAM_LINE_MS = 22;
+/** Pause between two output blocks. */
+const STREAM_GAP_MS = 30;
+const FALLBACK_LINE_HEIGHT_PX = 24;
 
 const CHIP_COMMANDS = ["whoami", "ls work/", "cat stack.json", "contact", "resume", "help"];
 const CHIP_CLASS = "border border-rule bg-paper px-2.5 py-1 hover:border-accent hover:text-accent";
@@ -34,7 +39,27 @@ const MODIFIER_KEYS = new Set(["Shift", "Control", "Alt", "Meta"]);
 /** A Tab cycle in progress. `index` is -1 until the second Tab fills in the first match. */
 type TabCycle = { matches: string[]; index: number };
 
-type PendingScroll = { kind: "line"; id: number } | { kind: "bottom" } | null;
+type PendingScroll =
+  | { kind: "line"; id: number }
+  | { kind: "follow"; promptId: number }
+  | { kind: "bottom" }
+  | null;
+
+function prefersReducedMotion(): boolean {
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+/** Reveals the element one line at a time, top to bottom, and returns how long that takes. */
+function printLines(element: HTMLElement): number {
+  const lineHeight = parseFloat(getComputedStyle(element).lineHeight) || FALLBACK_LINE_HEIGHT_PX;
+  const lines = Math.max(1, Math.round(element.offsetHeight / lineHeight));
+  const duration = lines * STREAM_LINE_MS;
+  element.animate([{ clipPath: "inset(0 0 100% 0)" }, { clipPath: "inset(0 0 0 0)" }], {
+    duration,
+    easing: `steps(${lines}, jump-start)`,
+  });
+  return duration;
+}
 
 function commonPrefix(words: string[]): string {
   return words.reduce((prefix, word) => {
@@ -92,8 +117,42 @@ export function Terminal({ active, setTheme }: TerminalProps) {
   // Tab stays inside the terminal, so Esc is the keyboard's way out. Keyboard users must never be trapped.
   const releaseFocus = useRef(false);
   const wasActive = useRef(active);
+  // Output waits here and prints one block at a time.
+  const streamQueue = useRef<Entry[]>([]);
+  const streamTimer = useRef<number | null>(null);
+  const streamPromptId = useRef<number | null>(null);
+  const printingId = useRef<number | null>(null);
+
+  /** Prints any output still waiting at once, so new input never lands in the middle of old output. */
+  const flushStream = useCallback(() => {
+    if (streamTimer.current !== null) window.clearTimeout(streamTimer.current);
+    streamTimer.current = null;
+    printingId.current = null;
+    const waiting = streamQueue.current;
+    streamQueue.current = [];
+    if (waiting.length > 0) setEntries((prev) => [...prev, ...waiting]);
+  }, []);
+
+  const streamNext = useCallback(() => {
+    streamTimer.current = null;
+    const next = streamQueue.current.shift();
+    if (!next) return;
+    printingId.current = next.id;
+    if (streamPromptId.current !== null) {
+      pendingScroll.current = { kind: "follow", promptId: streamPromptId.current };
+    }
+    setEntries((prev) => [...prev, next]);
+  }, []);
+
+  useEffect(
+    () => () => {
+      if (streamTimer.current !== null) window.clearTimeout(streamTimer.current);
+    },
+    [],
+  );
 
   const append = (nodes: ReactNode[]) => {
+    flushStream();
     const added = nodes.map(makeEntry);
     setEntries((prev) => [...prev, ...added]);
     return added;
@@ -102,19 +161,35 @@ export function Terminal({ active, setTheme }: TerminalProps) {
   // Long output stays readable from its first line. The browser clamps short output to the bottom.
   useLayoutEffect(() => {
     const body = bodyRef.current;
+    if (!body) return;
+    const findEntry = (id: number) => body.querySelector<HTMLElement>(`[data-entry="${id}"]`);
+
     const scroll = pendingScroll.current;
-    if (!body || !scroll) return;
     pendingScroll.current = null;
-    const line =
-      scroll.kind === "line"
-        ? body.querySelector<HTMLElement>(`[data-entry="${scroll.id}"]`)
-        : null;
-    body.scrollTop = line ? line.offsetTop - PROMPT_SCROLL_OFFSET_PX : body.scrollHeight;
-  }, [entries]);
+    if (scroll?.kind === "line") {
+      const line = findEntry(scroll.id);
+      body.scrollTop = line ? line.offsetTop - PROMPT_SCROLL_OFFSET_PX : body.scrollHeight;
+    } else if (scroll?.kind === "follow") {
+      // Follow the output down as it prints, but never push its prompt line out of view.
+      const prompt = findEntry(scroll.promptId);
+      const bottom = body.scrollHeight - body.clientHeight;
+      const top = prompt ? Math.min(prompt.offsetTop - PROMPT_SCROLL_OFFSET_PX, bottom) : bottom;
+      if (top > body.scrollTop) body.scrollTo({ top, behavior: "smooth" });
+    } else if (scroll?.kind === "bottom") {
+      body.scrollTop = body.scrollHeight;
+    }
+
+    if (printingId.current === null) return;
+    const block = findEntry(printingId.current);
+    printingId.current = null;
+    const duration = block ? printLines(block) : 0;
+    streamTimer.current = window.setTimeout(streamNext, duration + STREAM_GAP_MS);
+  }, [entries, streamNext]);
 
   const execute = useCallback(
     (raw: string, keepScroll = false) => {
       const command = raw.trim();
+      flushStream();
       const prompt: Entry = { id: nextId.current++, node: <Prompt command={command} /> };
       const result = runCommand(command, { setTheme });
       if (result === CLEAR) {
@@ -123,9 +198,16 @@ export function Terminal({ active, setTheme }: TerminalProps) {
       }
       const output: Entry[] = result.map((node) => ({ id: nextId.current++, node }));
       if (!keepScroll) pendingScroll.current = { kind: "line", id: prompt.id };
-      setEntries((prev) => [...prev, prompt, ...output]);
+      if (prefersReducedMotion() || output.length === 0) {
+        setEntries((prev) => [...prev, prompt, ...output]);
+        return;
+      }
+      streamQueue.current = output;
+      streamPromptId.current = keepScroll ? null : prompt.id;
+      setEntries((prev) => [...prev, prompt]);
+      streamTimer.current = window.setTimeout(streamNext, STREAM_GAP_MS);
     },
-    [setTheme],
+    [setTheme, flushStream, streamNext],
   );
 
   const cancelIntro = () => {
@@ -145,7 +227,7 @@ export function Terminal({ active, setTheme }: TerminalProps) {
 
   // Types `whoami` once on arrival, unless the visitor prefers no motion.
   useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (prefersReducedMotion()) return;
     let typed = 0;
     const typeNext = () => {
       if (typed < INTRO_COMMAND.length) {
@@ -169,6 +251,7 @@ export function Terminal({ active, setTheme }: TerminalProps) {
   // Returning from the page view greets once and resumes at the bottom of the session.
   useEffect(() => {
     if (active && !wasActive.current) {
+      flushStream();
       setEntries((prev) => {
         if (prev.length > 0 && prev[prev.length - 1].id === welcomeId.current) return prev;
         const welcome: Entry = {
@@ -184,7 +267,7 @@ export function Terminal({ active, setTheme }: TerminalProps) {
       inputRef.current?.focus({ preventScroll: true });
     }
     wasActive.current = active;
-  }, [active]);
+  }, [active, flushStream]);
 
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
