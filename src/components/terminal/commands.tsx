@@ -47,6 +47,9 @@ const COMMANDS: Record<string, Command> = {
   clear: { describe: "clear the screen", run: () => CLEAR },
 };
 
+/** What Tab offers on an empty prompt, as zsh lists every command. */
+export const COMMAND_NAMES = Object.keys(COMMANDS);
+
 export const COMPLETIONS = [
   "help",
   "whoami",
@@ -83,6 +86,7 @@ function showHelp(): CommandResult {
       ])}
     </div>,
     muted("Tab completes. → accepts the faded suggestion. ↑ and ↓ walk your history."),
+    muted("Esc, then Tab, leaves the terminal."),
   ];
 }
 

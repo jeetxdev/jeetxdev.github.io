@@ -11,7 +11,7 @@ import {
 } from "react";
 import { PROMPT_USER } from "@/data/profile";
 import type { Theme } from "@/lib/theme";
-import { CLEAR, COMPLETIONS, runCommand } from "./commands";
+import { CLEAR, COMMAND_NAMES, COMPLETIONS, runCommand } from "./commands";
 import { Prompt, RUN_ATTRIBUTE, RunLink } from "./TerminalBits";
 
 const TYPE_DELAY_MS = 70;
@@ -89,6 +89,8 @@ export function Terminal({ active, setTheme }: TerminalProps) {
   const introTimer = useRef<number | null>(null);
   const welcomeId = useRef<number | null>(null);
   const tabCycle = useRef<TabCycle | null>(null);
+  // Tab stays inside the terminal, so Esc is the keyboard's way out. Keyboard users must never be trapped.
+  const releaseFocus = useRef(false);
   const wasActive = useRef(active);
 
   const append = (nodes: ReactNode[]) => {
@@ -198,7 +200,10 @@ export function Terminal({ active, setTheme }: TerminalProps) {
     const past = history.current;
     const field = event.currentTarget;
     const caretAtEnd = field.selectionStart === input.length && field.selectionEnd === input.length;
-    if (event.key !== "Tab" && !MODIFIER_KEYS.has(event.key)) tabCycle.current = null;
+    if (event.key !== "Tab" && !MODIFIER_KEYS.has(event.key)) {
+      tabCycle.current = null;
+      releaseFocus.current = event.key === "Escape";
+    }
     if ((event.key === "ArrowRight" || event.key === "End") && suggestion && caretAtEnd) {
       event.preventDefault();
       setInput(suggestion);
@@ -210,8 +215,7 @@ export function Terminal({ active, setTheme }: TerminalProps) {
       event.preventDefault();
       historyIndex.current = Math.min(past.length, historyIndex.current + 1);
       setInput(past[historyIndex.current] ?? "");
-    } else if (event.key === "Tab" && input.trim() !== "") {
-      // An empty prompt lets Tab move focus, so keyboard users are never trapped.
+    } else if (event.key === "Tab" && !releaseFocus.current) {
       event.preventDefault();
       // Like zsh: the first Tab lists the matches, each further Tab fills in the next one.
       const cycle = tabCycle.current;
@@ -222,7 +226,8 @@ export function Terminal({ active, setTheme }: TerminalProps) {
         setInput(cycle.matches[cycle.index]);
         return;
       }
-      const matches = COMPLETIONS.filter((c) => c.startsWith(input));
+      const matches =
+        input.trim() === "" ? COMMAND_NAMES : COMPLETIONS.filter((c) => c.startsWith(input));
       if (matches.length === 1) {
         setInput(matches[0]);
       } else if (matches.length > 1) {
@@ -325,6 +330,9 @@ export function Terminal({ active, setTheme }: TerminalProps) {
                     setInput(event.target.value);
                   }}
                   onKeyDown={onKeyDown}
+                  onBlur={() => {
+                    releaseFocus.current = false;
+                  }}
                 />
               </div>
             </form>
@@ -333,6 +341,10 @@ export function Terminal({ active, setTheme }: TerminalProps) {
           <div className="flex items-center gap-2 overflow-x-auto border-t border-ink bg-surface px-4 py-3 font-mono text-[12.5px] whitespace-nowrap sm:flex-wrap sm:overflow-visible sm:px-8">
             <span id="term-help" className="mr-1 text-muted">
               try:
+              <span className="sr-only">
+                {" "}
+                a command below. Tab completes. Press Escape, then Tab, to leave the terminal.
+              </span>
             </span>
             {CHIP_COMMANDS.map((command) => (
               <button key={command} type="button" className={CHIP_CLASS} {...{ [RUN_ATTRIBUTE]: command }}>
