@@ -9,7 +9,7 @@ import {
   LINKEDIN_LABEL,
   LINKEDIN_URL,
   NAME,
-  RESUME_URL,
+  RESUME_LINK_PROPS,
   STACK,
 } from "@/data/profile";
 import type { Theme } from "@/lib/theme";
@@ -42,7 +42,7 @@ const COMMANDS: Record<string, Command> = {
   ls: { describe: "list files", example: "ls work/", run: listFiles },
   cat: { describe: "print a file, e.g. cat stack.json", example: "cat stack.json", run: catFile },
   contact: { describe: "email and links", run: showContact },
-  resume: { describe: "link to resume.pdf", run: showResume },
+  resume: { describe: "download resume.pdf", run: showResume },
   theme: { describe: "theme day | theme night", example: "theme night", run: setTheme },
   clear: { describe: "clear the screen", run: () => CLEAR },
 };
@@ -219,7 +219,9 @@ function showContact(): CommandResult {
       </div>
       <div className="text-muted">resume</div>
       <div>
-        <TermLink href={RESUME_URL}>resume.pdf</TermLink>
+        <a className="ink-link" {...RESUME_LINK_PROPS}>
+          resume.pdf
+        </a>
       </div>
     </div>,
     muted(
@@ -232,7 +234,7 @@ function showContact(): CommandResult {
 function showResume(): CommandResult {
   return [
     <div>
-      resume.pdf → <TermLink href={RESUME_URL}>open</TermLink>
+      resume.pdf → <a className="ink-link" {...RESUME_LINK_PROPS}>download</a>
     </div>,
   ];
 }

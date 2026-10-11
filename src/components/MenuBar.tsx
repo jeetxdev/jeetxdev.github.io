@@ -1,4 +1,4 @@
-import { EMAIL, RESUME_URL } from "@/data/profile";
+import { EMAIL, RESUME_LINK_PROPS } from "@/data/profile";
 import { THEME_LABELS, type Theme } from "@/lib/theme";
 import type { View } from "@/lib/view";
 import { Clock } from "./Clock";
@@ -30,7 +30,7 @@ export function MenuBar({ view, theme, onSwitchView, onToggleTheme }: MenuBarPro
         <a className="menu-item" href={`mailto:${EMAIL}`}>
           Mail
         </a>
-        <a className="menu-item" href={RESUME_URL}>
+        <a className="menu-item" {...RESUME_LINK_PROPS}>
           Résumé
         </a>
         {/* Each view offers only the way out to the other one. It sits last

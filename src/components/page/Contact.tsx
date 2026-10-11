@@ -5,7 +5,7 @@ import {
   INTERESTS,
   LINKEDIN_LABEL,
   LINKEDIN_URL,
-  RESUME_URL,
+  RESUME_LINK_PROPS,
 } from "@/data/profile";
 import { SectionHeading } from "./SectionHeading";
 
@@ -55,7 +55,7 @@ export function Contact() {
             </li>
           ))}
           <li>
-            <a className="ink-link" href={RESUME_URL}>
+            <a className="ink-link" {...RESUME_LINK_PROPS}>
               resume.pdf
             </a>
           </li>

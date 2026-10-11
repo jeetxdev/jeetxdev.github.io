@@ -5,6 +5,18 @@ export const GITHUB_LABEL = "github/jeetxdev";
 export const LINKEDIN_URL = "https://www.linkedin.com/in/jeetm";
 export const LINKEDIN_LABEL = "linkedin/jeetm";
 export const RESUME_URL = "/resume.pdf";
+export const RESUME_FILE_NAME = "Jeet-Mukherjee-Resume.pdf";
+
+/**
+ * Every résumé link downloads the file. A browser that ignores `download`
+ * follows `target` instead and opens the PDF in a new tab.
+ */
+export const RESUME_LINK_PROPS = {
+  href: RESUME_URL,
+  download: RESUME_FILE_NAME,
+  target: "_blank",
+  rel: "noopener noreferrer",
+} as const;
 
 export const HOME_ZONE = "Asia/Kolkata";
 export const PROMPT_USER = "jeet@bangalore";
