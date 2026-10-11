@@ -195,55 +195,65 @@ export function Terminal({ active, setTheme }: TerminalProps) {
 
   const suggestion = suggestFor(input, history.current);
 
+  // Like zsh: the first press lists the matches, each further press fills in the next one.
+  const complete = (backward: boolean) => {
+    const cycle = tabCycle.current;
+    if (cycle) {
+      const step = backward ? -1 : 1;
+      const start = cycle.index === -1 && backward ? 0 : cycle.index;
+      cycle.index = (start + step + cycle.matches.length) % cycle.matches.length;
+      setInput(cycle.matches[cycle.index]);
+      return;
+    }
+    const matches =
+      input.trim() === "" ? COMMAND_NAMES : COMPLETIONS.filter((c) => c.startsWith(input));
+    if (matches.length === 1) {
+      setInput(matches[0]);
+    } else if (matches.length > 1) {
+      const prefix = commonPrefix(matches);
+      tabCycle.current = { matches, index: -1 };
+      setInput(prefix);
+      pendingScroll.current = { kind: "bottom" };
+      append([
+        <Prompt command={prefix} />,
+        <div className="flex flex-wrap gap-x-6 text-muted">
+          {matches.map((match) => (
+            <span key={match}>{match}</span>
+          ))}
+        </div>,
+      ]);
+    }
+  };
+
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     cancelIntro();
     const past = history.current;
     const field = event.currentTarget;
     const caretAtEnd = field.selectionStart === input.length && field.selectionEnd === input.length;
-    if (event.key !== "Tab" && !MODIFIER_KEYS.has(event.key)) {
+    const isArrow = event.key === "ArrowUp" || event.key === "ArrowDown";
+    // With no history yet, the arrows would do nothing, so they step through commands like Tab.
+    const arrowCompletes = isArrow && past.length === 0;
+    if (event.key !== "Tab" && !arrowCompletes && !MODIFIER_KEYS.has(event.key)) {
       tabCycle.current = null;
       releaseFocus.current = event.key === "Escape";
     }
     if ((event.key === "ArrowRight" || event.key === "End") && suggestion && caretAtEnd) {
       event.preventDefault();
       setInput(suggestion);
-    } else if (event.key === "ArrowUp" && past.length) {
+    } else if (arrowCompletes) {
+      event.preventDefault();
+      complete(event.key === "ArrowUp");
+    } else if (event.key === "ArrowUp") {
       event.preventDefault();
       historyIndex.current = Math.max(0, historyIndex.current - 1);
       setInput(past[historyIndex.current]);
-    } else if (event.key === "ArrowDown" && past.length) {
+    } else if (event.key === "ArrowDown") {
       event.preventDefault();
       historyIndex.current = Math.min(past.length, historyIndex.current + 1);
       setInput(past[historyIndex.current] ?? "");
     } else if (event.key === "Tab" && !releaseFocus.current) {
       event.preventDefault();
-      // Like zsh: the first Tab lists the matches, each further Tab fills in the next one.
-      const cycle = tabCycle.current;
-      if (cycle) {
-        const step = event.shiftKey ? -1 : 1;
-        const start = cycle.index === -1 && step === -1 ? 0 : cycle.index;
-        cycle.index = (start + step + cycle.matches.length) % cycle.matches.length;
-        setInput(cycle.matches[cycle.index]);
-        return;
-      }
-      const matches =
-        input.trim() === "" ? COMMAND_NAMES : COMPLETIONS.filter((c) => c.startsWith(input));
-      if (matches.length === 1) {
-        setInput(matches[0]);
-      } else if (matches.length > 1) {
-        const prefix = commonPrefix(matches);
-        tabCycle.current = { matches, index: -1 };
-        setInput(prefix);
-        pendingScroll.current = { kind: "bottom" };
-        append([
-          <Prompt command={prefix} />,
-          <div className="flex flex-wrap gap-x-6 text-muted">
-            {matches.map((match) => (
-              <span key={match}>{match}</span>
-            ))}
-          </div>,
-        ]);
-      }
+      complete(event.shiftKey);
     }
   };
 
