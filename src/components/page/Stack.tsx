@@ -6,7 +6,7 @@ export function Stack() {
     <section
       id="stack"
       aria-labelledby="stack-heading"
-      className="reveal grid scroll-mt-20 grid-cols-12 gap-x-8 gap-y-6 border-t border-rule py-14"
+      className="reveal grid scroll-mt-20 grid-cols-12 gap-x-4 md:gap-x-8 gap-y-6 border-t border-rule py-14"
     >
       <SectionHeading
         id="stack-heading"

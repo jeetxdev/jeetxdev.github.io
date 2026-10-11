@@ -37,12 +37,15 @@ export function MenuBar({ view, theme, onSwitchView, onToggleTheme }: MenuBarPro
             because its label changes width, and nothing clickable follows it. */}
         {view === "terminal" ? (
           <button type="button" className="view-cta" onClick={() => onSwitchView("page")}>
-            <span className="sm:hidden">Regular page →</span>
+            {/* Below 380px the menu bar cannot fit the longer labels on one line. */}
+            <span className="min-[380px]:hidden">Page →</span>
+            <span className="hidden min-[380px]:inline sm:hidden">Regular page →</span>
             <span className="hidden sm:inline">View as a regular page →</span>
           </button>
         ) : (
           <button type="button" className="view-cta" onClick={() => onSwitchView("terminal")}>
-            ← Back to terminal
+            <span className="min-[380px]:hidden">← Terminal</span>
+            <span className="hidden min-[380px]:inline">← Back to terminal</span>
           </button>
         )}
         <Clock />

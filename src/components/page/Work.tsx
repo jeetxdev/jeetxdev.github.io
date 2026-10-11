@@ -11,7 +11,7 @@ export function Work() {
     <section
       id="work"
       aria-labelledby="work-heading"
-      className="reveal grid scroll-mt-20 grid-cols-12 gap-x-8 gap-y-6 border-t border-rule py-14"
+      className="reveal grid scroll-mt-20 grid-cols-12 gap-x-4 md:gap-x-8 gap-y-6 border-t border-rule py-14"
     >
       <div className="col-span-12 md:col-span-3">
         <SectionHeading id="work-heading" command="$ ls " path="~/work" />
