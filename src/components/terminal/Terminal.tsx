@@ -28,6 +28,12 @@ type Entry = {
   node: ReactNode;
 };
 
+/** Keys that change nothing on their own, so they keep a Tab cycle alive. Shift starts Shift+Tab. */
+const MODIFIER_KEYS = new Set(["Shift", "Control", "Alt", "Meta"]);
+
+/** A Tab cycle in progress. `index` is -1 until the second Tab fills in the first match. */
+type TabCycle = { matches: string[]; index: number };
+
 type PendingScroll = { kind: "line"; id: number } | { kind: "bottom" } | null;
 
 function commonPrefix(words: string[]): string {
@@ -82,6 +88,7 @@ export function Terminal({ active, setTheme }: TerminalProps) {
   const historyIndex = useRef(0);
   const introTimer = useRef<number | null>(null);
   const welcomeId = useRef<number | null>(null);
+  const tabCycle = useRef<TabCycle | null>(null);
   const wasActive = useRef(active);
 
   const append = (nodes: ReactNode[]) => {
@@ -128,6 +135,7 @@ export function Terminal({ active, setTheme }: TerminalProps) {
 
   const submit = (command: string) => {
     cancelIntro();
+    tabCycle.current = null;
     if (command.trim()) history.current.push(command.trim());
     historyIndex.current = history.current.length;
     execute(command);
@@ -190,6 +198,7 @@ export function Terminal({ active, setTheme }: TerminalProps) {
     const past = history.current;
     const field = event.currentTarget;
     const caretAtEnd = field.selectionStart === input.length && field.selectionEnd === input.length;
+    if (event.key !== "Tab" && !MODIFIER_KEYS.has(event.key)) tabCycle.current = null;
     if ((event.key === "ArrowRight" || event.key === "End") && suggestion && caretAtEnd) {
       event.preventDefault();
       setInput(suggestion);
@@ -204,11 +213,21 @@ export function Terminal({ active, setTheme }: TerminalProps) {
     } else if (event.key === "Tab" && input.trim() !== "") {
       // An empty prompt lets Tab move focus, so keyboard users are never trapped.
       event.preventDefault();
+      // Like zsh: the first Tab lists the matches, each further Tab fills in the next one.
+      const cycle = tabCycle.current;
+      if (cycle) {
+        const step = event.shiftKey ? -1 : 1;
+        const start = cycle.index === -1 && step === -1 ? 0 : cycle.index;
+        cycle.index = (start + step + cycle.matches.length) % cycle.matches.length;
+        setInput(cycle.matches[cycle.index]);
+        return;
+      }
       const matches = COMPLETIONS.filter((c) => c.startsWith(input));
       if (matches.length === 1) {
         setInput(matches[0]);
       } else if (matches.length > 1) {
         const prefix = commonPrefix(matches);
+        tabCycle.current = { matches, index: -1 };
         setInput(prefix);
         pendingScroll.current = { kind: "bottom" };
         append([
@@ -301,7 +320,10 @@ export function Terminal({ active, setTheme }: TerminalProps) {
                   autoCapitalize="off"
                   aria-describedby="term-help"
                   value={input}
-                  onChange={(event) => setInput(event.target.value)}
+                  onChange={(event) => {
+                    tabCycle.current = null;
+                    setInput(event.target.value);
+                  }}
                   onKeyDown={onKeyDown}
                 />
               </div>
