@@ -41,9 +41,9 @@ export function Work() {
               key={job.slug}
               className={cn(
                 "grid grid-cols-1 gap-x-6 gap-y-2 sm:grid-cols-[8rem_1fr]",
-                index !== last && "border-b border-dashed border-rule",
-                index !== last && (isOpen ? "pb-10" : "pb-6"),
-                index !== 0 && (isOpen ? "pt-10" : "pt-6"),
+                // Padding stays the same open or closed, so a toggle never moves the row's heading.
+                index !== last && "border-b border-dashed border-rule pb-6",
+                index !== 0 && "pt-6",
               )}
             >
               <p
