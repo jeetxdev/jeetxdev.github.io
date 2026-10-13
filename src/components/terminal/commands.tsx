@@ -136,6 +136,7 @@ function showWhoami(): CommandResult {
         </div>
         {fetchRow("Name", NAME)}
         {fetchRow("Role", "Senior full-stack developer")}
+        {fetchRow("Focus", "the parts users touch")}
         {fetchRow("Location", "Bangalore, India")}
         {fetchRow("Uptime", "11 yrs · no gaps")}
         {fetchRow("Host", JOBS[0].company)}
@@ -157,9 +158,6 @@ function showWhoami(): CommandResult {
         </div>
       </div>
     </div>,
-    <p className={`${PROSE_CLASS} pt-2`}>
-      Mostly I build the parts users touch - lately the banking interfaces at Standard Chartered.
-    </p>,
     <div className={NEXT_ROW_CLASS}>
       more: <RunLink command="cat about.txt" /> <RunLink command="ls work/" />{" "}
       <RunLink command="contact" />
