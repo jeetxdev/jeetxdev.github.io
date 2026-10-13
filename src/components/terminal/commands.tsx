@@ -35,14 +35,13 @@ const THEME_NAMES: Record<string, Theme> = { day: "light", night: "dark" };
 
 /** The stack line has room for a few names, so it shows the first ones from each layer. */
 const FETCH_STACK = STACK.slice(0, 3).flatMap(({ tools }) => tools.slice(0, 2));
-/** fastfetch ends with the terminal palette. These are the terminal's own colours. */
+/** The card ends with the terminal palette, as fastfetch does. These are the terminal's own colours. */
 const PALETTE_CLASSES = ["text-ink", "text-muted", "text-accent", "text-danger", "text-rule", "text-surface"];
-/** Typed for real by some visitors, so it runs fastfetch as the real tool's ancestor. */
-const ALIASES: Record<string, string> = { neofetch: "fastfetch" };
+/** whoami prints a fastfetch-style card, so the real tools' names print it too. */
+const ALIASES: Record<string, string> = { fastfetch: "whoami", neofetch: "whoami" };
 
 const COMMANDS: Record<string, Command> = {
   help: showHelp,
-  fastfetch: showFetch,
   whoami: showWhoami,
   ls: listFiles,
   cat: catFile,
@@ -54,8 +53,7 @@ const COMMANDS: Record<string, Command> = {
 
 /** `help` lists full commands by what they show, so visitors need not guess which file holds what. */
 const HELP_ROWS = [
-  { command: "fastfetch", describe: "quick overview" },
-  { command: "whoami", describe: "who I am" },
+  { command: "whoami", describe: "who I am, at a glance" },
   { command: "cat about.txt", describe: "about me" },
   { command: "ls work/", describe: "work experience" },
   { command: "cat stack.json", describe: "tech stack" },
@@ -72,7 +70,6 @@ export const COMMAND_NAMES = Object.keys(COMMANDS);
 
 export const COMPLETIONS = [
   "help",
-  "fastfetch",
   "whoami",
   "ls",
   "ls work/",
@@ -111,19 +108,6 @@ function showHelp(): CommandResult {
   ];
 }
 
-function profile(): ReactNode {
-  return (
-    <div className="pt-1">
-      <div className="font-bold">{NAME}</div>
-      <div>senior full-stack developer · Bangalore, India</div>
-      <div className="text-muted">11 yrs · fintech, banking, developer platforms</div>
-      <div className="mt-2">
-        <span className="text-accent">●</span> {AVAILABILITY}
-      </div>
-    </div>
-  );
-}
-
 function fetchRow(label: string, value: ReactNode): ReactNode {
   return (
     <div key={label} className="grid grid-cols-[5.5rem_1fr]">
@@ -133,7 +117,7 @@ function fetchRow(label: string, value: ReactNode): ReactNode {
   );
 }
 
-function showFetch(): CommandResult {
+function showWhoami(): CommandResult {
   return [
     <div className="flex gap-8 pt-1">
       <pre
@@ -152,6 +136,7 @@ function showFetch(): CommandResult {
         </div>
         {fetchRow("Name", NAME)}
         {fetchRow("Role", "Senior full-stack developer")}
+        {fetchRow("Location", "Bangalore, India")}
         {fetchRow("Uptime", "11 yrs · no gaps")}
         {fetchRow("Host", JOBS[0].company)}
         {fetchRow("Domain", "fintech, banking, developer platforms")}
@@ -172,17 +157,7 @@ function showFetch(): CommandResult {
         </div>
       </div>
     </div>,
-    <div className={NEXT_ROW_CLASS}>
-      more: <RunLink command="cat about.txt" /> <RunLink command="ls work/" />{" "}
-      <RunLink command="contact" />
-    </div>,
-  ];
-}
-
-function showWhoami(): CommandResult {
-  return [
-    profile(),
-    <p className={PROSE_CLASS}>
+    <p className={`${PROSE_CLASS} pt-2`}>
       Mostly I build the parts users touch - lately the banking interfaces at Standard Chartered.
     </p>,
     <div className={NEXT_ROW_CLASS}>
