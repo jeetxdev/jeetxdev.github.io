@@ -397,7 +397,7 @@ export function Terminal({ active, setTheme }: TerminalProps) {
                 className="font-mono text-lg font-bold tracking-[-0.02em] sm:text-xl"
               >
                 Eleven years of making the whole stack{" "}
-                <em className="-ml-[0.15em] font-serif text-[1.6em] leading-[0.6] font-semibold text-accent italic">
+                <em className="text-accent italic">
                   behave.
                 </em>
               </h1>

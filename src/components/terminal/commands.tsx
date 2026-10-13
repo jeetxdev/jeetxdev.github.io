@@ -29,7 +29,7 @@ export type CommandContext = {
 
 type Command = (args: string[], context: CommandContext) => CommandResult;
 
-const PROSE_CLASS = "max-w-[60ch] font-sans text-[16px] leading-relaxed";
+const PROSE_CLASS = "max-w-[64ch] leading-relaxed not-first:mt-2";
 const NEXT_ROW_CLASS = "flex flex-wrap gap-x-4 pt-2 text-muted";
 const THEME_NAMES: Record<string, Theme> = { day: "light", night: "dark" };
 
@@ -239,7 +239,7 @@ function catFile(args: string[]): CommandResult {
   return [
     <div className="pt-1 font-bold"># {job.company}</div>,
     muted(`${job.role} · ${job.place} · ${job.from} - ${job.to}`),
-    <ul className="mt-2 max-w-[64ch] space-y-1 font-sans text-[16px] leading-relaxed">
+    <ul className="mt-2 max-w-[64ch] space-y-1 leading-relaxed">
       {job.points.map((point) => (
         <li key={point}>
           <span className="font-mono text-accent">+ </span>
