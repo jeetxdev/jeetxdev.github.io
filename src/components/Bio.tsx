@@ -17,9 +17,8 @@ export function Bio({ paragraphClassName }: BioProps) {
         PHP) to know whose fault usually is.
       </p>
       <p className={paragraphClassName}>
-        I like well-named variables, problems that touch real users, and the
-        small thrill of{" "}
-        <span className="font-serif text-[1.15em] italic">deleting code</span>.
+        I like code that&rsquo;s easy to read, work that makes a difference to
+        users, and simplifying wherever I can.
       </p>
     </>
   );
