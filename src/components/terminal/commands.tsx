@@ -136,7 +136,7 @@ function showWhoami(): CommandResult {
         </div>
         {fetchRow("Name", NAME)}
         {fetchRow("Role", "Senior full-stack developer")}
-        {fetchRow("Focus", "user-facing products")}
+        {fetchRow("Focus", "UIs that ship to real users")}
         {fetchRow("Location", "Bangalore, India")}
         {fetchRow("Uptime", "11 yrs · no gaps")}
         {fetchRow("Host", JOBS[0].company)}
