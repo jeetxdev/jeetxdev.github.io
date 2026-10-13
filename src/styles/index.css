@@ -151,15 +151,9 @@ button {
   box-shadow: 8px 8px 0 var(--accent);
 }
 
-/* Everything in the terminal is monospace, including text shared with the page
-   view, such as the serif accent in the bio. */
+/* Everything in the terminal is monospace, including text shared with the page view. */
 .term-window * {
   font-family: var(--font-mono);
-}
-
-/* The bio enlarges its serif accent to match the body text's x-height. Monospace needs no boost. */
-.term-window .font-serif {
-  font-size: 1em;
 }
 
 .term-window .border-ink {
