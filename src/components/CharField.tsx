@@ -8,23 +8,30 @@ const FONT_SIZE_PX = 12;
 const LINE_HEIGHT_PX = 15;
 const MAX_DPR = 2;
 const FRAME_INTERVAL_MS = 1000 / 30;
+const MAX_FRAME_SECONDS = 0.1;
 const BRIGHTNESS_LEVELS = 12;
 const TINT_FROM = 0.55;
 
-/** The idle layer: faint grey patches that build up while the pointer moves and fade once it rests. */
-const IDLE_SHAPE_SCALE = 1 / 260;
-const IDLE_DETAIL_SCALE = 1 / 110;
-const IDLE_DETAIL_WEIGHT = 0.35;
-const IDLE_DRIFT_PER_SECOND = 0.15;
-const IDLE_VISIBLE_FROM = 0.45;
-const IDLE_FULL_AT = 0.75;
-const IDLE_BRIGHTNESS = 0.3;
-const IDLE_SCRAMBLE_RATIO = 0.03;
-const ACTIVITY_RISE_SECONDS = 2;
-const ACTIVITY_DECAY_SECONDS = 4;
-const ACTIVITY_EPSILON = 0.001;
-/** pointermove fires in bursts, so a short gap still counts as moving. */
-const MOVE_HOLD_MS = 150;
+/** Pointer movement leaves heat behind. More movement means more heat, which lasts longer. */
+const HEAT_CELL_PX = 20;
+const HEAT_RADIUS_PX = 130;
+const HEAT_PER_PX = 0.008;
+const HEAT_STAMP_SPACING_PX = 16;
+const HEAT_MAX = 3;
+const HEAT_DECAY_PER_SECOND = 0.6;
+const HEAT_EPSILON = 0.01;
+
+/** Heat sets how dense the hotspot is, but brightness stops rising at one unit of heat. */
+const HOTSPOT_BRIGHTNESS = 0.35;
+const HOTSPOT_SPARSE_FROM = 0.55;
+const HOTSPOT_DENSE_FROM = 0.25;
+const HOTSPOT_FULL_DENSITY_HEAT = 1.5;
+const HOTSPOT_FEATHER = 0.2;
+const HOTSPOT_SHAPE_SCALE = 1 / 260;
+const HOTSPOT_DETAIL_SCALE = 1 / 110;
+const HOTSPOT_DETAIL_WEIGHT = 0.35;
+const HOTSPOT_DRIFT_PER_SECOND = 0.15;
+const HOTSPOT_SCRAMBLE_RATIO = 0.03;
 
 /** Radius follows SPEED * age^EXPONENT, measured from the Claude Code desktop ripple. */
 const RIPPLE_SPEED_PX = 340;
@@ -105,13 +112,15 @@ type CharFieldProps = {
 };
 
 /**
- * Faint drifting characters that build up while the pointer moves, and a
- * ripple of scrambling characters from every click.
+ * Faint characters gather where the pointer moves and fade once it rests,
+ * and every click sends a ripple of scrambling characters across the page.
  */
 export function CharField({ theme, reduceMotion }: CharFieldProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
+    // Both layers exist only to answer pointer motion, so reduced motion shows nothing.
+    if (reduceMotion) return;
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext("2d");
     if (!canvas || !ctx) return;
@@ -126,8 +135,6 @@ export function CharField({ theme, reduceMotion }: CharFieldProps) {
     let frameId = 0;
     let running = false;
     let lastFrameAt = 0;
-    let lastMovedAt = -Infinity;
-    let activity = reduceMotion ? 1 : 0;
     let dpr = 1;
     let cellW = 1;
     let cellH = 1;
@@ -135,6 +142,11 @@ export function CharField({ theme, reduceMotion }: CharFieldProps) {
     let rows = 0;
     let glyphs = new Uint8Array(0);
     let atlas: HTMLCanvasElement | null = null;
+    let heatCols = 0;
+    let heatRows = 0;
+    let heat = new Float32Array(0);
+    let hottest = 0;
+    let pointer: { x: number; y: number } | null = null;
 
     const randomGlyph = () => Math.floor(Math.random() * GLYPHS.length);
 
@@ -149,13 +161,63 @@ export function CharField({ theme, reduceMotion }: CharFieldProps) {
       rows = Math.ceil(canvas.height / cellH);
       glyphs = Uint8Array.from({ length: cols * rows }, randomGlyph);
       atlas = buildAtlas(cellW, cellH, dpr, theme);
+      heatCols = Math.ceil(window.innerWidth / HEAT_CELL_PX) + 1;
+      heatRows = Math.ceil(window.innerHeight / HEAT_CELL_PX) + 1;
+      heat = new Float32Array(heatCols * heatRows);
+      hottest = 0;
     };
 
-    const idleAt = (cssX: number, cssY: number, drift: number): number => {
+    const stampHeat = (cx: number, cy: number, amount: number) => {
+      const reach = Math.ceil(HEAT_RADIUS_PX / HEAT_CELL_PX);
+      const centerCol = Math.round(cx / HEAT_CELL_PX);
+      const centerRow = Math.round(cy / HEAT_CELL_PX);
+      const sigmaSq = (HEAT_RADIUS_PX / 2) ** 2;
+      for (let row = Math.max(0, centerRow - reach); row <= Math.min(heatRows - 1, centerRow + reach); row++) {
+        for (let col = Math.max(0, centerCol - reach); col <= Math.min(heatCols - 1, centerCol + reach); col++) {
+          const dx = col * HEAT_CELL_PX - cx;
+          const dy = row * HEAT_CELL_PX - cy;
+          const distSq = dx * dx + dy * dy;
+          if (distSq > HEAT_RADIUS_PX * HEAT_RADIUS_PX) continue;
+          const index = row * heatCols + col;
+          heat[index] = Math.min(HEAT_MAX, heat[index] + amount * Math.exp(-distSq / (2 * sigmaSq)));
+          hottest = Math.max(hottest, heat[index]);
+        }
+      }
+    };
+
+    const coolHeat = (seconds: number) => {
+      const loss = HEAT_DECAY_PER_SECOND * seconds;
+      hottest = 0;
+      for (let i = 0; i < heat.length; i++) {
+        if (heat[i] === 0) continue;
+        heat[i] = Math.max(0, heat[i] - loss);
+        hottest = Math.max(hottest, heat[i]);
+      }
+    };
+
+    /** Bilinear lookup, so the hotspot edge does not show the coarse heat grid. */
+    const heatAt = (cssX: number, cssY: number): number => {
+      const gx = Math.min(cssX / HEAT_CELL_PX, heatCols - 1.001);
+      const gy = Math.min(cssY / HEAT_CELL_PX, heatRows - 1.001);
+      const col = Math.floor(gx);
+      const row = Math.floor(gy);
+      const fx = gx - col;
+      const fy = gy - row;
+      const i = row * heatCols + col;
+      const top = heat[i] + (heat[i + 1] - heat[i]) * fx;
+      const bottom = heat[i + heatCols] + (heat[i + heatCols + 1] - heat[i + heatCols]) * fx;
+      return top + (bottom - top) * fy;
+    };
+
+    const hotspotAt = (cssX: number, cssY: number, drift: number): number => {
+      const warmth = heatAt(cssX, cssY);
+      if (warmth < HEAT_EPSILON) return 0;
       const field =
-        shape(cssX * IDLE_SHAPE_SCALE + drift, cssY * IDLE_SHAPE_SCALE - drift * 0.6) * (1 - IDLE_DETAIL_WEIGHT) +
-        detail(cssX * IDLE_DETAIL_SCALE - drift * 1.3, cssY * IDLE_DETAIL_SCALE + drift * 0.8) * IDLE_DETAIL_WEIGHT;
-      return IDLE_BRIGHTNESS * activity * smoothstep(IDLE_VISIBLE_FROM, IDLE_FULL_AT, field);
+        shape(cssX * HOTSPOT_SHAPE_SCALE + drift, cssY * HOTSPOT_SHAPE_SCALE - drift * 0.6) * (1 - HOTSPOT_DETAIL_WEIGHT) +
+        detail(cssX * HOTSPOT_DETAIL_SCALE - drift * 1.3, cssY * HOTSPOT_DETAIL_SCALE + drift * 0.8) * HOTSPOT_DETAIL_WEIGHT;
+      const density = Math.min(1, warmth / HOTSPOT_FULL_DENSITY_HEAT);
+      const visibleFrom = HOTSPOT_SPARSE_FROM + (HOTSPOT_DENSE_FROM - HOTSPOT_SPARSE_FROM) * density;
+      return HOTSPOT_BRIGHTNESS * Math.min(1, warmth) * smoothstep(visibleFrom, visibleFrom + HOTSPOT_FEATHER, field);
     };
 
     const rippleAt = (cssX: number, cssY: number, now: number): number => {
@@ -175,8 +237,8 @@ export function CharField({ theme, reduceMotion }: CharFieldProps) {
     const draw = (now: number) => {
       if (!atlas) return;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      const drift = ((now - startedAt) / 1000) * IDLE_DRIFT_PER_SECOND;
-      const showIdle = activity > ACTIVITY_EPSILON;
+      const drift = ((now - startedAt) / 1000) * HOTSPOT_DRIFT_PER_SECOND;
+      const warm = hottest > HEAT_EPSILON;
 
       for (let row = 0; row < rows; row++) {
         const y = row * cellH;
@@ -186,11 +248,11 @@ export function CharField({ theme, reduceMotion }: CharFieldProps) {
           const cssX = (x + cellW / 2) / dpr;
           const index = row * cols + col;
           const ripple = ripples.length > 0 ? rippleAt(cssX, cssY, now) : 0;
-          // Characters inside a ripple churn fast, while the idle field only flickers.
+          // Characters inside a ripple churn fast, while the hotspot only flickers.
           if (ripple > RIPPLE_SCRAMBLE_FROM && Math.random() < RIPPLE_SCRAMBLE_CHANCE) {
             glyphs[index] = randomGlyph();
           }
-          const brightness = Math.max(ripple, showIdle ? idleAt(cssX, cssY, drift) : 0);
+          const brightness = Math.max(ripple, warm ? hotspotAt(cssX, cssY, drift) : 0);
           const level = Math.round(brightness * BRIGHTNESS_LEVELS);
           if (level === 0) continue;
           ctx.drawImage(atlas, glyphs[index] * cellW, (level - 1) * cellH, cellW, cellH, x, y, cellW, cellH);
@@ -198,8 +260,8 @@ export function CharField({ theme, reduceMotion }: CharFieldProps) {
       }
     };
 
-    const scrambleIdle = () => {
-      const swaps = glyphs.length * IDLE_SCRAMBLE_RATIO;
+    const flicker = () => {
+      const swaps = glyphs.length * HOTSPOT_SCRAMBLE_RATIO;
       for (let i = 0; i < swaps; i++) {
         glyphs[Math.floor(Math.random() * glyphs.length)] = randomGlyph();
       }
@@ -207,22 +269,18 @@ export function CharField({ theme, reduceMotion }: CharFieldProps) {
 
     const tick = (now: number) => {
       if (now - lastFrameAt >= FRAME_INTERVAL_MS) {
-        const seconds = Math.min(now - lastFrameAt, 100) / 1000;
+        const seconds = Math.min((now - lastFrameAt) / 1000, MAX_FRAME_SECONDS);
         lastFrameAt = now;
-        activity =
-          now - lastMovedAt < MOVE_HOLD_MS
-            ? Math.min(1, activity + seconds / ACTIVITY_RISE_SECONDS)
-            : Math.max(0, activity - seconds / ACTIVITY_DECAY_SECONDS);
+        coolHeat(seconds);
         const expiresBefore = now - RIPPLE_LIFETIME_SECONDS * 1000;
         while (ripples.length > 0 && ripples[0].bornAt < expiresBefore) ripples.shift();
-        scrambleIdle();
+        flicker();
         draw(now);
       }
-      // Once the field has faded and no ripple is left, the loop stops until the pointer acts again.
-      if (activity > ACTIVITY_EPSILON || ripples.length > 0 || now - lastMovedAt < MOVE_HOLD_MS) {
+      // Once the heat is gone and no ripple is left, the loop stops until the pointer acts again.
+      if (hottest > HEAT_EPSILON || ripples.length > 0) {
         frameId = requestAnimationFrame(tick);
       } else {
-        activity = 0;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         running = false;
       }
@@ -233,6 +291,25 @@ export function CharField({ theme, reduceMotion }: CharFieldProps) {
       running = true;
       lastFrameAt = performance.now();
       frameId = requestAnimationFrame(tick);
+    };
+
+    const onPointerMove = (event: PointerEvent) => {
+      const next = { x: event.clientX, y: event.clientY };
+      if (pointer) {
+        const distance = Math.hypot(next.x - pointer.x, next.y - pointer.y);
+        const stamps = Math.max(1, Math.ceil(distance / HEAT_STAMP_SPACING_PX));
+        const amount = (distance * HEAT_PER_PX) / stamps;
+        for (let i = 1; i <= stamps; i++) {
+          const t = i / stamps;
+          stampHeat(pointer.x + (next.x - pointer.x) * t, pointer.y + (next.y - pointer.y) * t, amount);
+        }
+      }
+      pointer = next;
+      start();
+    };
+
+    const onPointerLeave = () => {
+      pointer = null;
     };
 
     const onPointerDown = (event: PointerEvent) => {
@@ -246,16 +323,6 @@ export function CharField({ theme, reduceMotion }: CharFieldProps) {
       start();
     };
 
-    const onPointerMove = () => {
-      lastMovedAt = performance.now();
-      start();
-    };
-
-    const onResize = () => {
-      layout();
-      if (reduceMotion) draw(startedAt);
-    };
-
     // Measuring before the web font arrives would size every cell for the fallback font.
     document.fonts
       .load(`${FONT_SIZE_PX}px ${FONT_FAMILY}`)
@@ -263,21 +330,19 @@ export function CharField({ theme, reduceMotion }: CharFieldProps) {
       .then(() => {
         if (disposed) return;
         layout();
-        window.addEventListener("resize", onResize);
-        if (reduceMotion) {
-          draw(startedAt);
-          return;
-        }
-        window.addEventListener("pointerdown", onPointerDown);
+        window.addEventListener("resize", layout);
         window.addEventListener("pointermove", onPointerMove);
+        window.addEventListener("pointerdown", onPointerDown);
+        document.documentElement.addEventListener("pointerleave", onPointerLeave);
       });
 
     return () => {
       disposed = true;
       cancelAnimationFrame(frameId);
-      window.removeEventListener("resize", onResize);
-      window.removeEventListener("pointerdown", onPointerDown);
+      window.removeEventListener("resize", layout);
       window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointerdown", onPointerDown);
+      document.documentElement.removeEventListener("pointerleave", onPointerLeave);
     };
   }, [theme, reduceMotion]);
 
