@@ -9,6 +9,7 @@ import {
   type MouseEvent,
   type ReactNode,
 } from "react";
+import { QUIET_ZONE_ATTRIBUTE } from "@/components/CharField";
 import { PROMPT_USER } from "@/data/profile";
 import type { Theme } from "@/lib/theme";
 import { CLEAR, COMMAND_NAMES, COMPLETIONS, runCommand } from "./commands";
@@ -374,7 +375,11 @@ export function Terminal({ active, setTheme }: TerminalProps) {
         aria-labelledby="hero-heading"
         className="h-[calc(100svh-2.06rem)] min-h-[28rem] pt-3 pb-5 sm:pt-5 sm:pb-6"
       >
-        <div className="term-window flex h-full flex-col border border-ink bg-paper" onClick={onClick}>
+        <div
+          className="term-window flex h-full flex-col border border-ink bg-paper"
+          onClick={onClick}
+          {...{ [QUIET_ZONE_ATTRIBUTE]: "" }}
+        >
           <div className="flex items-center gap-3 border-b border-ink bg-surface px-4 py-3 font-mono text-[12.5px] text-muted sm:px-5">
             <span className="flex gap-1.5" aria-hidden="true">
               <span className="term-dot" />
