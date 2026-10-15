@@ -10,26 +10,33 @@ const MAX_DPR = 2;
 const FRAME_INTERVAL_MS = 1000 / 30;
 const BRIGHTNESS_LEVELS = 12;
 const SCRAMBLE_RATIO = 0.3;
-
-const SHAPE_SCALE = 1 / 260;
-const DETAIL_SCALE = 1 / 110;
-const DETAIL_WEIGHT = 0.35;
-const DRIFT_PER_SECOND = 0.07;
-const VISIBLE_FROM = 0.56;
-const FULL_AT = 0.86;
 const TINT_FROM = 0.55;
 
-const GLOW_RADIUS_PX = 110;
-const GLOW_STRENGTH = 0.9;
-const GLOW_FOLLOW = 0.3;
-const GLOW_FADE = 0.08;
-const GLOW_MIN = 0.01;
-const FINE_POINTER_QUERY = "(hover: hover) and (pointer: fine)";
+/** Radius follows SPEED * age^EXPONENT, measured from the Claude Code desktop ripple. */
+const RIPPLE_SPEED_PX = 340;
+const RIPPLE_GROWTH_EXPONENT = 0.7;
+const RIPPLE_LIFETIME_SECONDS = 1.8;
+const RIPPLE_FADE_FROM = 0.4;
+const RIPPLE_FRONT_PX = 14;
+const RIPPLE_WAKE_PX = 70;
+const RIPPLE_WAKE_BRIGHTNESS = 0.45;
+const MAX_RIPPLES = 8;
+
+/** Noise bends the ring more as it ages, so it breaks into wavy arcs. */
+const WARP_SCALE = 1 / 150;
+const WARP_PX_PER_SECOND = 110;
 
 /** Day needs a lighter touch, or the field fights the dark body text. */
-const MAX_ALPHA: Record<Theme, number> = { dark: 0.3, light: 0.24 };
+const MAX_ALPHA: Record<Theme, number> = { dark: 0.55, light: 0.45 };
 
 type Rgb = [number, number, number];
+
+type Ripple = {
+  x: number;
+  y: number;
+  bornAt: number;
+  warpOffset: number;
+};
 
 function smoothstep(edge0: number, edge1: number, x: number): number {
   const t = Math.min(1, Math.max(0, (x - edge0) / (edge1 - edge0)));
@@ -70,28 +77,34 @@ function buildAtlas(cellW: number, cellH: number, dpr: number, theme: Theme): HT
   return atlas;
 }
 
+/** A bright leading edge with a dimmer wake trailing inside the ring. */
+function waveProfile(offset: number): number {
+  if (offset > 0) return Math.exp(-((offset / RIPPLE_FRONT_PX) ** 2));
+  return Math.max(Math.exp(offset / RIPPLE_FRONT_PX), RIPPLE_WAKE_BRIGHTNESS * Math.exp(offset / RIPPLE_WAKE_PX));
+}
+
 type CharFieldProps = {
   theme: Theme;
   reduceMotion: boolean;
 };
 
-/** Scrambling monospace characters, revealed by drifting noise and brightened around the cursor. */
+/** Scrambling monospace characters that only show where a click sends a ripple across the page. */
 export function CharField({ theme, reduceMotion }: CharFieldProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
+    // The field shows nothing until a ripple runs, and ripples are pure motion.
+    if (reduceMotion) return;
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext("2d");
     if (!canvas || !ctx) return;
 
-    const shape = createValueNoise();
-    const detail = createValueNoise();
-    const allowGlow = !reduceMotion && window.matchMedia(FINE_POINTER_QUERY).matches;
-    const pointer = { x: 0, y: 0, targetX: 0, targetY: 0, glow: 0, inside: false };
-    const startedAt = performance.now();
+    const warp = createValueNoise();
+    const ripples: Ripple[] = [];
 
     let disposed = false;
     let frameId = 0;
+    let running = false;
     let lastFrameAt = 0;
     let dpr = 1;
     let cellW = 1;
@@ -123,37 +136,30 @@ export function CharField({ theme, reduceMotion }: CharFieldProps) {
       }
     };
 
-    const draw = (seconds: number) => {
+    const brightnessAt = (cssX: number, cssY: number, now: number): number => {
+      let brightness = 0;
+      for (const ripple of ripples) {
+        const age = (now - ripple.bornAt) / 1000;
+        const radius = RIPPLE_SPEED_PX * age ** RIPPLE_GROWTH_EXPONENT;
+        const strength = 1 - smoothstep(RIPPLE_FADE_FROM, 1, age / RIPPLE_LIFETIME_SECONDS);
+        const bend =
+          (warp(cssX * WARP_SCALE + ripple.warpOffset, cssY * WARP_SCALE) - 0.5) * 2 * WARP_PX_PER_SECOND * age;
+        const distance = Math.hypot(cssX - ripple.x, cssY - ripple.y) + bend;
+        brightness = Math.max(brightness, strength * waveProfile(distance - radius));
+      }
+      return brightness;
+    };
+
+    const draw = (now: number) => {
       if (!atlas) return;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      const drift = seconds * DRIFT_PER_SECOND;
-      const glowRadius = GLOW_RADIUS_PX * dpr;
-      const glowRadiusSq = glowRadius * glowRadius;
-      const glowing = pointer.glow > GLOW_MIN;
-
       for (let row = 0; row < rows; row++) {
         const y = row * cellH;
-        const cssY = y / dpr;
+        const cssY = (y + cellH / 2) / dpr;
         for (let col = 0; col < cols; col++) {
           const x = col * cellW;
-          const cssX = x / dpr;
-          const field =
-            shape(cssX * SHAPE_SCALE + drift, cssY * SHAPE_SCALE - drift * 0.6) * (1 - DETAIL_WEIGHT) +
-            detail(cssX * DETAIL_SCALE - drift * 1.3, cssY * DETAIL_SCALE + drift * 0.8) * DETAIL_WEIGHT;
-          let brightness = smoothstep(VISIBLE_FROM, FULL_AT, field);
-
-          if (glowing) {
-            const dx = x + cellW / 2 - pointer.x;
-            const dy = y + cellH / 2 - pointer.y;
-            const distSq = dx * dx + dy * dy;
-            if (distSq < glowRadiusSq) {
-              const falloff = 1 - Math.sqrt(distSq) / glowRadius;
-              brightness = Math.min(1, brightness + falloff * falloff * GLOW_STRENGTH * pointer.glow);
-            }
-          }
-
-          const level = Math.round(brightness * BRIGHTNESS_LEVELS);
+          const level = Math.round(brightnessAt((x + cellW / 2) / dpr, cssY, now) * BRIGHTNESS_LEVELS);
           if (level === 0) continue;
           const glyph = glyphs[row * cols + col];
           ctx.drawImage(atlas, glyph * cellW, (level - 1) * cellH, cellW, cellH, x, y, cellW, cellH);
@@ -161,38 +167,39 @@ export function CharField({ theme, reduceMotion }: CharFieldProps) {
       }
     };
 
-    // requestAnimationFrame already stops in background tabs, so a hidden tab costs nothing.
     const tick = (now: number) => {
-      frameId = requestAnimationFrame(tick);
-      if (now - lastFrameAt < FRAME_INTERVAL_MS) return;
-      lastFrameAt = now;
-
-      scramble();
-      pointer.x += (pointer.targetX - pointer.x) * GLOW_FOLLOW;
-      pointer.y += (pointer.targetY - pointer.y) * GLOW_FOLLOW;
-      pointer.glow += ((pointer.inside ? 1 : 0) - pointer.glow) * GLOW_FADE;
-      draw((now - startedAt) / 1000);
-    };
-
-    const onResize = () => {
-      layout();
-      if (reduceMotion) draw(0);
-    };
-
-    const onPointerMove = (event: PointerEvent) => {
-      pointer.targetX = event.clientX * dpr;
-      pointer.targetY = event.clientY * dpr;
-      // Entering the window starts the glow at the cursor instead of sliding in from the last exit.
-      if (!pointer.inside) {
-        pointer.x = pointer.targetX;
-        pointer.y = pointer.targetY;
-        pointer.inside = true;
+      if (now - lastFrameAt >= FRAME_INTERVAL_MS) {
+        lastFrameAt = now;
+        const expiresBefore = now - RIPPLE_LIFETIME_SECONDS * 1000;
+        while (ripples.length > 0 && ripples[0].bornAt < expiresBefore) ripples.shift();
+        scramble();
+        draw(now);
+      }
+      // The loop stops once the last ripple fades, so an idle page costs nothing.
+      if (ripples.length > 0) {
+        frameId = requestAnimationFrame(tick);
+      } else {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        running = false;
       }
     };
 
-    const onMouseOut = (event: MouseEvent) => {
-      if (!event.relatedTarget) pointer.inside = false;
+    const onPointerDown = (event: PointerEvent) => {
+      if (!atlas) return;
+      if (ripples.length >= MAX_RIPPLES) ripples.shift();
+      ripples.push({
+        x: event.clientX,
+        y: event.clientY,
+        bornAt: performance.now(),
+        warpOffset: Math.random() * 100,
+      });
+      if (!running) {
+        running = true;
+        frameId = requestAnimationFrame(tick);
+      }
     };
+
+    const onResize = () => layout();
 
     // Measuring before the web font arrives would size every cell for the fallback font.
     document.fonts
@@ -202,23 +209,14 @@ export function CharField({ theme, reduceMotion }: CharFieldProps) {
         if (disposed) return;
         layout();
         window.addEventListener("resize", onResize);
-        if (reduceMotion) {
-          draw(0);
-          return;
-        }
-        if (allowGlow) {
-          window.addEventListener("pointermove", onPointerMove);
-          document.addEventListener("mouseout", onMouseOut);
-        }
-        frameId = requestAnimationFrame(tick);
+        window.addEventListener("pointerdown", onPointerDown);
       });
 
     return () => {
       disposed = true;
       cancelAnimationFrame(frameId);
       window.removeEventListener("resize", onResize);
-      window.removeEventListener("pointermove", onPointerMove);
-      document.removeEventListener("mouseout", onMouseOut);
+      window.removeEventListener("pointerdown", onPointerDown);
     };
   }, [theme, reduceMotion]);
 

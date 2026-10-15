@@ -244,12 +244,12 @@ button {
   opacity: 0.9;
 }
 
-/* The field stays at full strength in the margins and drops back behind the
+/* Ripples stay at full strength in the margins and drop back behind the
    content column, so body text never competes with the characters. On narrow
    screens the column fills the viewport, so the whole field stays dimmed. */
 .char-field {
   --content-edge: calc(50% - var(--container-page) / 2);
-  --content-dim: rgb(0 0 0 / 0.3);
+  --content-dim: rgb(0 0 0 / 0.5);
   --field-mask: linear-gradient(
     to right,
     #000 calc(var(--content-edge) - 3rem),
