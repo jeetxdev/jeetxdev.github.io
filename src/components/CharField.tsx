@@ -10,7 +10,13 @@ const MAX_DPR = 2;
 const FRAME_INTERVAL_MS = 1000 / 30;
 const MAX_FRAME_SECONDS = 0.1;
 const BRIGHTNESS_LEVELS = 12;
-const TINT_FROM = 0.55;
+
+/** The hotspot stays grey, while ripple characters carry the accent at every brightness. */
+const HOTSPOT_PALETTE = 0;
+const RIPPLE_PALETTE = 1;
+const RIPPLE_TINT_MIN = 0.7;
+/** Ring bands saturate, so a good share of their characters reach full brightness. */
+const RIPPLE_GAIN = 1.5;
 
 /** Pointer movement leaves heat behind. More movement means more heat, which lasts longer. */
 const HEAT_CELL_PX = 20;
@@ -43,8 +49,8 @@ const RIPPLE_SCRAMBLE_CHANCE = 0.5;
 const MAX_RIPPLES = 8;
 
 /** One click sends a train of rings, each later and fainter, so smaller rings sit inside larger ones. */
-const RING_DELAYS_SECONDS = [0, 0.18, 0.36];
-const RING_STRENGTHS = [1, 0.7, 0.45];
+const RING_DELAYS_SECONDS = [0, 0.22];
+const RING_STRENGTHS = [1, 0.8];
 const RIPPLE_TOTAL_SECONDS = RIPPLE_LIFETIME_SECONDS + RING_DELAYS_SECONDS[RING_DELAYS_SECONDS.length - 1];
 
 /** Each ring is a hollow band that thickens as it grows, softer on its inner side. */
@@ -55,12 +61,29 @@ const RING_INNER_SOFTNESS = 1.2;
 /** Low harmonics give every ripple its own lopsided outline, kept by all its rings as they grow. */
 const SHAPE_HARMONICS = [1, 2, 3, 4];
 const SHAPE_AMPLITUDE_MAX = [0.06, 0.12, 0.08, 0.04];
-const SHAPE_AMPLITUDE_MIN_RATIO = 0.4;
+const SHAPE_AMPLITUDE_MIN_RATIO = 0.2;
 const SHAPE_STRETCH_MAX = 1 + SHAPE_AMPLITUDE_MAX.reduce((sum, amplitude) => sum + amplitude, 0);
 
 /** Noise bends the rings a little more as they age, so they break into wavy arcs. */
 const WARP_SCALE = 1 / 150;
 const WARP_PX_PER_SECOND = 50;
+
+/** Fine noise keeps the ring edge ragged instead of a clean vector outline. */
+const RAGGED_SCALE = 1 / 40;
+const RAGGED_PX = 9;
+
+/** Brightness varies around each ring and the dim stretches deepen with age, so rings break into arcs. */
+const ARC_HARMONICS = [2, 3, 5];
+const ARC_SPIN_PER_SECOND = 0.6;
+const ARC_BREAK_FROM_SECONDS = 0.15;
+const ARC_BREAK_FULL_SECONDS = 0.9;
+const ARC_BREAK_DEPTH = 0.9;
+
+/** Each lit cell keeps a random weight, so ring bands read as scattered characters, not solid strokes. */
+const SPARKLE_MIN = 0.25;
+
+/** The square root skews weights towards 1, so most ring characters stay bright and a few drop out. */
+const randomSparkle = () => Math.sqrt(Math.random());
 
 /** Pointer activity inside these elements, such as the terminal window, never reaches the field. */
 export const QUIET_ZONE_ATTRIBUTE = "data-char-field-quiet";
@@ -78,10 +101,20 @@ type Ripple = {
   warpOffset: number;
   amplitudes: number[];
   phases: number[];
+  arcPhases: number[];
 };
 
 function inQuietZone(event: PointerEvent): boolean {
   return event.target instanceof Element && event.target.closest(QUIET_ZONE_SELECTOR) !== null;
+}
+
+/** Smooth 0..1 brightness around the ring that slowly rotates. */
+function arcPresence(ripple: Ripple, angle: number, age: number): number {
+  let sum = 0;
+  for (let i = 0; i < ARC_HARMONICS.length; i++) {
+    sum += Math.sin(ARC_HARMONICS[i] * angle + ripple.arcPhases[i] + age * ARC_SPIN_PER_SECOND * (i + 1));
+  }
+  return 0.5 + (0.5 * sum) / ARC_HARMONICS.length;
 }
 
 function smoothstep(edge0: number, edge1: number, x: number): number {
@@ -96,11 +129,11 @@ function readColorToken(name: string): Rgb {
   return [(value >> 16) & 255, (value >> 8) & 255, value & 255];
 }
 
-/** Pre-renders every glyph at every brightness, so a frame is only drawImage calls. */
+/** Pre-renders every glyph at every brightness in both palettes, so a frame is only drawImage calls. */
 function buildAtlas(cellW: number, cellH: number, dpr: number, theme: Theme): HTMLCanvasElement {
   const atlas = document.createElement("canvas");
   atlas.width = GLYPHS.length * cellW;
-  atlas.height = BRIGHTNESS_LEVELS * cellH;
+  atlas.height = 2 * BRIGHTNESS_LEVELS * cellH;
   const ctx = atlas.getContext("2d");
   if (!ctx) return atlas;
 
@@ -110,14 +143,16 @@ function buildAtlas(cellW: number, cellH: number, dpr: number, theme: Theme): HT
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
 
-  for (let level = 1; level <= BRIGHTNESS_LEVELS; level++) {
-    const strength = level / BRIGHTNESS_LEVELS;
-    const tint = smoothstep(TINT_FROM, 1, strength);
-    const [r, g, b] = dim.map((channel, i) => Math.round(channel + (bright[i] - channel) * tint));
-    ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${strength * MAX_ALPHA[theme]})`;
-    const y = (level - 1) * cellH + cellH / 2;
-    for (let i = 0; i < GLYPHS.length; i++) {
-      ctx.fillText(GLYPHS[i], i * cellW + cellW / 2, y);
+  for (const palette of [HOTSPOT_PALETTE, RIPPLE_PALETTE]) {
+    for (let level = 1; level <= BRIGHTNESS_LEVELS; level++) {
+      const strength = level / BRIGHTNESS_LEVELS;
+      const tint = palette === RIPPLE_PALETTE ? RIPPLE_TINT_MIN + (1 - RIPPLE_TINT_MIN) * strength : 0;
+      const [r, g, b] = dim.map((channel, i) => Math.round(channel + (bright[i] - channel) * tint));
+      ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${strength * MAX_ALPHA[theme]})`;
+      const y = (palette * BRIGHTNESS_LEVELS + level - 1) * cellH + cellH / 2;
+      for (let i = 0; i < GLYPHS.length; i++) {
+        ctx.fillText(GLYPHS[i], i * cellW + cellW / 2, y);
+      }
     }
   }
   return atlas;
@@ -176,6 +211,7 @@ export function CharField({ theme, reduceMotion }: CharFieldProps) {
     let cols = 0;
     let rows = 0;
     let glyphs = new Uint8Array(0);
+    let sparkle = new Float32Array(0);
     let atlas: HTMLCanvasElement | null = null;
     let heatCols = 0;
     let heatRows = 0;
@@ -195,6 +231,7 @@ export function CharField({ theme, reduceMotion }: CharFieldProps) {
       cols = Math.ceil(canvas.width / cellW);
       rows = Math.ceil(canvas.height / cellH);
       glyphs = Uint8Array.from({ length: cols * rows }, randomGlyph);
+      sparkle = Float32Array.from({ length: cols * rows }, randomSparkle);
       atlas = buildAtlas(cellW, cellH, dpr, theme);
       heatCols = Math.ceil(window.innerWidth / HEAT_CELL_PX) + 1;
       heatRows = Math.ceil(window.innerHeight / HEAT_CELL_PX) + 1;
@@ -264,20 +301,28 @@ export function CharField({ theme, reduceMotion }: CharFieldProps) {
         const distance = Math.hypot(dx, dy);
         const outer = ringRadius(age);
         const reach =
-          outer * SHAPE_STRETCH_MAX + RING_WIDTH_PX * 3 + outer * RING_WIDTH_PER_RADIUS * 3 + WARP_PX_PER_SECOND * age;
+          outer * SHAPE_STRETCH_MAX +
+          RING_WIDTH_PX * 3 +
+          outer * RING_WIDTH_PER_RADIUS * 3 +
+          WARP_PX_PER_SECOND * age +
+          RAGGED_PX;
         if (distance > reach) continue;
 
         // Dividing by the stretch maps the lopsided outline back onto a circle, so every ring shares it.
+        const angle = Math.atan2(dy, dx);
         const bend =
-          (warp(cssX * WARP_SCALE + ripple.warpOffset, cssY * WARP_SCALE) - 0.5) * 2 * WARP_PX_PER_SECOND * age;
-        const shaped = distance / shapeStretch(ripple, Math.atan2(dy, dx)) + bend;
+          (warp(cssX * WARP_SCALE + ripple.warpOffset, cssY * WARP_SCALE) - 0.5) * 2 * WARP_PX_PER_SECOND * age +
+          (warp(cssX * RAGGED_SCALE - ripple.warpOffset, cssY * RAGGED_SCALE) - 0.5) * 2 * RAGGED_PX;
+        const shaped = distance / shapeStretch(ripple, angle) + bend;
+        const breakDepth = ARC_BREAK_DEPTH * smoothstep(ARC_BREAK_FROM_SECONDS, ARC_BREAK_FULL_SECONDS, age);
+        const arcs = 1 - breakDepth * (1 - arcPresence(ripple, angle, age));
         for (let ring = 0; ring < RING_DELAYS_SECONDS.length; ring++) {
           const ringAge = age - RING_DELAYS_SECONDS[ring];
           if (ringAge <= 0) continue;
           const radius = ringRadius(ringAge);
           const strength =
             RING_STRENGTHS[ring] * (1 - smoothstep(RIPPLE_FADE_FROM, 1, ringAge / RIPPLE_LIFETIME_SECONDS));
-          brightness = Math.max(brightness, strength * ringBand(shaped - radius, radius));
+          brightness = Math.max(brightness, arcs * strength * ringBand(shaped - radius, radius));
         }
       }
       return brightness;
@@ -300,11 +345,15 @@ export function CharField({ theme, reduceMotion }: CharFieldProps) {
           // Characters inside a ripple churn fast, while the hotspot only flickers.
           if (ripple > RIPPLE_SCRAMBLE_FROM && Math.random() < RIPPLE_SCRAMBLE_CHANCE) {
             glyphs[index] = randomGlyph();
+            sparkle[index] = randomSparkle();
           }
-          const brightness = Math.max(ripple, warm ? hotspotAt(cssX, cssY, drift) : 0);
-          const level = Math.round(brightness * BRIGHTNESS_LEVELS);
+          const sparkled = Math.min(1, RIPPLE_GAIN * ripple * (SPARKLE_MIN + (1 - SPARKLE_MIN) * sparkle[index]));
+          const hotspot = warm ? hotspotAt(cssX, cssY, drift) : 0;
+          const palette = sparkled >= hotspot ? RIPPLE_PALETTE : HOTSPOT_PALETTE;
+          const level = Math.round(Math.max(sparkled, hotspot) * BRIGHTNESS_LEVELS);
           if (level === 0) continue;
-          ctx.drawImage(atlas, glyphs[index] * cellW, (level - 1) * cellH, cellW, cellH, x, y, cellW, cellH);
+          const atlasY = (palette * BRIGHTNESS_LEVELS + level - 1) * cellH;
+          ctx.drawImage(atlas, glyphs[index] * cellW, atlasY, cellW, cellH, x, y, cellW, cellH);
         }
       }
     };
@@ -378,6 +427,7 @@ export function CharField({ theme, reduceMotion }: CharFieldProps) {
           (max) => max * (SHAPE_AMPLITUDE_MIN_RATIO + Math.random() * (1 - SHAPE_AMPLITUDE_MIN_RATIO)),
         ),
         phases: SHAPE_HARMONICS.map(() => Math.random() * Math.PI * 2),
+        arcPhases: ARC_HARMONICS.map(() => Math.random() * Math.PI * 2),
       });
       start();
     };
