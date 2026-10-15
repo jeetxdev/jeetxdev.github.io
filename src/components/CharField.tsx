@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import type { Theme } from "@/lib/theme";
-import { createValueNoise, type Noise2D } from "@/lib/valueNoise";
+import { createValueNoise } from "@/lib/valueNoise";
 
 const GLYPHS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 const FONT_FAMILY = '"JetBrains Mono", ui-monospace, monospace';
@@ -17,12 +17,12 @@ const MAX_FRAME_SECONDS = 0.1;
 const BRIGHTNESS_LEVELS = 12;
 const EMPTY_CELL = -1;
 
-/** The hotspot stays grey, while ripple characters carry the accent at every brightness. */
+/** The hotspot stays grey, while burst characters carry the accent at every brightness. */
 const HOTSPOT_PALETTE = 0;
-const RIPPLE_PALETTE = 1;
-const RIPPLE_TINT_MIN = 0.7;
-/** Ring bands saturate, so a good share of their characters reach full brightness. */
-const RIPPLE_GAIN = 1.5;
+const BURST_PALETTE = 1;
+const BURST_TINT_MIN = 0.7;
+/** The burst core saturates, so a good share of its characters reach full brightness. */
+const BURST_GAIN = 1.3;
 
 /** Pointer movement leaves heat behind. More movement means more heat, which lasts longer. */
 const HEAT_CELL_PX = 20;
@@ -47,67 +47,29 @@ const HOTSPOT_DRIFT_PER_SECOND = 0.15;
 const HOTSPOT_SCRAMBLE_PER_SECOND = 0.9;
 
 /**
- * Measured from a Claude Code recording: the outer ring starts at 36px and
- * eases towards 564px, so it keeps slowing down like a wave on water.
+ * A click lights a small patch of characters that scramble, then settle and
+ * fade, like text decoding. The patch grows a little as it appears.
  */
-const RIPPLE_START_PX = 36;
-const RIPPLE_REACH_PX = 528;
-const RIPPLE_EASE_SECONDS = 1.15;
-/**
- * Brightness falls as 1 / (1 + age / DECAY). The recording showed about 55% at
- * 0.5s, 38% at 1s and 28% at 1.5s. DECAY sits a little slower than that fit,
- * because scattered characters and broken arcs already dim the ring on average.
- */
-const RIPPLE_DECAY_SECONDS = 1;
-const RIPPLE_FADE_FROM_SECONDS = 1.8;
-const RIPPLE_LIFETIME_SECONDS = 2.6;
-const RIPPLE_SCRAMBLE_FROM = 0.05;
-const RIPPLE_SCRAMBLE_PER_SECOND = 12;
-const MAX_RIPPLES = 8;
+const BURST_START_RADIUS_PX = 45;
+const BURST_RADIUS_PX = 85;
+const BURST_GROW_SECONDS = 0.15;
+const BURST_CORE = 0.35;
+const BURST_RISE_SECONDS = 0.05;
+const BURST_FADE_FROM_SECONDS = 0.08;
+const BURST_LIFETIME_SECONDS = 0.55;
+/** Characters churn fast at first and slow to a stop as the burst fades, which reads as decoding. */
+const BURST_SCRAMBLE_PER_SECOND = 30;
+const BURST_SCRAMBLE_FROM = 0.05;
+const MAX_BURSTS = 8;
 
-/** The inner ring starts later and travels slower, so the two rings drift apart like water waves. */
-const RING_DELAYS_SECONDS = [0, 0.2];
-const RING_SPEEDS = [1, 0.75];
-const RING_STRENGTHS = [1, 0.9];
-const RIPPLE_TOTAL_SECONDS = RIPPLE_LIFETIME_SECONDS + RING_DELAYS_SECONDS[RING_DELAYS_SECONDS.length - 1];
-
-/** Each ring is a hollow band that thickens as it grows, softer on its inner side. */
-const RING_WIDTH_PX = 8;
-const RING_WIDTH_PER_RADIUS = 0.03;
-const RING_INNER_SOFTNESS = 1.2;
-
-/**
- * Noise sampled around a circle gives each ripple an irregular outline, and
- * moving through the noise over time keeps that outline morphing.
- */
-const SHAPE_NOISE_RADIUS = 1.2;
-const SHAPE_MORPH_PER_SECOND = 0.5;
-const SHAPE_STRETCH_BASE = 0.06;
-const SHAPE_STRETCH_PER_SECOND = 0.06;
-const SHAPE_STRETCH_MAX = 1 + SHAPE_STRETCH_BASE + SHAPE_STRETCH_PER_SECOND * RIPPLE_TOTAL_SECONDS;
-
-/** Noise bends the rings a little more as they age, so they break into wavy arcs. */
-const WARP_SCALE = 1 / 150;
-const WARP_PX_PER_SECOND = 25;
-
-/** Fine noise keeps the ring edge ragged instead of a clean vector outline. */
+/** Fine noise keeps the burst edge ragged instead of a clean circle. */
 const RAGGED_SCALE = 1 / 40;
 const RAGGED_PX = 9;
 
-/** Brightness wanders around each ring, and the dim stretches deepen with age, so rings break into arcs. */
-const ARC_NOISE_RADIUS = 1.5;
-const ARC_MORPH_PER_SECOND = 0.7;
-const ARC_BREAK_FROM_SECONDS = 0.15;
-const ARC_BREAK_FULL_SECONDS = 1.1;
-const ARC_BREAK_DEPTH = 0.6;
-
-/** Outline and arc noise depend only on the angle, so each ripple samples them once per frame into a table. */
-const ANGLE_BINS = 128;
-
-/** Each lit cell keeps a random weight, so ring bands read as scattered characters, not solid strokes. */
+/** Each lit cell keeps a random weight, so a burst reads as scattered characters, not a solid disc. */
 const SPARKLE_MIN = 0.25;
 
-/** The square root skews weights towards 1, so most ring characters stay bright and a few drop out. */
+/** The square root skews weights towards 1, so most burst characters stay bright and a few drop out. */
 const randomSparkle = () => Math.sqrt(Math.random());
 
 /** Pointer activity inside these elements, such as the terminal window, never reaches the field. */
@@ -119,26 +81,19 @@ const MAX_ALPHA: Record<Theme, number> = { dark: 0.55, light: 0.45 };
 
 type Rgb = [number, number, number];
 
-type Ripple = {
+type Burst = {
   x: number;
   y: number;
   bornAt: number;
-  shapeSeed: number;
-  arcSeed: number;
 };
 
-/** Everything about a ripple that is the same for every character in one frame. */
-type RippleFrame = {
+/** Everything about a burst that is the same for every character in one frame. */
+type BurstFrame = {
   x: number;
   y: number;
-  age: number;
-  reach: number;
-  hollow: number;
-  warpPx: number;
-  stretch: Float32Array;
-  arcs: Float32Array;
-  radii: number[];
-  strengths: number[];
+  radius: number;
+  strength: number;
+  scrambleRate: number;
 };
 
 function inQuietZone(event: PointerEvent): boolean {
@@ -171,10 +126,10 @@ function buildAtlas(cellW: number, cellH: number, dpr: number, theme: Theme): HT
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
 
-  for (const palette of [HOTSPOT_PALETTE, RIPPLE_PALETTE]) {
+  for (const palette of [HOTSPOT_PALETTE, BURST_PALETTE]) {
     for (let level = 1; level <= BRIGHTNESS_LEVELS; level++) {
       const strength = level / BRIGHTNESS_LEVELS;
-      const tint = palette === RIPPLE_PALETTE ? RIPPLE_TINT_MIN + (1 - RIPPLE_TINT_MIN) * strength : 0;
+      const tint = palette === BURST_PALETTE ? BURST_TINT_MIN + (1 - BURST_TINT_MIN) * strength : 0;
       const [r, g, b] = dim.map((channel, i) => Math.round(channel + (bright[i] - channel) * tint));
       ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${strength * MAX_ALPHA[theme]})`;
       const y = (palette * BRIGHTNESS_LEVELS + level - 1) * cellH + cellH / 2;
@@ -186,26 +141,6 @@ function buildAtlas(cellW: number, cellH: number, dpr: number, theme: Theme): HT
   return atlas;
 }
 
-function ringRadius(age: number, speed: number): number {
-  return speed * (RIPPLE_START_PX + RIPPLE_REACH_PX * (1 - Math.exp(-age / RIPPLE_EASE_SECONDS)));
-}
-
-function ringStrength(age: number): number {
-  const decay = 1 / (1 + age / RIPPLE_DECAY_SECONDS);
-  return decay * (1 - smoothstep(RIPPLE_FADE_FROM_SECONDS, RIPPLE_LIFETIME_SECONDS, age));
-}
-
-function ringBand(offset: number, radius: number): number {
-  const width = RING_WIDTH_PX + radius * RING_WIDTH_PER_RADIUS;
-  const side = offset > 0 ? width : width * RING_INNER_SOFTNESS;
-  return Math.exp(-((offset / side) ** 2));
-}
-
-/** Samples noise on a circle, so the value wraps smoothly around the ring with no seam. */
-function aroundRing(noise: Noise2D, seed: number, cos: number, sin: number, radius: number, drift: number): number {
-  return noise(seed + cos * radius + drift, seed + sin * radius - drift);
-}
-
 type CharFieldProps = {
   theme: Theme;
   reduceMotion: boolean;
@@ -213,7 +148,7 @@ type CharFieldProps = {
 
 /**
  * Faint characters gather where the pointer moves and fade once it rests,
- * and every click sends a ripple of scrambling characters across the page.
+ * and every click lights a small patch of characters that decode and fade.
  */
 export function CharField({ theme, reduceMotion }: CharFieldProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -227,10 +162,8 @@ export function CharField({ theme, reduceMotion }: CharFieldProps) {
 
     const shape = createValueNoise();
     const detail = createValueNoise();
-    const warp = createValueNoise();
-    const outline = createValueNoise();
-    const arcNoise = createValueNoise();
-    const ripples: Ripple[] = [];
+    const edge = createValueNoise();
+    const bursts: Burst[] = [];
     const startedAt = performance.now();
 
     let disposed = false;
@@ -244,11 +177,10 @@ export function CharField({ theme, reduceMotion }: CharFieldProps) {
     let rows = 0;
     let glyphs = new Uint8Array(0);
     let sparkle = new Float32Array(0);
-    let bendField = new Float32Array(0);
     let raggedField = new Float32Array(0);
     let frameInterval = FRAME_INTERVAL_MS;
     let workMs = 0;
-    let rippleFrames: RippleFrame[] = [];
+    let burstFrames: BurstFrame[] = [];
     // What each cell currently shows on the canvas, so unchanged cells are never redrawn.
     let shown = new Int16Array(0);
     let atlas: HTMLCanvasElement | null = null;
@@ -272,16 +204,14 @@ export function CharField({ theme, reduceMotion }: CharFieldProps) {
       glyphs = Uint8Array.from({ length: cols * rows }, randomGlyph);
       sparkle = Float32Array.from({ length: cols * rows }, randomSparkle);
       shown = new Int16Array(cols * rows).fill(EMPTY_CELL);
-      // Spatial noise never moves, so it is sampled once per layout instead of every frame.
-      bendField = new Float32Array(cols * rows);
+      // Edge noise never moves, so it is sampled once per layout instead of every frame.
       raggedField = new Float32Array(cols * rows);
       for (let row = 0; row < rows; row++) {
         const cssY = (row * cellH + cellH / 2) / dpr;
         for (let col = 0; col < cols; col++) {
           const cssX = (col * cellW + cellW / 2) / dpr;
           const index = row * cols + col;
-          bendField[index] = (warp(cssX * WARP_SCALE, cssY * WARP_SCALE) - 0.5) * 2;
-          raggedField[index] = (warp(cssX * RAGGED_SCALE + 50, cssY * RAGGED_SCALE + 50) - 0.5) * 2 * RAGGED_PX;
+          raggedField[index] = (edge(cssX * RAGGED_SCALE, cssY * RAGGED_SCALE) - 0.5) * 2 * RAGGED_PX;
         }
       }
       atlas = buildAtlas(cellW, cellH, dpr, theme);
@@ -344,76 +274,24 @@ export function CharField({ theme, reduceMotion }: CharFieldProps) {
       return HOTSPOT_BRIGHTNESS * Math.min(1, warmth) * smoothstep(visibleFrom, visibleFrom + HOTSPOT_FEATHER, field);
     };
 
-    const prepareRipples = (now: number) => {
-      const lastRing = RING_DELAYS_SECONDS.length - 1;
-      rippleFrames = ripples.map((ripple) => {
-        const age = (now - ripple.bornAt) / 1000;
-        const outer = ringRadius(age, RING_SPEEDS[0]);
-        const warpPx = WARP_PX_PER_SECOND * age;
-        const innerAge = age - RING_DELAYS_SECONDS[lastRing];
-        const innerRadius = innerAge > 0 ? ringRadius(innerAge, RING_SPEEDS[lastRing]) : 0;
-        const stretchAmount = SHAPE_STRETCH_BASE + SHAPE_STRETCH_PER_SECOND * age;
-        const breakDepth = ARC_BREAK_DEPTH * smoothstep(ARC_BREAK_FROM_SECONDS, ARC_BREAK_FULL_SECONDS, age);
-        const stretch = new Float32Array(ANGLE_BINS);
-        const arcs = new Float32Array(ANGLE_BINS);
-        for (let bin = 0; bin < ANGLE_BINS; bin++) {
-          const angle = ((bin + 0.5) / ANGLE_BINS) * Math.PI * 2 - Math.PI;
-          const cos = Math.cos(angle);
-          const sin = Math.sin(angle);
-          const shapeNoise = aroundRing(outline, ripple.shapeSeed, cos, sin, SHAPE_NOISE_RADIUS, age * SHAPE_MORPH_PER_SECOND);
-          stretch[bin] = 1 / (1 + (shapeNoise - 0.5) * 2 * stretchAmount);
-          const presence = aroundRing(arcNoise, ripple.arcSeed, cos, sin, ARC_NOISE_RADIUS, age * ARC_MORPH_PER_SECOND);
-          arcs[bin] = 1 - breakDepth * (1 - smoothstep(0.25, 0.75, presence));
-        }
-        const radii: number[] = [];
-        const strengths: number[] = [];
-        for (let ring = 0; ring <= lastRing; ring++) {
-          const ringAge = age - RING_DELAYS_SECONDS[ring];
-          radii.push(ringAge > 0 ? ringRadius(ringAge, RING_SPEEDS[ring]) : -1);
-          strengths.push(ringAge > 0 ? RING_STRENGTHS[ring] * ringStrength(ringAge) : 0);
-        }
+    const prepareBursts = (now: number) => {
+      burstFrames = bursts.map((burst) => {
+        const age = (now - burst.bornAt) / 1000;
+        const progress = Math.min(1, age / BURST_LIFETIME_SECONDS);
+        const grow = 1 - Math.exp(-age / BURST_GROW_SECONDS);
         return {
-          x: ripple.x,
-          y: ripple.y,
-          age,
-          reach: outer * SHAPE_STRETCH_MAX + (RING_WIDTH_PX + outer * RING_WIDTH_PER_RADIUS) * 3 + warpPx + RAGGED_PX,
-          hollow:
-            innerRadius * (2 - SHAPE_STRETCH_MAX) -
-            (RING_WIDTH_PX + innerRadius * RING_WIDTH_PER_RADIUS) * RING_INNER_SOFTNESS * 3 -
-            warpPx -
-            RAGGED_PX,
-          warpPx,
-          stretch,
-          arcs,
-          radii,
-          strengths,
+          x: burst.x,
+          y: burst.y,
+          radius: BURST_START_RADIUS_PX + (BURST_RADIUS_PX - BURST_START_RADIUS_PX) * grow,
+          strength:
+            smoothstep(0, BURST_RISE_SECONDS, age) *
+            (1 - smoothstep(BURST_FADE_FROM_SECONDS, BURST_LIFETIME_SECONDS, age)),
+          scrambleRate: BURST_SCRAMBLE_PER_SECOND * (1 - progress),
         };
       });
     };
 
-    const rippleAt = (cssX: number, cssY: number, index: number): number => {
-      let brightness = 0;
-      for (const frame of rippleFrames) {
-        const dx = cssX - frame.x;
-        const dy = cssY - frame.y;
-        const distance = Math.hypot(dx, dy);
-        if (distance > frame.reach || distance < frame.hollow) continue;
-
-        // Scaling by the stretch maps the irregular outline back onto a circle, so every ring shares it.
-        const bin = Math.min(ANGLE_BINS - 1, Math.floor(((Math.atan2(dy, dx) + Math.PI) / (Math.PI * 2)) * ANGLE_BINS));
-        const shaped = distance * frame.stretch[bin] + bendField[index] * frame.warpPx + raggedField[index];
-        const arcs = frame.arcs[bin];
-        for (let ring = 0; ring < frame.radii.length; ring++) {
-          const radius = frame.radii[ring];
-          if (radius < 0) continue;
-          brightness = Math.max(brightness, arcs * frame.strengths[ring] * ringBand(shaped - radius, radius));
-        }
-      }
-      return brightness;
-    };
-
     const draw = (now: number, seconds: number) => {
-      const scrambleChance = Math.min(1, RIPPLE_SCRAMBLE_PER_SECOND * seconds);
       if (!atlas) return;
       const drift = ((now - startedAt) / 1000) * HOTSPOT_DRIFT_PER_SECOND;
       const warm = hottest > HEAT_EPSILON;
@@ -425,15 +303,25 @@ export function CharField({ theme, reduceMotion }: CharFieldProps) {
           const x = col * cellW;
           const cssX = (x + cellW / 2) / dpr;
           const index = row * cols + col;
-          const ripple = rippleFrames.length > 0 ? rippleAt(cssX, cssY, index) : 0;
-          // Characters inside a ripple churn fast, while the hotspot only flickers.
-          if (ripple > RIPPLE_SCRAMBLE_FROM && Math.random() < scrambleChance) {
+          let burst = 0;
+          let scrambleRate = 0;
+          for (const frame of burstFrames) {
+            const distance = Math.hypot(cssX - frame.x, cssY - frame.y) + raggedField[index];
+            if (distance > frame.radius) continue;
+            const reach = frame.strength * (1 - smoothstep(frame.radius * BURST_CORE, frame.radius, distance));
+            if (reach > burst) {
+              burst = reach;
+              scrambleRate = frame.scrambleRate;
+            }
+          }
+          // Burst characters churn fast and settle as the burst fades, while the hotspot only flickers.
+          if (burst > BURST_SCRAMBLE_FROM && Math.random() < scrambleRate * seconds) {
             glyphs[index] = randomGlyph();
             sparkle[index] = randomSparkle();
           }
-          const sparkled = Math.min(1, RIPPLE_GAIN * ripple * (SPARKLE_MIN + (1 - SPARKLE_MIN) * sparkle[index]));
+          const sparkled = Math.min(1, BURST_GAIN * burst * (SPARKLE_MIN + (1 - SPARKLE_MIN) * sparkle[index]));
           const hotspot = warm ? hotspotAt(cssX, cssY, drift) : 0;
-          const palette = sparkled >= hotspot ? RIPPLE_PALETTE : HOTSPOT_PALETTE;
+          const palette = sparkled >= hotspot ? BURST_PALETTE : HOTSPOT_PALETTE;
           const level = Math.round(Math.max(sparkled, hotspot) * BRIGHTNESS_LEVELS);
           const tile = level === 0 ? EMPTY_CELL : (palette * BRIGHTNESS_LEVELS + level - 1) * GLYPHS.length + glyphs[index];
           if (tile === shown[index]) continue;
@@ -459,17 +347,17 @@ export function CharField({ theme, reduceMotion }: CharFieldProps) {
         lastFrameAt = now;
         const workStartedAt = performance.now();
         coolHeat(seconds);
-        const expiresBefore = now - RIPPLE_TOTAL_SECONDS * 1000;
-        while (ripples.length > 0 && ripples[0].bornAt < expiresBefore) ripples.shift();
-        prepareRipples(now);
+        const expiresBefore = now - BURST_LIFETIME_SECONDS * 1000;
+        while (bursts.length > 0 && bursts[0].bornAt < expiresBefore) bursts.shift();
+        prepareBursts(now);
         flicker(seconds);
         draw(now, seconds);
         workMs += (performance.now() - workStartedAt - workMs) * WORK_SMOOTHING;
         if (workMs > SLOW_WORK_MS) frameInterval = SLOW_FRAME_INTERVAL_MS;
         else if (workMs < FAST_WORK_MS) frameInterval = FRAME_INTERVAL_MS;
       }
-      // Once the heat is gone and no ripple is left, the loop stops until the pointer acts again.
-      if (hottest > HEAT_EPSILON || ripples.length > 0) {
+      // Once the heat is gone and no burst is left, the loop stops until the pointer acts again.
+      if (hottest > HEAT_EPSILON || bursts.length > 0) {
         frameId = requestAnimationFrame(tick);
       } else {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -511,14 +399,8 @@ export function CharField({ theme, reduceMotion }: CharFieldProps) {
 
     const onPointerDown = (event: PointerEvent) => {
       if (inQuietZone(event)) return;
-      if (ripples.length >= MAX_RIPPLES) ripples.shift();
-      ripples.push({
-        x: event.clientX,
-        y: event.clientY,
-        bornAt: performance.now(),
-        shapeSeed: Math.random() * 100,
-        arcSeed: Math.random() * 100,
-      });
+      if (bursts.length >= MAX_BURSTS) bursts.shift();
+      bursts.push({ x: event.clientX, y: event.clientY, bornAt: performance.now() });
       start();
     };
 
