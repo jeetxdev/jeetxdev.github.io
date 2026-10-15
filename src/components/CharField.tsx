@@ -17,12 +17,10 @@ const MAX_FRAME_SECONDS = 0.1;
 const BRIGHTNESS_LEVELS = 12;
 const EMPTY_CELL = -1;
 
-/** The hotspot stays grey, while burst characters carry the accent at every brightness. */
+/** The hotspot stays grey, while scattered characters carry the accent at every brightness. */
 const HOTSPOT_PALETTE = 0;
-const BURST_PALETTE = 1;
-const BURST_TINT_MIN = 0.7;
-/** The burst core saturates, so a good share of its characters reach full brightness. */
-const BURST_GAIN = 1.3;
+const SHARD_PALETTE = 1;
+const SHARD_TINT_MIN = 0.7;
 
 /** Pointer movement leaves heat behind. More movement means more heat, which lasts longer. */
 const HEAT_CELL_PX = 20;
@@ -47,30 +45,25 @@ const HOTSPOT_DRIFT_PER_SECOND = 0.15;
 const HOTSPOT_SCRAMBLE_PER_SECOND = 0.9;
 
 /**
- * A click lights a small patch of characters that scramble, then settle and
- * fade, like text decoding. The patch grows a little as it appears.
+ * A click throws the characters around the pointer outward. They slow down,
+ * drift slightly downward and fade, moving freely instead of along the grid.
  */
-const BURST_START_RADIUS_PX = 45;
-const BURST_RADIUS_PX = 85;
-const BURST_GROW_SECONDS = 0.15;
-const BURST_CORE = 0.35;
-const BURST_RISE_SECONDS = 0.05;
-const BURST_FADE_FROM_SECONDS = 0.08;
-const BURST_LIFETIME_SECONDS = 0.55;
-/** Characters churn fast at first and slow to a stop as the burst fades, which reads as decoding. */
-const BURST_SCRAMBLE_PER_SECOND = 30;
-const BURST_SCRAMBLE_FROM = 0.05;
-const MAX_BURSTS = 8;
-
-/** Fine noise keeps the burst edge ragged instead of a clean circle. */
-const RAGGED_SCALE = 1 / 40;
-const RAGGED_PX = 9;
-
-/** Each lit cell keeps a random weight, so a burst reads as scattered characters, not a solid disc. */
-const SPARKLE_MIN = 0.25;
-
-/** The square root skews weights towards 1, so most burst characters stay bright and a few drop out. */
-const randomSparkle = () => Math.sqrt(Math.random());
+const SCATTER_RADIUS_PX = 55;
+/** Skipping some cells keeps the scatter loose instead of a solid disc. */
+const SCATTER_KEEP = 0.65;
+const SCATTER_MIN_SPEED_PX = 60;
+const SCATTER_SPEED_RANGE_PX = 180;
+/** Characters at the rim travel half as far as those under the pointer. */
+const SCATTER_RIM_SLOWDOWN = 0.5;
+const SCATTER_LIFT_PX = 40;
+/** Drag makes each character cover its full distance early and then ease to a stop. */
+const SCATTER_DRAG = 3;
+const SCATTER_GRAVITY_PX = 240;
+const SCATTER_MIN_LIFE_SECONDS = 0.5;
+const SCATTER_LIFE_RANGE_SECONDS = 0.4;
+const SCATTER_BRIGHTNESS = 0.95;
+const SCATTER_FADE_POWER = 1.5;
+const MAX_SHARDS = 480;
 
 /** Pointer activity inside these elements, such as the terminal window, never reaches the field. */
 export const QUIET_ZONE_ATTRIBUTE = "data-char-field-quiet";
@@ -81,19 +74,15 @@ const MAX_ALPHA: Record<Theme, number> = { dark: 0.55, light: 0.45 };
 
 type Rgb = [number, number, number];
 
-type Burst = {
+/** One scattered character. Positions and velocities are in canvas pixels. */
+type Shard = {
   x: number;
   y: number;
+  vx: number;
+  vy: number;
+  glyph: number;
   bornAt: number;
-};
-
-/** Everything about a burst that is the same for every character in one frame. */
-type BurstFrame = {
-  x: number;
-  y: number;
-  radius: number;
-  strength: number;
-  scrambleRate: number;
+  life: number;
 };
 
 function inQuietZone(event: PointerEvent): boolean {
@@ -126,10 +115,10 @@ function buildAtlas(cellW: number, cellH: number, dpr: number, theme: Theme): HT
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
 
-  for (const palette of [HOTSPOT_PALETTE, BURST_PALETTE]) {
+  for (const palette of [HOTSPOT_PALETTE, SHARD_PALETTE]) {
     for (let level = 1; level <= BRIGHTNESS_LEVELS; level++) {
       const strength = level / BRIGHTNESS_LEVELS;
-      const tint = palette === BURST_PALETTE ? BURST_TINT_MIN + (1 - BURST_TINT_MIN) * strength : 0;
+      const tint = palette === SHARD_PALETTE ? SHARD_TINT_MIN + (1 - SHARD_TINT_MIN) * strength : 0;
       const [r, g, b] = dim.map((channel, i) => Math.round(channel + (bright[i] - channel) * tint));
       ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${strength * MAX_ALPHA[theme]})`;
       const y = (palette * BRIGHTNESS_LEVELS + level - 1) * cellH + cellH / 2;
@@ -148,7 +137,7 @@ type CharFieldProps = {
 
 /**
  * Faint characters gather where the pointer moves and fade once it rests,
- * and every click lights a small patch of characters that decode and fade.
+ * and every click scatters the nearby characters outward.
  */
 export function CharField({ theme, reduceMotion }: CharFieldProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -162,8 +151,6 @@ export function CharField({ theme, reduceMotion }: CharFieldProps) {
 
     const shape = createValueNoise();
     const detail = createValueNoise();
-    const edge = createValueNoise();
-    const bursts: Burst[] = [];
     const startedAt = performance.now();
 
     let disposed = false;
@@ -176,11 +163,8 @@ export function CharField({ theme, reduceMotion }: CharFieldProps) {
     let cols = 0;
     let rows = 0;
     let glyphs = new Uint8Array(0);
-    let sparkle = new Float32Array(0);
-    let raggedField = new Float32Array(0);
     let frameInterval = FRAME_INTERVAL_MS;
     let workMs = 0;
-    let burstFrames: BurstFrame[] = [];
     // What each cell currently shows on the canvas, so unchanged cells are never redrawn.
     let shown = new Int16Array(0);
     let atlas: HTMLCanvasElement | null = null;
@@ -189,6 +173,9 @@ export function CharField({ theme, reduceMotion }: CharFieldProps) {
     let heat = new Float32Array(0);
     let hottest = 0;
     let pointer: { x: number; y: number } | null = null;
+    let shards: Shard[] = [];
+    // Top-left corners of the shards drawn last frame, as x, y pairs, so only those spots are cleared.
+    let trail: number[] = [];
 
     const randomGlyph = () => Math.floor(Math.random() * GLYPHS.length);
 
@@ -202,23 +189,14 @@ export function CharField({ theme, reduceMotion }: CharFieldProps) {
       cols = Math.ceil(canvas.width / cellW);
       rows = Math.ceil(canvas.height / cellH);
       glyphs = Uint8Array.from({ length: cols * rows }, randomGlyph);
-      sparkle = Float32Array.from({ length: cols * rows }, randomSparkle);
       shown = new Int16Array(cols * rows).fill(EMPTY_CELL);
-      // Edge noise never moves, so it is sampled once per layout instead of every frame.
-      raggedField = new Float32Array(cols * rows);
-      for (let row = 0; row < rows; row++) {
-        const cssY = (row * cellH + cellH / 2) / dpr;
-        for (let col = 0; col < cols; col++) {
-          const cssX = (col * cellW + cellW / 2) / dpr;
-          const index = row * cols + col;
-          raggedField[index] = (edge(cssX * RAGGED_SCALE, cssY * RAGGED_SCALE) - 0.5) * 2 * RAGGED_PX;
-        }
-      }
       atlas = buildAtlas(cellW, cellH, dpr, theme);
       heatCols = Math.ceil(window.innerWidth / HEAT_CELL_PX) + 1;
       heatRows = Math.ceil(window.innerHeight / HEAT_CELL_PX) + 1;
       heat = new Float32Array(heatCols * heatRows);
       hottest = 0;
+      shards = [];
+      trail = [];
     };
 
     const stampHeat = (cx: number, cy: number, amount: number) => {
@@ -274,24 +252,54 @@ export function CharField({ theme, reduceMotion }: CharFieldProps) {
       return HOTSPOT_BRIGHTNESS * Math.min(1, warmth) * smoothstep(visibleFrom, visibleFrom + HOTSPOT_FEATHER, field);
     };
 
-    const prepareBursts = (now: number) => {
-      burstFrames = bursts.map((burst) => {
-        const age = (now - burst.bornAt) / 1000;
-        const progress = Math.min(1, age / BURST_LIFETIME_SECONDS);
-        const grow = 1 - Math.exp(-age / BURST_GROW_SECONDS);
-        return {
-          x: burst.x,
-          y: burst.y,
-          radius: BURST_START_RADIUS_PX + (BURST_RADIUS_PX - BURST_START_RADIUS_PX) * grow,
-          strength:
-            smoothstep(0, BURST_RISE_SECONDS, age) *
-            (1 - smoothstep(BURST_FADE_FROM_SECONDS, BURST_LIFETIME_SECONDS, age)),
-          scrambleRate: BURST_SCRAMBLE_PER_SECOND * (1 - progress),
-        };
-      });
+    const scatter = (cssX: number, cssY: number, now: number) => {
+      const x = cssX * dpr;
+      const y = cssY * dpr;
+      const radius = SCATTER_RADIUS_PX * dpr;
+      const col0 = Math.max(0, Math.floor((x - radius) / cellW));
+      const col1 = Math.min(cols - 1, Math.ceil((x + radius) / cellW));
+      const row0 = Math.max(0, Math.floor((y - radius) / cellH));
+      const row1 = Math.min(rows - 1, Math.ceil((y + radius) / cellH));
+      for (let row = row0; row <= row1; row++) {
+        for (let col = col0; col <= col1; col++) {
+          const dx = col * cellW + cellW / 2 - x;
+          const dy = row * cellH + cellH / 2 - y;
+          const distance = Math.hypot(dx, dy) || 1;
+          if (distance > radius || Math.random() > SCATTER_KEEP) continue;
+          const speed =
+            (SCATTER_MIN_SPEED_PX + Math.random() * SCATTER_SPEED_RANGE_PX) *
+            (1 - (distance / radius) * SCATTER_RIM_SLOWDOWN) *
+            dpr;
+          shards.push({
+            x: col * cellW,
+            y: row * cellH,
+            vx: (dx / distance) * speed * SCATTER_DRAG,
+            vy: (dy / distance) * speed * SCATTER_DRAG - SCATTER_LIFT_PX * dpr,
+            glyph: glyphs[row * cols + col],
+            bornAt: now,
+            life: SCATTER_MIN_LIFE_SECONDS + Math.random() * SCATTER_LIFE_RANGE_SECONDS,
+          });
+        }
+      }
+      if (shards.length > MAX_SHARDS) shards.splice(0, shards.length - MAX_SHARDS);
     };
 
-    const draw = (now: number, seconds: number) => {
+    /** Clears the cells under last frame's shards and marks them for the grid pass to redraw. */
+    const eraseTrail = () => {
+      for (let i = 0; i < trail.length; i += 2) {
+        const col0 = Math.floor(trail[i] / cellW);
+        const row0 = Math.floor(trail[i + 1] / cellH);
+        for (let row = Math.max(0, row0); row <= Math.min(rows - 1, row0 + 1); row++) {
+          for (let col = Math.max(0, col0); col <= Math.min(cols - 1, col0 + 1); col++) {
+            ctx.clearRect(col * cellW, row * cellH, cellW, cellH);
+            shown[row * cols + col] = EMPTY_CELL;
+          }
+        }
+      }
+      trail = [];
+    };
+
+    const drawGrid = (now: number) => {
       if (!atlas) return;
       const drift = ((now - startedAt) / 1000) * HOTSPOT_DRIFT_PER_SECOND;
       const warm = hottest > HEAT_EPSILON;
@@ -303,34 +311,32 @@ export function CharField({ theme, reduceMotion }: CharFieldProps) {
           const x = col * cellW;
           const cssX = (x + cellW / 2) / dpr;
           const index = row * cols + col;
-          let burst = 0;
-          let scrambleRate = 0;
-          for (const frame of burstFrames) {
-            const distance = Math.hypot(cssX - frame.x, cssY - frame.y) + raggedField[index];
-            if (distance > frame.radius) continue;
-            const reach = frame.strength * (1 - smoothstep(frame.radius * BURST_CORE, frame.radius, distance));
-            if (reach > burst) {
-              burst = reach;
-              scrambleRate = frame.scrambleRate;
-            }
-          }
-          // Burst characters churn fast and settle as the burst fades, while the hotspot only flickers.
-          if (burst > BURST_SCRAMBLE_FROM && Math.random() < scrambleRate * seconds) {
-            glyphs[index] = randomGlyph();
-            sparkle[index] = randomSparkle();
-          }
-          const sparkled = Math.min(1, BURST_GAIN * burst * (SPARKLE_MIN + (1 - SPARKLE_MIN) * sparkle[index]));
-          const hotspot = warm ? hotspotAt(cssX, cssY, drift) : 0;
-          const palette = sparkled >= hotspot ? BURST_PALETTE : HOTSPOT_PALETTE;
-          const level = Math.round(Math.max(sparkled, hotspot) * BRIGHTNESS_LEVELS);
-          const tile = level === 0 ? EMPTY_CELL : (palette * BRIGHTNESS_LEVELS + level - 1) * GLYPHS.length + glyphs[index];
+          const level = warm ? Math.round(hotspotAt(cssX, cssY, drift) * BRIGHTNESS_LEVELS) : 0;
+          const tile = level === 0 ? EMPTY_CELL : (level - 1) * GLYPHS.length + glyphs[index];
           if (tile === shown[index]) continue;
           if (shown[index] !== EMPTY_CELL) ctx.clearRect(x, y, cellW, cellH);
           shown[index] = tile;
           if (tile === EMPTY_CELL) continue;
-          const atlasY = (palette * BRIGHTNESS_LEVELS + level - 1) * cellH;
+          const atlasY = (HOTSPOT_PALETTE * BRIGHTNESS_LEVELS + level - 1) * cellH;
           ctx.drawImage(atlas, glyphs[index] * cellW, atlasY, cellW, cellH, x, y, cellW, cellH);
         }
+      }
+    };
+
+    const drawShards = (now: number) => {
+      if (!atlas) return;
+      shards = shards.filter((shard) => now - shard.bornAt < shard.life * 1000);
+      const gravity = SCATTER_GRAVITY_PX * dpr;
+      for (const shard of shards) {
+        const age = (now - shard.bornAt) / 1000;
+        const level = Math.round(SCATTER_BRIGHTNESS * (1 - age / shard.life) ** SCATTER_FADE_POWER * BRIGHTNESS_LEVELS);
+        if (level === 0) continue;
+        const travel = (1 - Math.exp(-age * SCATTER_DRAG)) / SCATTER_DRAG;
+        const x = Math.round(shard.x + shard.vx * travel);
+        const y = Math.round(shard.y + shard.vy * travel + 0.5 * gravity * age * age);
+        const atlasY = (SHARD_PALETTE * BRIGHTNESS_LEVELS + level - 1) * cellH;
+        ctx.drawImage(atlas, shard.glyph * cellW, atlasY, cellW, cellH, x, y, cellW, cellH);
+        trail.push(x, y);
       }
     };
 
@@ -347,21 +353,21 @@ export function CharField({ theme, reduceMotion }: CharFieldProps) {
         lastFrameAt = now;
         const workStartedAt = performance.now();
         coolHeat(seconds);
-        const expiresBefore = now - BURST_LIFETIME_SECONDS * 1000;
-        while (bursts.length > 0 && bursts[0].bornAt < expiresBefore) bursts.shift();
-        prepareBursts(now);
         flicker(seconds);
-        draw(now, seconds);
+        eraseTrail();
+        drawGrid(now);
+        drawShards(now);
         workMs += (performance.now() - workStartedAt - workMs) * WORK_SMOOTHING;
         if (workMs > SLOW_WORK_MS) frameInterval = SLOW_FRAME_INTERVAL_MS;
         else if (workMs < FAST_WORK_MS) frameInterval = FRAME_INTERVAL_MS;
       }
-      // Once the heat is gone and no burst is left, the loop stops until the pointer acts again.
-      if (hottest > HEAT_EPSILON || bursts.length > 0) {
+      // Once the heat is gone and no shard is left, the loop stops until the pointer acts again.
+      if (hottest > HEAT_EPSILON || shards.length > 0) {
         frameId = requestAnimationFrame(tick);
       } else {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         shown.fill(EMPTY_CELL);
+        trail = [];
         running = false;
       }
     };
@@ -398,9 +404,8 @@ export function CharField({ theme, reduceMotion }: CharFieldProps) {
     };
 
     const onPointerDown = (event: PointerEvent) => {
-      if (inQuietZone(event)) return;
-      if (bursts.length >= MAX_BURSTS) bursts.shift();
-      bursts.push({ x: event.clientX, y: event.clientY, bornAt: performance.now() });
+      if (inQuietZone(event) || !atlas) return;
+      scatter(event.clientX, event.clientY, performance.now());
       start();
     };
 
