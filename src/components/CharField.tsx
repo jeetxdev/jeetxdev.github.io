@@ -11,7 +11,7 @@ const FRAME_INTERVAL_MS = 1000 / 30;
 const BRIGHTNESS_LEVELS = 12;
 const TINT_FROM = 0.55;
 
-/** The idle layer: faint grey patches that drift while the window has focus. */
+/** The idle layer: faint grey patches that build up while the pointer moves and fade once it rests. */
 const IDLE_SHAPE_SCALE = 1 / 260;
 const IDLE_DETAIL_SCALE = 1 / 110;
 const IDLE_DETAIL_WEIGHT = 0.35;
@@ -20,8 +20,11 @@ const IDLE_VISIBLE_FROM = 0.45;
 const IDLE_FULL_AT = 0.75;
 const IDLE_BRIGHTNESS = 0.3;
 const IDLE_SCRAMBLE_RATIO = 0.03;
-const FOCUS_FADE_PER_FRAME = 0.05;
-const FOCUS_EPSILON = 0.001;
+const ACTIVITY_RISE_SECONDS = 2;
+const ACTIVITY_DECAY_SECONDS = 4;
+const ACTIVITY_EPSILON = 0.001;
+/** pointermove fires in bursts, so a short gap still counts as moving. */
+const MOVE_HOLD_MS = 150;
 
 /** Radius follows SPEED * age^EXPONENT, measured from the Claude Code desktop ripple. */
 const RIPPLE_SPEED_PX = 340;
@@ -102,8 +105,8 @@ type CharFieldProps = {
 };
 
 /**
- * Faint drifting characters while the window has focus, and a ripple of
- * scrambling characters from every click.
+ * Faint drifting characters that build up while the pointer moves, and a
+ * ripple of scrambling characters from every click.
  */
 export function CharField({ theme, reduceMotion }: CharFieldProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -123,8 +126,8 @@ export function CharField({ theme, reduceMotion }: CharFieldProps) {
     let frameId = 0;
     let running = false;
     let lastFrameAt = 0;
-    let focused = reduceMotion || document.hasFocus();
-    let focusLevel = reduceMotion ? 1 : 0;
+    let lastMovedAt = -Infinity;
+    let activity = reduceMotion ? 1 : 0;
     let dpr = 1;
     let cellW = 1;
     let cellH = 1;
@@ -152,7 +155,7 @@ export function CharField({ theme, reduceMotion }: CharFieldProps) {
       const field =
         shape(cssX * IDLE_SHAPE_SCALE + drift, cssY * IDLE_SHAPE_SCALE - drift * 0.6) * (1 - IDLE_DETAIL_WEIGHT) +
         detail(cssX * IDLE_DETAIL_SCALE - drift * 1.3, cssY * IDLE_DETAIL_SCALE + drift * 0.8) * IDLE_DETAIL_WEIGHT;
-      return IDLE_BRIGHTNESS * focusLevel * smoothstep(IDLE_VISIBLE_FROM, IDLE_FULL_AT, field);
+      return IDLE_BRIGHTNESS * activity * smoothstep(IDLE_VISIBLE_FROM, IDLE_FULL_AT, field);
     };
 
     const rippleAt = (cssX: number, cssY: number, now: number): number => {
@@ -173,7 +176,7 @@ export function CharField({ theme, reduceMotion }: CharFieldProps) {
       if (!atlas) return;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       const drift = ((now - startedAt) / 1000) * IDLE_DRIFT_PER_SECOND;
-      const showIdle = focusLevel > FOCUS_EPSILON;
+      const showIdle = activity > ACTIVITY_EPSILON;
 
       for (let row = 0; row < rows; row++) {
         const y = row * cellH;
@@ -204,18 +207,22 @@ export function CharField({ theme, reduceMotion }: CharFieldProps) {
 
     const tick = (now: number) => {
       if (now - lastFrameAt >= FRAME_INTERVAL_MS) {
+        const seconds = Math.min(now - lastFrameAt, 100) / 1000;
         lastFrameAt = now;
-        focusLevel += ((focused ? 1 : 0) - focusLevel) * FOCUS_FADE_PER_FRAME;
+        activity =
+          now - lastMovedAt < MOVE_HOLD_MS
+            ? Math.min(1, activity + seconds / ACTIVITY_RISE_SECONDS)
+            : Math.max(0, activity - seconds / ACTIVITY_DECAY_SECONDS);
         const expiresBefore = now - RIPPLE_LIFETIME_SECONDS * 1000;
         while (ripples.length > 0 && ripples[0].bornAt < expiresBefore) ripples.shift();
         scrambleIdle();
         draw(now);
       }
-      // A blurred window with no ripples left has nothing to show, so the loop stops.
-      if (focused || focusLevel > FOCUS_EPSILON || ripples.length > 0) {
+      // Once the field has faded and no ripple is left, the loop stops until the pointer acts again.
+      if (activity > ACTIVITY_EPSILON || ripples.length > 0 || now - lastMovedAt < MOVE_HOLD_MS) {
         frameId = requestAnimationFrame(tick);
       } else {
-        focusLevel = 0;
+        activity = 0;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         running = false;
       }
@@ -224,6 +231,7 @@ export function CharField({ theme, reduceMotion }: CharFieldProps) {
     const start = () => {
       if (running || disposed || !atlas) return;
       running = true;
+      lastFrameAt = performance.now();
       frameId = requestAnimationFrame(tick);
     };
 
@@ -238,13 +246,9 @@ export function CharField({ theme, reduceMotion }: CharFieldProps) {
       start();
     };
 
-    const onFocus = () => {
-      focused = true;
+    const onPointerMove = () => {
+      lastMovedAt = performance.now();
       start();
-    };
-
-    const onBlur = () => {
-      focused = false;
     };
 
     const onResize = () => {
@@ -265,9 +269,7 @@ export function CharField({ theme, reduceMotion }: CharFieldProps) {
           return;
         }
         window.addEventListener("pointerdown", onPointerDown);
-        window.addEventListener("focus", onFocus);
-        window.addEventListener("blur", onBlur);
-        if (focused) start();
+        window.addEventListener("pointermove", onPointerMove);
       });
 
     return () => {
@@ -275,8 +277,7 @@ export function CharField({ theme, reduceMotion }: CharFieldProps) {
       cancelAnimationFrame(frameId);
       window.removeEventListener("resize", onResize);
       window.removeEventListener("pointerdown", onPointerDown);
-      window.removeEventListener("focus", onFocus);
-      window.removeEventListener("blur", onBlur);
+      window.removeEventListener("pointermove", onPointerMove);
     };
   }, [theme, reduceMotion]);
 
