@@ -1,9 +1,7 @@
 import { useEffect } from "react";
 
 /**
- * Suppresses the browser context menu across the page.
- *
- * Text inputs keep theirs - cut/copy/paste/spellcheck have no keyboard-free
+ * Text inputs keep their context menu: cut/copy/paste/spellcheck have no keyboard-free
  * substitute, so blocking them there costs real usability for no gain.
  *
  * This is a deterrent, not protection: anything the page ships is still one
