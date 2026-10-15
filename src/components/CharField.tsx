@@ -1,13 +1,13 @@
 import { useEffect, useRef } from "react";
 import type { Theme } from "@/lib/theme";
-import { createValueNoise } from "@/lib/valueNoise";
+import { createValueNoise, type Noise2D } from "@/lib/valueNoise";
 
 const GLYPHS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 const FONT_FAMILY = '"JetBrains Mono", ui-monospace, monospace';
 const FONT_SIZE_PX = 12;
 const LINE_HEIGHT_PX = 15;
 const MAX_DPR = 2;
-const FRAME_INTERVAL_MS = 1000 / 30;
+const FRAME_INTERVAL_MS = 1000 / 60;
 const MAX_FRAME_SECONDS = 0.1;
 const BRIGHTNESS_LEVELS = 12;
 
@@ -37,20 +37,32 @@ const HOTSPOT_SHAPE_SCALE = 1 / 260;
 const HOTSPOT_DETAIL_SCALE = 1 / 110;
 const HOTSPOT_DETAIL_WEIGHT = 0.35;
 const HOTSPOT_DRIFT_PER_SECOND = 0.15;
-const HOTSPOT_SCRAMBLE_RATIO = 0.03;
+/** Share of all characters swapped per second, so the flicker rate does not depend on frame rate. */
+const HOTSPOT_SCRAMBLE_PER_SECOND = 0.9;
 
-/** Ring radius follows SPEED * age^EXPONENT, measured from the Claude Code desktop ripple. */
-const RIPPLE_SPEED_PX = 340;
-const RIPPLE_GROWTH_EXPONENT = 0.7;
-const RIPPLE_LIFETIME_SECONDS = 1.8;
-const RIPPLE_FADE_FROM = 0.4;
+/**
+ * Measured from a Claude Code recording: the outer ring starts at 36px and
+ * eases towards 564px, so it keeps slowing down like a wave on water.
+ */
+const RIPPLE_START_PX = 36;
+const RIPPLE_REACH_PX = 528;
+const RIPPLE_EASE_SECONDS = 1.15;
+/**
+ * Brightness falls as 1 / (1 + age / DECAY). The recording showed about 55% at
+ * 0.5s, 38% at 1s and 28% at 1.5s. DECAY sits a little slower than that fit,
+ * because scattered characters and broken arcs already dim the ring on average.
+ */
+const RIPPLE_DECAY_SECONDS = 1;
+const RIPPLE_FADE_FROM_SECONDS = 1.8;
+const RIPPLE_LIFETIME_SECONDS = 2.6;
 const RIPPLE_SCRAMBLE_FROM = 0.05;
-const RIPPLE_SCRAMBLE_CHANCE = 0.5;
+const RIPPLE_SCRAMBLE_PER_SECOND = 12;
 const MAX_RIPPLES = 8;
 
-/** One click sends a train of rings, each later and fainter, so smaller rings sit inside larger ones. */
-const RING_DELAYS_SECONDS = [0, 0.22];
-const RING_STRENGTHS = [1, 0.8];
+/** The inner ring starts later and travels slower, so the two rings drift apart like water waves. */
+const RING_DELAYS_SECONDS = [0, 0.2];
+const RING_SPEEDS = [1, 0.75];
+const RING_STRENGTHS = [1, 0.9];
 const RIPPLE_TOTAL_SECONDS = RIPPLE_LIFETIME_SECONDS + RING_DELAYS_SECONDS[RING_DELAYS_SECONDS.length - 1];
 
 /** Each ring is a hollow band that thickens as it grows, softer on its inner side. */
@@ -58,26 +70,30 @@ const RING_WIDTH_PX = 8;
 const RING_WIDTH_PER_RADIUS = 0.03;
 const RING_INNER_SOFTNESS = 1.2;
 
-/** Low harmonics give every ripple its own lopsided outline, kept by all its rings as they grow. */
-const SHAPE_HARMONICS = [1, 2, 3, 4];
-const SHAPE_AMPLITUDE_MAX = [0.06, 0.12, 0.08, 0.04];
-const SHAPE_AMPLITUDE_MIN_RATIO = 0.2;
-const SHAPE_STRETCH_MAX = 1 + SHAPE_AMPLITUDE_MAX.reduce((sum, amplitude) => sum + amplitude, 0);
+/**
+ * Noise sampled around a circle gives each ripple an irregular outline, and
+ * moving through the noise over time keeps that outline morphing.
+ */
+const SHAPE_NOISE_RADIUS = 1.2;
+const SHAPE_MORPH_PER_SECOND = 0.5;
+const SHAPE_STRETCH_BASE = 0.06;
+const SHAPE_STRETCH_PER_SECOND = 0.06;
+const SHAPE_STRETCH_MAX = 1 + SHAPE_STRETCH_BASE + SHAPE_STRETCH_PER_SECOND * RIPPLE_TOTAL_SECONDS;
 
 /** Noise bends the rings a little more as they age, so they break into wavy arcs. */
 const WARP_SCALE = 1 / 150;
-const WARP_PX_PER_SECOND = 50;
+const WARP_PX_PER_SECOND = 25;
 
 /** Fine noise keeps the ring edge ragged instead of a clean vector outline. */
 const RAGGED_SCALE = 1 / 40;
 const RAGGED_PX = 9;
 
-/** Brightness varies around each ring and the dim stretches deepen with age, so rings break into arcs. */
-const ARC_HARMONICS = [2, 3, 5];
-const ARC_SPIN_PER_SECOND = 0.6;
+/** Brightness wanders around each ring, and the dim stretches deepen with age, so rings break into arcs. */
+const ARC_NOISE_RADIUS = 1.5;
+const ARC_MORPH_PER_SECOND = 0.7;
 const ARC_BREAK_FROM_SECONDS = 0.15;
-const ARC_BREAK_FULL_SECONDS = 0.9;
-const ARC_BREAK_DEPTH = 0.9;
+const ARC_BREAK_FULL_SECONDS = 1.1;
+const ARC_BREAK_DEPTH = 0.6;
 
 /** Each lit cell keeps a random weight, so ring bands read as scattered characters, not solid strokes. */
 const SPARKLE_MIN = 0.25;
@@ -99,22 +115,12 @@ type Ripple = {
   y: number;
   bornAt: number;
   warpOffset: number;
-  amplitudes: number[];
-  phases: number[];
-  arcPhases: number[];
+  shapeSeed: number;
+  arcSeed: number;
 };
 
 function inQuietZone(event: PointerEvent): boolean {
   return event.target instanceof Element && event.target.closest(QUIET_ZONE_SELECTOR) !== null;
-}
-
-/** Smooth 0..1 brightness around the ring that slowly rotates. */
-function arcPresence(ripple: Ripple, angle: number, age: number): number {
-  let sum = 0;
-  for (let i = 0; i < ARC_HARMONICS.length; i++) {
-    sum += Math.sin(ARC_HARMONICS[i] * angle + ripple.arcPhases[i] + age * ARC_SPIN_PER_SECOND * (i + 1));
-  }
-  return 0.5 + (0.5 * sum) / ARC_HARMONICS.length;
 }
 
 function smoothstep(edge0: number, edge1: number, x: number): number {
@@ -158,8 +164,13 @@ function buildAtlas(cellW: number, cellH: number, dpr: number, theme: Theme): HT
   return atlas;
 }
 
-function ringRadius(age: number): number {
-  return RIPPLE_SPEED_PX * age ** RIPPLE_GROWTH_EXPONENT;
+function ringRadius(age: number, speed: number): number {
+  return speed * (RIPPLE_START_PX + RIPPLE_REACH_PX * (1 - Math.exp(-age / RIPPLE_EASE_SECONDS)));
+}
+
+function ringStrength(age: number): number {
+  const decay = 1 / (1 + age / RIPPLE_DECAY_SECONDS);
+  return decay * (1 - smoothstep(RIPPLE_FADE_FROM_SECONDS, RIPPLE_LIFETIME_SECONDS, age));
 }
 
 function ringBand(offset: number, radius: number): number {
@@ -168,12 +179,9 @@ function ringBand(offset: number, radius: number): number {
   return Math.exp(-((offset / side) ** 2));
 }
 
-function shapeStretch(ripple: Ripple, angle: number): number {
-  let stretch = 1;
-  for (let i = 0; i < SHAPE_HARMONICS.length; i++) {
-    stretch += ripple.amplitudes[i] * Math.sin(SHAPE_HARMONICS[i] * angle + ripple.phases[i]);
-  }
-  return stretch;
+/** Samples noise on a circle, so the value wraps smoothly around the ring with no seam. */
+function aroundRing(noise: Noise2D, seed: number, cos: number, sin: number, radius: number, drift: number): number {
+  return noise(seed + cos * radius + drift, seed + sin * radius - drift);
 }
 
 type CharFieldProps = {
@@ -198,6 +206,8 @@ export function CharField({ theme, reduceMotion }: CharFieldProps) {
     const shape = createValueNoise();
     const detail = createValueNoise();
     const warp = createValueNoise();
+    const outline = createValueNoise();
+    const arcNoise = createValueNoise();
     const ripples: Ripple[] = [];
     const startedAt = performance.now();
 
@@ -299,7 +309,7 @@ export function CharField({ theme, reduceMotion }: CharFieldProps) {
         const dx = cssX - ripple.x;
         const dy = cssY - ripple.y;
         const distance = Math.hypot(dx, dy);
-        const outer = ringRadius(age);
+        const outer = ringRadius(age, RING_SPEEDS[0]);
         const reach =
           outer * SHAPE_STRETCH_MAX +
           RING_WIDTH_PX * 3 +
@@ -307,28 +317,45 @@ export function CharField({ theme, reduceMotion }: CharFieldProps) {
           WARP_PX_PER_SECOND * age +
           RAGGED_PX;
         if (distance > reach) continue;
+        const lastRing = RING_DELAYS_SECONDS.length - 1;
+        const innerAge = age - RING_DELAYS_SECONDS[lastRing];
+        const innerRadius = innerAge > 0 ? ringRadius(innerAge, RING_SPEEDS[lastRing]) : 0;
+        const hollow =
+          innerRadius * (1 - SHAPE_STRETCH_MAX + 1) -
+          (RING_WIDTH_PX + innerRadius * RING_WIDTH_PER_RADIUS) * RING_INNER_SOFTNESS * 3 -
+          WARP_PX_PER_SECOND * age -
+          RAGGED_PX;
+        if (distance < hollow) continue;
 
-        // Dividing by the stretch maps the lopsided outline back onto a circle, so every ring shares it.
-        const angle = Math.atan2(dy, dx);
+        // Dividing by the stretch maps the irregular outline back onto a circle, so every ring shares it.
+        const cos = distance > 0 ? dx / distance : 1;
+        const sin = distance > 0 ? dy / distance : 0;
+        const stretchAmount = SHAPE_STRETCH_BASE + SHAPE_STRETCH_PER_SECOND * age;
+        const stretch =
+          1 +
+          (aroundRing(outline, ripple.shapeSeed, cos, sin, SHAPE_NOISE_RADIUS, age * SHAPE_MORPH_PER_SECOND) - 0.5) *
+            2 *
+            stretchAmount;
         const bend =
           (warp(cssX * WARP_SCALE + ripple.warpOffset, cssY * WARP_SCALE) - 0.5) * 2 * WARP_PX_PER_SECOND * age +
           (warp(cssX * RAGGED_SCALE - ripple.warpOffset, cssY * RAGGED_SCALE) - 0.5) * 2 * RAGGED_PX;
-        const shaped = distance / shapeStretch(ripple, angle) + bend;
+        const shaped = distance / stretch + bend;
         const breakDepth = ARC_BREAK_DEPTH * smoothstep(ARC_BREAK_FROM_SECONDS, ARC_BREAK_FULL_SECONDS, age);
-        const arcs = 1 - breakDepth * (1 - arcPresence(ripple, angle, age));
+        const presence = aroundRing(arcNoise, ripple.arcSeed, cos, sin, ARC_NOISE_RADIUS, age * ARC_MORPH_PER_SECOND);
+        const arcs = 1 - breakDepth * (1 - smoothstep(0.25, 0.75, presence));
         for (let ring = 0; ring < RING_DELAYS_SECONDS.length; ring++) {
           const ringAge = age - RING_DELAYS_SECONDS[ring];
           if (ringAge <= 0) continue;
-          const radius = ringRadius(ringAge);
-          const strength =
-            RING_STRENGTHS[ring] * (1 - smoothstep(RIPPLE_FADE_FROM, 1, ringAge / RIPPLE_LIFETIME_SECONDS));
+          const radius = ringRadius(ringAge, RING_SPEEDS[ring]);
+          const strength = RING_STRENGTHS[ring] * ringStrength(ringAge);
           brightness = Math.max(brightness, arcs * strength * ringBand(shaped - radius, radius));
         }
       }
       return brightness;
     };
 
-    const draw = (now: number) => {
+    const draw = (now: number, seconds: number) => {
+      const scrambleChance = Math.min(1, RIPPLE_SCRAMBLE_PER_SECOND * seconds);
       if (!atlas) return;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       const drift = ((now - startedAt) / 1000) * HOTSPOT_DRIFT_PER_SECOND;
@@ -343,7 +370,7 @@ export function CharField({ theme, reduceMotion }: CharFieldProps) {
           const index = row * cols + col;
           const ripple = ripples.length > 0 ? rippleAt(cssX, cssY, now) : 0;
           // Characters inside a ripple churn fast, while the hotspot only flickers.
-          if (ripple > RIPPLE_SCRAMBLE_FROM && Math.random() < RIPPLE_SCRAMBLE_CHANCE) {
+          if (ripple > RIPPLE_SCRAMBLE_FROM && Math.random() < scrambleChance) {
             glyphs[index] = randomGlyph();
             sparkle[index] = randomSparkle();
           }
@@ -358,8 +385,8 @@ export function CharField({ theme, reduceMotion }: CharFieldProps) {
       }
     };
 
-    const flicker = () => {
-      const swaps = glyphs.length * HOTSPOT_SCRAMBLE_RATIO;
+    const flicker = (seconds: number) => {
+      const swaps = glyphs.length * HOTSPOT_SCRAMBLE_PER_SECOND * seconds;
       for (let i = 0; i < swaps; i++) {
         glyphs[Math.floor(Math.random() * glyphs.length)] = randomGlyph();
       }
@@ -372,8 +399,8 @@ export function CharField({ theme, reduceMotion }: CharFieldProps) {
         coolHeat(seconds);
         const expiresBefore = now - RIPPLE_TOTAL_SECONDS * 1000;
         while (ripples.length > 0 && ripples[0].bornAt < expiresBefore) ripples.shift();
-        flicker();
-        draw(now);
+        flicker(seconds);
+        draw(now, seconds);
       }
       // Once the heat is gone and no ripple is left, the loop stops until the pointer acts again.
       if (hottest > HEAT_EPSILON || ripples.length > 0) {
@@ -423,11 +450,8 @@ export function CharField({ theme, reduceMotion }: CharFieldProps) {
         y: event.clientY,
         bornAt: performance.now(),
         warpOffset: Math.random() * 100,
-        amplitudes: SHAPE_AMPLITUDE_MAX.map(
-          (max) => max * (SHAPE_AMPLITUDE_MIN_RATIO + Math.random() * (1 - SHAPE_AMPLITUDE_MIN_RATIO)),
-        ),
-        phases: SHAPE_HARMONICS.map(() => Math.random() * Math.PI * 2),
-        arcPhases: ARC_HARMONICS.map(() => Math.random() * Math.PI * 2),
+        shapeSeed: Math.random() * 100,
+        arcSeed: Math.random() * 100,
       });
       start();
     };
