@@ -31,7 +31,7 @@ export function App() {
         onSwitchView={switchView}
         onToggleTheme={() => setTheme(theme === "dark" ? "light" : "dark")}
       />
-      {view === "page" ? <CharField theme={theme} reduceMotion={reduceMotion} /> : null}
+      <CharField theme={theme} reduceMotion={reduceMotion} />
       {/* Both views stay mounted, so the terminal session survives a round trip. */}
       <main id="main" className="mx-auto max-w-page px-5 sm:px-8">
         <Terminal active={view === "terminal"} setTheme={setTheme} />

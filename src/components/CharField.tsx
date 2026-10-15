@@ -62,6 +62,10 @@ const SHAPE_STRETCH_MAX = 1 + SHAPE_AMPLITUDE_MAX.reduce((sum, amplitude) => sum
 const WARP_SCALE = 1 / 150;
 const WARP_PX_PER_SECOND = 50;
 
+/** Pointer activity inside these elements, such as the terminal window, never reaches the field. */
+export const QUIET_ZONE_ATTRIBUTE = "data-char-field-quiet";
+const QUIET_ZONE_SELECTOR = `[${QUIET_ZONE_ATTRIBUTE}]`;
+
 /** Day needs a lighter touch, or the field fights the dark body text. */
 const MAX_ALPHA: Record<Theme, number> = { dark: 0.55, light: 0.45 };
 
@@ -75,6 +79,10 @@ type Ripple = {
   amplitudes: number[];
   phases: number[];
 };
+
+function inQuietZone(event: PointerEvent): boolean {
+  return event.target instanceof Element && event.target.closest(QUIET_ZONE_SELECTOR) !== null;
+}
 
 function smoothstep(edge0: number, edge1: number, x: number): number {
   const t = Math.min(1, Math.max(0, (x - edge0) / (edge1 - edge0)));
@@ -335,6 +343,11 @@ export function CharField({ theme, reduceMotion }: CharFieldProps) {
     };
 
     const onPointerMove = (event: PointerEvent) => {
+      // Forgetting the last point stops a trail from jumping across the quiet zone on exit.
+      if (inQuietZone(event)) {
+        pointer = null;
+        return;
+      }
       const next = { x: event.clientX, y: event.clientY };
       if (pointer) {
         const distance = Math.hypot(next.x - pointer.x, next.y - pointer.y);
@@ -354,6 +367,7 @@ export function CharField({ theme, reduceMotion }: CharFieldProps) {
     };
 
     const onPointerDown = (event: PointerEvent) => {
+      if (inQuietZone(event)) return;
       if (ripples.length >= MAX_RIPPLES) ripples.shift();
       ripples.push({
         x: event.clientX,
