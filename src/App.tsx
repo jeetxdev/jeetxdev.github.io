@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { CharField } from "@/components/CharField";
 import { Footer } from "@/components/Footer";
 import { MenuBar } from "@/components/MenuBar";
 import { PageView } from "@/components/page/PageView";
@@ -30,6 +31,7 @@ export function App() {
         onSwitchView={switchView}
         onToggleTheme={() => setTheme(theme === "dark" ? "light" : "dark")}
       />
+      {view === "page" ? <CharField theme={theme} reduceMotion={reduceMotion} /> : null}
       {/* Both views stay mounted, so the terminal session survives a round trip. */}
       <main id="main" className="mx-auto max-w-page px-5 sm:px-8">
         <Terminal active={view === "terminal"} setTheme={setTheme} />
