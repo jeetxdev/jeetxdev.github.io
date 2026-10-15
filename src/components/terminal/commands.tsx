@@ -65,8 +65,11 @@ const HELP_ROWS = [
   { command: "help", describe: "show this list" },
 ];
 
-/** What Tab offers on an empty prompt, as zsh lists every command. */
-export const COMMAND_NAMES = Object.keys(COMMANDS);
+/**
+ * What Tab offers on an empty prompt, as zsh lists every command. An array literal,
+ * because react-refresh reads a capitalised call result as a component export.
+ */
+export const COMMAND_NAMES = [...Object.keys(COMMANDS)];
 
 export const COMPLETIONS = [
   "help",

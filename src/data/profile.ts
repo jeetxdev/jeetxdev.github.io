@@ -47,7 +47,7 @@ export const STACK: StackLayer[] = [
   { layer: "data", tools: ["PostgreSQL", "MySQL"] },
   {
     layer: "craft",
-    tools: ["REST API design", "component architecture", "performance", "CI/CD", "Docker"],
+    tools: ["REST API design", "component architecture", "performance", "CI/CD", "containerization"],
   },
 ];
 
