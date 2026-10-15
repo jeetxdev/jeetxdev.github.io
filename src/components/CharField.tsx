@@ -33,21 +33,34 @@ const HOTSPOT_DETAIL_WEIGHT = 0.35;
 const HOTSPOT_DRIFT_PER_SECOND = 0.15;
 const HOTSPOT_SCRAMBLE_RATIO = 0.03;
 
-/** Radius follows SPEED * age^EXPONENT, measured from the Claude Code desktop ripple. */
+/** Ring radius follows SPEED * age^EXPONENT, measured from the Claude Code desktop ripple. */
 const RIPPLE_SPEED_PX = 340;
 const RIPPLE_GROWTH_EXPONENT = 0.7;
 const RIPPLE_LIFETIME_SECONDS = 1.8;
 const RIPPLE_FADE_FROM = 0.4;
-const RIPPLE_FRONT_PX = 14;
-const RIPPLE_WAKE_PX = 70;
-const RIPPLE_WAKE_BRIGHTNESS = 0.45;
 const RIPPLE_SCRAMBLE_FROM = 0.05;
 const RIPPLE_SCRAMBLE_CHANCE = 0.5;
 const MAX_RIPPLES = 8;
 
-/** Noise bends the ring more as it ages, so it breaks into wavy arcs. */
+/** One click sends a train of rings, each later and fainter, so smaller rings sit inside larger ones. */
+const RING_DELAYS_SECONDS = [0, 0.18, 0.36];
+const RING_STRENGTHS = [1, 0.7, 0.45];
+const RIPPLE_TOTAL_SECONDS = RIPPLE_LIFETIME_SECONDS + RING_DELAYS_SECONDS[RING_DELAYS_SECONDS.length - 1];
+
+/** Each ring is a hollow band that thickens as it grows, softer on its inner side. */
+const RING_WIDTH_PX = 8;
+const RING_WIDTH_PER_RADIUS = 0.03;
+const RING_INNER_SOFTNESS = 1.2;
+
+/** Low harmonics give every ripple its own lopsided outline, kept by all its rings as they grow. */
+const SHAPE_HARMONICS = [1, 2, 3, 4];
+const SHAPE_AMPLITUDE_MAX = [0.06, 0.12, 0.08, 0.04];
+const SHAPE_AMPLITUDE_MIN_RATIO = 0.4;
+const SHAPE_STRETCH_MAX = 1 + SHAPE_AMPLITUDE_MAX.reduce((sum, amplitude) => sum + amplitude, 0);
+
+/** Noise bends the rings a little more as they age, so they break into wavy arcs. */
 const WARP_SCALE = 1 / 150;
-const WARP_PX_PER_SECOND = 110;
+const WARP_PX_PER_SECOND = 50;
 
 /** Day needs a lighter touch, or the field fights the dark body text. */
 const MAX_ALPHA: Record<Theme, number> = { dark: 0.55, light: 0.45 };
@@ -59,6 +72,8 @@ type Ripple = {
   y: number;
   bornAt: number;
   warpOffset: number;
+  amplitudes: number[];
+  phases: number[];
 };
 
 function smoothstep(edge0: number, edge1: number, x: number): number {
@@ -100,10 +115,22 @@ function buildAtlas(cellW: number, cellH: number, dpr: number, theme: Theme): HT
   return atlas;
 }
 
-/** A bright leading edge with a dimmer wake trailing inside the ring. */
-function waveProfile(offset: number): number {
-  if (offset > 0) return Math.exp(-((offset / RIPPLE_FRONT_PX) ** 2));
-  return Math.max(Math.exp(offset / RIPPLE_FRONT_PX), RIPPLE_WAKE_BRIGHTNESS * Math.exp(offset / RIPPLE_WAKE_PX));
+function ringRadius(age: number): number {
+  return RIPPLE_SPEED_PX * age ** RIPPLE_GROWTH_EXPONENT;
+}
+
+function ringBand(offset: number, radius: number): number {
+  const width = RING_WIDTH_PX + radius * RING_WIDTH_PER_RADIUS;
+  const side = offset > 0 ? width : width * RING_INNER_SOFTNESS;
+  return Math.exp(-((offset / side) ** 2));
+}
+
+function shapeStretch(ripple: Ripple, angle: number): number {
+  let stretch = 1;
+  for (let i = 0; i < SHAPE_HARMONICS.length; i++) {
+    stretch += ripple.amplitudes[i] * Math.sin(SHAPE_HARMONICS[i] * angle + ripple.phases[i]);
+  }
+  return stretch;
 }
 
 type CharFieldProps = {
@@ -224,12 +251,26 @@ export function CharField({ theme, reduceMotion }: CharFieldProps) {
       let brightness = 0;
       for (const ripple of ripples) {
         const age = (now - ripple.bornAt) / 1000;
-        const radius = RIPPLE_SPEED_PX * age ** RIPPLE_GROWTH_EXPONENT;
-        const strength = 1 - smoothstep(RIPPLE_FADE_FROM, 1, age / RIPPLE_LIFETIME_SECONDS);
+        const dx = cssX - ripple.x;
+        const dy = cssY - ripple.y;
+        const distance = Math.hypot(dx, dy);
+        const outer = ringRadius(age);
+        const reach =
+          outer * SHAPE_STRETCH_MAX + RING_WIDTH_PX * 3 + outer * RING_WIDTH_PER_RADIUS * 3 + WARP_PX_PER_SECOND * age;
+        if (distance > reach) continue;
+
+        // Dividing by the stretch maps the lopsided outline back onto a circle, so every ring shares it.
         const bend =
           (warp(cssX * WARP_SCALE + ripple.warpOffset, cssY * WARP_SCALE) - 0.5) * 2 * WARP_PX_PER_SECOND * age;
-        const distance = Math.hypot(cssX - ripple.x, cssY - ripple.y) + bend;
-        brightness = Math.max(brightness, strength * waveProfile(distance - radius));
+        const shaped = distance / shapeStretch(ripple, Math.atan2(dy, dx)) + bend;
+        for (let ring = 0; ring < RING_DELAYS_SECONDS.length; ring++) {
+          const ringAge = age - RING_DELAYS_SECONDS[ring];
+          if (ringAge <= 0) continue;
+          const radius = ringRadius(ringAge);
+          const strength =
+            RING_STRENGTHS[ring] * (1 - smoothstep(RIPPLE_FADE_FROM, 1, ringAge / RIPPLE_LIFETIME_SECONDS));
+          brightness = Math.max(brightness, strength * ringBand(shaped - radius, radius));
+        }
       }
       return brightness;
     };
@@ -272,7 +313,7 @@ export function CharField({ theme, reduceMotion }: CharFieldProps) {
         const seconds = Math.min((now - lastFrameAt) / 1000, MAX_FRAME_SECONDS);
         lastFrameAt = now;
         coolHeat(seconds);
-        const expiresBefore = now - RIPPLE_LIFETIME_SECONDS * 1000;
+        const expiresBefore = now - RIPPLE_TOTAL_SECONDS * 1000;
         while (ripples.length > 0 && ripples[0].bornAt < expiresBefore) ripples.shift();
         flicker();
         draw(now);
@@ -319,6 +360,10 @@ export function CharField({ theme, reduceMotion }: CharFieldProps) {
         y: event.clientY,
         bornAt: performance.now(),
         warpOffset: Math.random() * 100,
+        amplitudes: SHAPE_AMPLITUDE_MAX.map(
+          (max) => max * (SHAPE_AMPLITUDE_MIN_RATIO + Math.random() * (1 - SHAPE_AMPLITUDE_MIN_RATIO)),
+        ),
+        phases: SHAPE_HARMONICS.map(() => Math.random() * Math.PI * 2),
       });
       start();
     };
