@@ -22,7 +22,6 @@ const INTRO_COMMAND = "whoami";
 const PROMPT_SCROLL_OFFSET_PX = 8;
 /** Time to print one line of output, so long output streams in like a real terminal. */
 const STREAM_LINE_MS = 22;
-/** Pause between two output blocks. */
 const STREAM_GAP_MS = 30;
 const FALLBACK_LINE_HEIGHT_PX = 24;
 /** Matches a mouse or trackpad. On touch screens, focus would open the keyboard over the terminal. */
@@ -120,7 +119,6 @@ export function Terminal({ active, setTheme }: TerminalProps) {
   // Tab stays inside the terminal, so Esc is the keyboard's way out. Keyboard users must never be trapped.
   const releaseFocus = useRef(false);
   const wasActive = useRef(active);
-  // Output waits here and prints one block at a time.
   const streamQueue = useRef<Entry[]>([]);
   const streamTimer = useRef<number | null>(null);
   const streamPromptId = useRef<number | null>(null);
@@ -394,7 +392,6 @@ export function Terminal({ active, setTheme }: TerminalProps) {
             ref={bodyRef}
             className="relative min-h-0 flex-1 overflow-y-auto px-4 py-5 font-mono text-[13.5px] leading-relaxed sm:px-8 sm:py-7 sm:text-[15px]"
           >
-            {/* Login banner: the page headline lives inside the terminal. */}
             <div className="mb-4 border-b border-dashed border-rule pb-4">
               <h1
                 id="hero-heading"

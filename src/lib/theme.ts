@@ -1,6 +1,5 @@
 export type Theme = "light" | "dark";
 
-/** The menu bar and the terminal both speak of day and night. */
 export const THEME_LABELS: Record<Theme, string> = {
   light: "day",
   dark: "night",

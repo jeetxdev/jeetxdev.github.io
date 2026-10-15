@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 import { PROMPT_USER } from "@/data/profile";
 
-/** Name of the data attribute the terminal's delegated click handler reads. */
 export const RUN_ATTRIBUTE = "data-run";
 
 type RunLinkProps = {

@@ -6,7 +6,6 @@ type UseTheme = {
   setTheme: (next: Theme) => void;
 };
 
-/** Owns the day/night choice for both the menu bar and the terminal. */
 export function useTheme(): UseTheme {
   const [theme, setThemeState] = useState<Theme>(readPaintedTheme);
 
