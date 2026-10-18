@@ -9,7 +9,7 @@ export function Bio() {
       </p>
       <p>
         I&rsquo;ve spent enough time behind the API (Node, Express, Postgres,
-        PHP) to know whose fault usually is.
+        PHP) to know whose fault it usually is.
       </p>
       <p>
         I like code that&rsquo;s easy to read, work that makes a difference to
