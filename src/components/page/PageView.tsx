@@ -1,3 +1,4 @@
+import { yearsOfExperienceInWords } from "@/data/career";
 import { AVAILABILITY } from "@/data/profile";
 import { useReveal } from "@/hooks/useReveal";
 import { About } from "./About";
@@ -22,7 +23,7 @@ export function PageView({ reduceMotion }: PageViewProps) {
           id="page-heading"
           className="mt-5 max-w-[20ch] font-mono text-[2.5rem] leading-[1.04] font-extrabold tracking-[-0.045em] sm:text-6xl lg:text-[4.6rem]"
         >
-          Eleven years of making the whole stack{" "}
+          {yearsOfExperienceInWords()} years of making the whole stack{" "}
           <em className="font-serif text-[1.4em] leading-[0.7] font-normal tracking-[-0.01em] text-accent italic">
             behave.
           </em>
