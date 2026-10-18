@@ -19,9 +19,9 @@ const THEME_COLORS: Record<Theme, string> = {
 
 /** The pre-paint script already resolved the theme, so the attribute is the truth. */
 export function readPaintedTheme(): Theme {
-  return document.documentElement.getAttribute(THEME_ATTRIBUTE) === "light"
-    ? "light"
-    : "dark";
+  return document.documentElement.getAttribute(THEME_ATTRIBUTE) === "dark"
+    ? "dark"
+    : "light";
 }
 
 export function storeTheme(theme: Theme): void {

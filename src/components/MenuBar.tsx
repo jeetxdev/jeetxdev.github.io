@@ -1,16 +1,13 @@
 import { EMAIL, RESUME_LINK_PROPS } from "@/data/profile";
 import { THEME_LABELS, type Theme } from "@/lib/theme";
-import type { View } from "@/lib/view";
 import { Clock } from "./Clock";
 
 type MenuBarProps = {
-  view: View;
   theme: Theme;
-  onSwitchView: (next: View) => void;
   onToggleTheme: () => void;
 };
 
-export function MenuBar({ view, theme, onSwitchView, onToggleTheme }: MenuBarProps) {
+export function MenuBar({ theme, onToggleTheme }: MenuBarProps) {
   return (
     <header className="sticky top-0 z-40 border-b border-rule bg-surface">
       <nav
@@ -33,21 +30,6 @@ export function MenuBar({ view, theme, onSwitchView, onToggleTheme }: MenuBarPro
         <a className="menu-item" {...RESUME_LINK_PROPS}>
           Résumé
         </a>
-        {/* Each view offers only the way out to the other one. It sits last
-            because its label changes width, and nothing clickable follows it. */}
-        {view === "terminal" ? (
-          <button type="button" className="view-cta" onClick={() => onSwitchView("page")}>
-            {/* Below 380px the menu bar cannot fit the longer labels on one line. */}
-            <span className="min-[380px]:hidden">Page →</span>
-            <span className="hidden min-[380px]:inline sm:hidden">Regular page →</span>
-            <span className="hidden sm:inline">View as a regular page →</span>
-          </button>
-        ) : (
-          <button type="button" className="view-cta" onClick={() => onSwitchView("terminal")}>
-            <span className="min-[380px]:hidden">← Terminal</span>
-            <span className="hidden min-[380px]:inline">← Back to terminal</span>
-          </button>
-        )}
         <Clock />
       </nav>
     </header>

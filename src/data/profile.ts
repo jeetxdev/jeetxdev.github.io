@@ -19,7 +19,6 @@ export const RESUME_LINK_PROPS = {
 } as const;
 
 export const HOME_ZONE = "Asia/Kolkata";
-export const PROMPT_USER = "jeet@bangalore";
 
 export const AVAILABILITY = "available · senior roles & select freelance";
 
@@ -50,5 +49,3 @@ export const STACK: StackLayer[] = [
     tools: ["REST API design", "component architecture", "performance", "CI/CD", "containerization"],
   },
 ];
-
-export const FAVOURITE_TOOL = "a well-named variable";

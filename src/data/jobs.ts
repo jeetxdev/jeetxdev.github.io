@@ -1,5 +1,4 @@
 export type Job = {
-  /** Folder name in the terminal, as in `cat work/<slug>`. */
   slug: string;
   role: string;
   company: string;

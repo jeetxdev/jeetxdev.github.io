@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#161410" />
+    <meta name="theme-color" content="#faf8f5" />
     <meta
       name="description"
       content="Jeet Mukherjee - senior full-stack developer in Bangalore, India. Eleven years shipping React/Node platforms for fintech and developer tooling."
@@ -25,12 +25,12 @@
          from src/lib/theme.ts because this has to run ahead of the bundle. -->
     <script>
       (function () {
-        /* Night is the default. Day applies only once a visitor picks it. */
-        var theme = "dark";
+        /* Day is the default. Night applies only once a visitor picks it. */
+        var theme = "light";
         try {
-          if (localStorage.getItem("jeetxdev-theme") === "light") theme = "light";
+          if (localStorage.getItem("jeetxdev-theme") === "dark") theme = "dark";
         } catch {
-          /* Blocked storage: keep the dark default. */
+          /* Blocked storage: keep the light default. */
         }
         document.documentElement.setAttribute("data-theme", theme);
         document
