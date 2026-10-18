@@ -1,10 +1,22 @@
-import { defineConfig } from "vite";
+import { defineConfig, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import path from "node:path";
+import { yearsOfExperienceInWords } from "./src/data/career";
+
+/** Meta tags are read before any JS runs, so the experience count is filled in at build time. */
+function careerYears(): Plugin {
+  return {
+    name: "career-years",
+    transformIndexHtml: {
+      order: "pre",
+      handler: (html) => html.replaceAll("__CAREER_YEARS__", yearsOfExperienceInWords()),
+    },
+  };
+}
 
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  plugins: [react(), tailwindcss(), careerYears()],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

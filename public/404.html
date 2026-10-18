@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <meta name="theme-color" content="#faf8f5" />
+    <link rel="icon" href="/favicon.svg?v=2" type="image/svg+xml" />
+    <title>Not found - Jeet Mukherjee</title>
+
+    <!-- Same storage key as src/lib/theme.ts, so the visitor's theme carries over. -->
+    <script>
+      (function () {
+        var theme = "light";
+        try {
+          if (localStorage.getItem("jeetxdev-theme") === "dark") theme = "dark";
+        } catch {
+          /* Blocked storage: keep the light default. */
+        }
+        document.documentElement.setAttribute("data-theme", theme);
+        document
+          .querySelector('meta[name="theme-color"]')
+          .setAttribute("content", theme === "light" ? "#faf8f5" : "#161410");
+      })();
+    </script>
+
+    <style>
+      [data-theme="light"] {
+        --paper: #faf8f5;
+        --ink: #22201c;
+        --muted: #6e675c;
+        --accent: #0f7a4a;
+        color-scheme: light;
+      }
+
+      [data-theme="dark"] {
+        --paper: #161410;
+        --ink: #ece6da;
+        --muted: #a39b8c;
+        --accent: #5cc995;
+        color-scheme: dark;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 1.25rem;
+        box-sizing: border-box;
+        background: var(--paper);
+        color: var(--ink);
+        font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 14px;
+        line-height: 1.7;
+      }
+
+      main {
+        max-width: 36rem;
+        width: 100%;
+      }
+
+      h1 {
+        margin: 0 0 1.5rem;
+        font-size: clamp(2.5rem, 10vw, 4.5rem);
+        line-height: 1;
+        font-weight: 800;
+        letter-spacing: -0.045em;
+      }
+
+      p {
+        margin: 0;
+      }
+
+      .muted {
+        color: var(--muted);
+      }
+
+      a {
+        color: inherit;
+        text-decoration: underline;
+        text-decoration-color: var(--accent);
+        text-underline-offset: 0.22em;
+      }
+
+      a:hover {
+        color: var(--accent);
+        text-decoration-thickness: 2px;
+      }
+
+      a:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 3px;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>404</h1>
+      <p><span class="muted">$ cd </span><span id="path">this-page</span></p>
+      <p class="muted">cd: no such file or directory</p>
+      <p style="margin-top: 1.5rem">
+        <span class="muted">$ </span><a href="/">cd ~</a>
+      </p>
+    </main>
+    <script>
+      document.getElementById("path").textContent = location.pathname;
+    </script>
+  </body>
+</html>

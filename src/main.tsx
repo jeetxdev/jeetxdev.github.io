@@ -1,16 +1,12 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 
-import "@fontsource/instrument-serif/latin-400.css";
+// Only the faces the page renders: serif is italic-only, mono and sans are upright.
 import "@fontsource/instrument-serif/latin-400-italic.css";
 import "@fontsource/jetbrains-mono/latin-400.css";
-import "@fontsource/jetbrains-mono/latin-400-italic.css";
-import "@fontsource/jetbrains-mono/latin-500.css";
 import "@fontsource/jetbrains-mono/latin-700.css";
-import "@fontsource/jetbrains-mono/latin-700-italic.css";
 import "@fontsource/jetbrains-mono/latin-800.css";
 import "@fontsource/source-sans-3/latin-400.css";
-import "@fontsource/source-sans-3/latin-400-italic.css";
 import "@fontsource/source-sans-3/latin-600.css";
 
 import "./styles/index.css";

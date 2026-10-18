@@ -1,9 +1,8 @@
 import { useState } from "react";
+import { CAREER_START } from "@/data/career";
 import { JOBS } from "@/data/jobs";
 import { cn } from "@/lib/utils";
 import { SectionHeading } from "./SectionHeading";
-
-const CAREER_START = Math.min(...JOBS.map((job) => Number(job.from)));
 
 export function Work() {
   const last = JOBS.length - 1;

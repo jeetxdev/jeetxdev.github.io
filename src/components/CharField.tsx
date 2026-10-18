@@ -17,14 +17,9 @@ const MAX_FRAME_SECONDS = 0.1;
 const BRIGHTNESS_LEVELS = 12;
 const EMPTY_CELL = -1;
 
-/** The hotspot stays grey, while scattered characters carry the accent at every brightness. */
-const HOTSPOT_PALETTE = 0;
-const SHARD_PALETTE = 1;
-const SHARD_TINT_MIN = 0.7;
-
 /** Pointer movement leaves heat behind. More movement means more heat, which lasts longer. */
 const HEAT_CELL_PX = 20;
-const HEAT_RADIUS_PX = 130;
+const HEAT_RADIUS_PX = 140;
 const HEAT_PER_PX = 0.008;
 const HEAT_STAMP_SPACING_PX = 16;
 const HEAT_MAX = 3;
@@ -32,7 +27,7 @@ const HEAT_DECAY_PER_SECOND = 0.6;
 const HEAT_EPSILON = 0.01;
 
 /** Heat sets how dense the hotspot is, but brightness stops rising at one unit of heat. */
-const HOTSPOT_BRIGHTNESS = 0.35;
+const HOTSPOT_BRIGHTNESS = 0.45;
 const HOTSPOT_SPARSE_FROM = 0.55;
 const HOTSPOT_DENSE_FROM = 0.25;
 const HOTSPOT_FULL_DENSITY_HEAT = 1.5;
@@ -44,50 +39,10 @@ const HOTSPOT_DRIFT_PER_SECOND = 0.15;
 /** Share of all characters swapped per second, so the flicker rate does not depend on frame rate. */
 const HOTSPOT_SCRAMBLE_PER_SECOND = 0.9;
 
-/**
- * A click throws the characters around the pointer outward. They slow down,
- * drift slightly downward and fade, moving freely instead of along the grid.
- */
-const SCATTER_RADIUS_PX = 55;
-/** Skipping some cells keeps the scatter loose instead of a solid disc. */
-const SCATTER_KEEP = 0.65;
-const SCATTER_MIN_SPEED_PX = 60;
-const SCATTER_SPEED_RANGE_PX = 180;
-/** Characters at the rim travel half as far as those under the pointer. */
-const SCATTER_RIM_SLOWDOWN = 0.5;
-const SCATTER_LIFT_PX = 40;
-/** Drag makes each character cover its full distance early and then ease to a stop. */
-const SCATTER_DRAG = 3;
-const SCATTER_GRAVITY_PX = 240;
-const SCATTER_MIN_LIFE_SECONDS = 0.5;
-const SCATTER_LIFE_RANGE_SECONDS = 0.4;
-const SCATTER_BRIGHTNESS = 0.95;
-const SCATTER_FADE_POWER = 1.5;
-const MAX_SHARDS = 480;
-
-/** Pointer activity inside these elements, such as the terminal window, never reaches the field. */
-export const QUIET_ZONE_ATTRIBUTE = "data-char-field-quiet";
-const QUIET_ZONE_SELECTOR = `[${QUIET_ZONE_ATTRIBUTE}]`;
-
 /** Day needs a lighter touch, or the field fights the dark body text. */
 const MAX_ALPHA: Record<Theme, number> = { dark: 0.55, light: 0.45 };
 
 type Rgb = [number, number, number];
-
-/** One scattered character. Positions and velocities are in canvas pixels. */
-type Shard = {
-  x: number;
-  y: number;
-  vx: number;
-  vy: number;
-  glyph: number;
-  bornAt: number;
-  life: number;
-};
-
-function inQuietZone(event: PointerEvent): boolean {
-  return event.target instanceof Element && event.target.closest(QUIET_ZONE_SELECTOR) !== null;
-}
 
 function smoothstep(edge0: number, edge1: number, x: number): number {
   const t = Math.min(1, Math.max(0, (x - edge0) / (edge1 - edge0)));
@@ -101,30 +56,25 @@ function readColorToken(name: string): Rgb {
   return [(value >> 16) & 255, (value >> 8) & 255, value & 255];
 }
 
-/** Pre-renders every glyph at every brightness in both palettes, so a frame is only drawImage calls. */
+/** Pre-renders every glyph at every brightness, so a frame is only drawImage calls. */
 function buildAtlas(cellW: number, cellH: number, dpr: number, theme: Theme): HTMLCanvasElement {
   const atlas = document.createElement("canvas");
   atlas.width = GLYPHS.length * cellW;
-  atlas.height = 2 * BRIGHTNESS_LEVELS * cellH;
+  atlas.height = BRIGHTNESS_LEVELS * cellH;
   const ctx = atlas.getContext("2d");
   if (!ctx) return atlas;
 
-  const dim = readColorToken("--muted");
-  const bright = readColorToken("--accent");
+  const [r, g, b] = readColorToken("--muted");
   ctx.font = `${FONT_SIZE_PX * dpr}px ${FONT_FAMILY}`;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
 
-  for (const palette of [HOTSPOT_PALETTE, SHARD_PALETTE]) {
-    for (let level = 1; level <= BRIGHTNESS_LEVELS; level++) {
-      const strength = level / BRIGHTNESS_LEVELS;
-      const tint = palette === SHARD_PALETTE ? SHARD_TINT_MIN + (1 - SHARD_TINT_MIN) * strength : 0;
-      const [r, g, b] = dim.map((channel, i) => Math.round(channel + (bright[i] - channel) * tint));
-      ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${strength * MAX_ALPHA[theme]})`;
-      const y = (palette * BRIGHTNESS_LEVELS + level - 1) * cellH + cellH / 2;
-      for (let i = 0; i < GLYPHS.length; i++) {
-        ctx.fillText(GLYPHS[i], i * cellW + cellW / 2, y);
-      }
+  for (let level = 1; level <= BRIGHTNESS_LEVELS; level++) {
+    const strength = level / BRIGHTNESS_LEVELS;
+    ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${strength * MAX_ALPHA[theme]})`;
+    const y = (level - 1) * cellH + cellH / 2;
+    for (let i = 0; i < GLYPHS.length; i++) {
+      ctx.fillText(GLYPHS[i], i * cellW + cellW / 2, y);
     }
   }
   return atlas;
@@ -135,15 +85,12 @@ type CharFieldProps = {
   reduceMotion: boolean;
 };
 
-/**
- * Faint characters gather where the pointer moves and fade once it rests,
- * and every click scatters the nearby characters outward.
- */
+/** Faint characters gather where the pointer moves and fade once it rests. */
 export function CharField({ theme, reduceMotion }: CharFieldProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
-    // Both layers exist only to answer pointer motion, so reduced motion shows nothing.
+    // The field exists only to answer pointer motion, so reduced motion shows nothing.
     if (reduceMotion) return;
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext("2d");
@@ -173,9 +120,6 @@ export function CharField({ theme, reduceMotion }: CharFieldProps) {
     let heat = new Float32Array(0);
     let hottest = 0;
     let pointer: { x: number; y: number } | null = null;
-    let shards: Shard[] = [];
-    // Top-left corners of the shards drawn last frame, as x, y pairs, so only those spots are cleared.
-    let trail: number[] = [];
 
     const randomGlyph = () => Math.floor(Math.random() * GLYPHS.length);
 
@@ -195,8 +139,6 @@ export function CharField({ theme, reduceMotion }: CharFieldProps) {
       heatRows = Math.ceil(window.innerHeight / HEAT_CELL_PX) + 1;
       heat = new Float32Array(heatCols * heatRows);
       hottest = 0;
-      shards = [];
-      trail = [];
     };
 
     const stampHeat = (cx: number, cy: number, amount: number) => {
@@ -252,53 +194,6 @@ export function CharField({ theme, reduceMotion }: CharFieldProps) {
       return HOTSPOT_BRIGHTNESS * Math.min(1, warmth) * smoothstep(visibleFrom, visibleFrom + HOTSPOT_FEATHER, field);
     };
 
-    const scatter = (cssX: number, cssY: number, now: number) => {
-      const x = cssX * dpr;
-      const y = cssY * dpr;
-      const radius = SCATTER_RADIUS_PX * dpr;
-      const col0 = Math.max(0, Math.floor((x - radius) / cellW));
-      const col1 = Math.min(cols - 1, Math.ceil((x + radius) / cellW));
-      const row0 = Math.max(0, Math.floor((y - radius) / cellH));
-      const row1 = Math.min(rows - 1, Math.ceil((y + radius) / cellH));
-      for (let row = row0; row <= row1; row++) {
-        for (let col = col0; col <= col1; col++) {
-          const dx = col * cellW + cellW / 2 - x;
-          const dy = row * cellH + cellH / 2 - y;
-          const distance = Math.hypot(dx, dy) || 1;
-          if (distance > radius || Math.random() > SCATTER_KEEP) continue;
-          const speed =
-            (SCATTER_MIN_SPEED_PX + Math.random() * SCATTER_SPEED_RANGE_PX) *
-            (1 - (distance / radius) * SCATTER_RIM_SLOWDOWN) *
-            dpr;
-          shards.push({
-            x: col * cellW,
-            y: row * cellH,
-            vx: (dx / distance) * speed * SCATTER_DRAG,
-            vy: (dy / distance) * speed * SCATTER_DRAG - SCATTER_LIFT_PX * dpr,
-            glyph: glyphs[row * cols + col],
-            bornAt: now,
-            life: SCATTER_MIN_LIFE_SECONDS + Math.random() * SCATTER_LIFE_RANGE_SECONDS,
-          });
-        }
-      }
-      if (shards.length > MAX_SHARDS) shards.splice(0, shards.length - MAX_SHARDS);
-    };
-
-    /** Clears the cells under last frame's shards and marks them for the grid pass to redraw. */
-    const eraseTrail = () => {
-      for (let i = 0; i < trail.length; i += 2) {
-        const col0 = Math.floor(trail[i] / cellW);
-        const row0 = Math.floor(trail[i + 1] / cellH);
-        for (let row = Math.max(0, row0); row <= Math.min(rows - 1, row0 + 1); row++) {
-          for (let col = Math.max(0, col0); col <= Math.min(cols - 1, col0 + 1); col++) {
-            ctx.clearRect(col * cellW, row * cellH, cellW, cellH);
-            shown[row * cols + col] = EMPTY_CELL;
-          }
-        }
-      }
-      trail = [];
-    };
-
     const drawGrid = (now: number) => {
       if (!atlas) return;
       const drift = ((now - startedAt) / 1000) * HOTSPOT_DRIFT_PER_SECOND;
@@ -317,26 +212,9 @@ export function CharField({ theme, reduceMotion }: CharFieldProps) {
           if (shown[index] !== EMPTY_CELL) ctx.clearRect(x, y, cellW, cellH);
           shown[index] = tile;
           if (tile === EMPTY_CELL) continue;
-          const atlasY = (HOTSPOT_PALETTE * BRIGHTNESS_LEVELS + level - 1) * cellH;
+          const atlasY = (level - 1) * cellH;
           ctx.drawImage(atlas, glyphs[index] * cellW, atlasY, cellW, cellH, x, y, cellW, cellH);
         }
-      }
-    };
-
-    const drawShards = (now: number) => {
-      if (!atlas) return;
-      shards = shards.filter((shard) => now - shard.bornAt < shard.life * 1000);
-      const gravity = SCATTER_GRAVITY_PX * dpr;
-      for (const shard of shards) {
-        const age = (now - shard.bornAt) / 1000;
-        const level = Math.round(SCATTER_BRIGHTNESS * (1 - age / shard.life) ** SCATTER_FADE_POWER * BRIGHTNESS_LEVELS);
-        if (level === 0) continue;
-        const travel = (1 - Math.exp(-age * SCATTER_DRAG)) / SCATTER_DRAG;
-        const x = Math.round(shard.x + shard.vx * travel);
-        const y = Math.round(shard.y + shard.vy * travel + 0.5 * gravity * age * age);
-        const atlasY = (SHARD_PALETTE * BRIGHTNESS_LEVELS + level - 1) * cellH;
-        ctx.drawImage(atlas, shard.glyph * cellW, atlasY, cellW, cellH, x, y, cellW, cellH);
-        trail.push(x, y);
       }
     };
 
@@ -354,20 +232,17 @@ export function CharField({ theme, reduceMotion }: CharFieldProps) {
         const workStartedAt = performance.now();
         coolHeat(seconds);
         flicker(seconds);
-        eraseTrail();
         drawGrid(now);
-        drawShards(now);
         workMs += (performance.now() - workStartedAt - workMs) * WORK_SMOOTHING;
         if (workMs > SLOW_WORK_MS) frameInterval = SLOW_FRAME_INTERVAL_MS;
         else if (workMs < FAST_WORK_MS) frameInterval = FRAME_INTERVAL_MS;
       }
-      // Once the heat is gone and no shard is left, the loop stops until the pointer acts again.
-      if (hottest > HEAT_EPSILON || shards.length > 0) {
+      // Once the heat is gone, the loop stops until the pointer moves again.
+      if (hottest > HEAT_EPSILON) {
         frameId = requestAnimationFrame(tick);
       } else {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         shown.fill(EMPTY_CELL);
-        trail = [];
         running = false;
       }
     };
@@ -380,11 +255,6 @@ export function CharField({ theme, reduceMotion }: CharFieldProps) {
     };
 
     const onPointerMove = (event: PointerEvent) => {
-      // Forgetting the last point stops a trail from jumping across the quiet zone on exit.
-      if (inQuietZone(event)) {
-        pointer = null;
-        return;
-      }
       const next = { x: event.clientX, y: event.clientY };
       if (pointer) {
         const distance = Math.hypot(next.x - pointer.x, next.y - pointer.y);
@@ -403,12 +273,6 @@ export function CharField({ theme, reduceMotion }: CharFieldProps) {
       pointer = null;
     };
 
-    const onPointerDown = (event: PointerEvent) => {
-      if (inQuietZone(event) || !atlas) return;
-      scatter(event.clientX, event.clientY, performance.now());
-      start();
-    };
-
     // Measuring before the web font arrives would size every cell for the fallback font.
     document.fonts
       .load(`${FONT_SIZE_PX}px ${FONT_FAMILY}`)
@@ -418,7 +282,6 @@ export function CharField({ theme, reduceMotion }: CharFieldProps) {
         layout();
         window.addEventListener("resize", layout);
         window.addEventListener("pointermove", onPointerMove);
-        window.addEventListener("pointerdown", onPointerDown);
         document.documentElement.addEventListener("pointerleave", onPointerLeave);
       });
 
@@ -427,7 +290,6 @@ export function CharField({ theme, reduceMotion }: CharFieldProps) {
       cancelAnimationFrame(frameId);
       window.removeEventListener("resize", layout);
       window.removeEventListener("pointermove", onPointerMove);
-      window.removeEventListener("pointerdown", onPointerDown);
       document.documentElement.removeEventListener("pointerleave", onPointerLeave);
     };
   }, [theme, reduceMotion]);

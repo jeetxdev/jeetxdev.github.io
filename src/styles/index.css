@@ -1,8 +1,7 @@
 @import "tailwindcss";
 
 /* `inline` makes every utility read the raw custom property at use-site, so
-   the terminal window can re-scope --paper, --ink and friends for its own
-   subtree and every utility inside it follows. */
+   the colours follow whichever theme is active. */
 @theme inline {
   --color-*: initial;
   --color-paper: var(--paper);
@@ -81,11 +80,6 @@ body {
   outline-offset: 3px;
 }
 
-/* Headings receive focus only so screen readers land on the new view. */
-[tabindex="-1"]:focus {
-  outline: none;
-}
-
 button {
   cursor: pointer;
 }
@@ -127,63 +121,6 @@ button {
   text-decoration-thickness: 2px;
 }
 
-/* Day gives the terminal a Solarized Light base with the site's green accent.
-   Text colours are darkened from Solarized to pass WCAG AA on both surfaces.
-   Hard offset shadow reads as a printed window, not a floating card. */
-[data-theme="light"] .term-window {
-  --paper: #fdf6e3;
-  --surface: #eee8d5;
-  --ink: #073642;
-  --muted: #4e6168;
-  --accent: #0f7a4a;
-  --on-accent: #fdf6e3;
-  --danger: #b03a10;
-  --rule: #ddd6c1;
-  border-color: var(--ink);
-  box-shadow: 8px 8px 0 var(--accent);
-  color: var(--ink);
-}
-
-[data-theme="dark"] .term-window {
-  --paper: #0c0b09;
-  --surface: #1a1814;
-  --rule: #2a2621;
-  box-shadow: 8px 8px 0 var(--accent);
-}
-
-/* Everything in the terminal is monospace, including text shared with the page view. */
-.term-window * {
-  font-family: var(--font-mono);
-}
-
-.term-window .border-ink {
-  border-color: var(--rule);
-}
-
-.term-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 9999px;
-  border: 1px solid var(--muted);
-}
-
-.term-input {
-  caret-color: var(--accent);
-  background: transparent;
-  outline: none;
-}
-
-.term-run {
-  text-decoration: underline dotted;
-  text-decoration-color: var(--muted);
-  text-underline-offset: 0.2em;
-}
-
-.term-run:hover {
-  color: var(--accent);
-  text-decoration-color: var(--accent);
-}
-
 /* Atkinson-dithered 1-bit portrait, pre-rendered per theme so pixels stay sharp. */
 .dither img {
   display: block;
@@ -196,22 +133,6 @@ button {
 [data-theme="light"] .dither-night,
 [data-theme="dark"] .dither-day {
   display: none;
-}
-
-.caret {
-  display: inline-block;
-  width: 0.55em;
-  height: 1em;
-  margin-left: 0.1em;
-  vertical-align: -0.12em;
-  background: var(--accent);
-  animation: blink 1.1s steps(1) infinite;
-}
-
-@keyframes blink {
-  50% {
-    opacity: 0;
-  }
 }
 
 .reveal {
@@ -231,17 +152,6 @@ button {
 
 .menu-item:hover {
   background: var(--rule);
-}
-
-.view-cta {
-  padding: 0.15rem 0.55rem;
-  background: var(--accent);
-  color: var(--on-accent);
-  font-weight: 500;
-}
-
-.view-cta:hover {
-  opacity: 0.9;
 }
 
 /* Ripples stay at full strength in the margins and drop back behind the
@@ -268,10 +178,6 @@ button {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .caret {
-    animation: none;
-  }
-
   .reveal {
     opacity: 1;
     transform: none;
