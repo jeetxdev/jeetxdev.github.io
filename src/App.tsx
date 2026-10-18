@@ -2,12 +2,10 @@ import { CharField } from "@/components/CharField";
 import { Footer } from "@/components/Footer";
 import { MenuBar } from "@/components/MenuBar";
 import { PageView } from "@/components/page/PageView";
-import { useDisableContextMenu } from "@/hooks/useDisableContextMenu";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { useTheme } from "@/hooks/useTheme";
 
 export function App() {
-  useDisableContextMenu();
   const reduceMotion = useReducedMotion();
   const { theme, setTheme } = useTheme();
 
