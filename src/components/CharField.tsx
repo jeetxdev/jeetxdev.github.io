@@ -24,7 +24,7 @@ const SHARD_TINT_MIN = 0.7;
 
 /** Pointer movement leaves heat behind. More movement means more heat, which lasts longer. */
 const HEAT_CELL_PX = 20;
-const HEAT_RADIUS_PX = 130;
+const HEAT_RADIUS_PX = 140;
 const HEAT_PER_PX = 0.008;
 const HEAT_STAMP_SPACING_PX = 16;
 const HEAT_MAX = 3;
@@ -32,7 +32,7 @@ const HEAT_DECAY_PER_SECOND = 0.6;
 const HEAT_EPSILON = 0.01;
 
 /** Heat sets how dense the hotspot is, but brightness stops rising at one unit of heat. */
-const HOTSPOT_BRIGHTNESS = 0.35;
+const HOTSPOT_BRIGHTNESS = 0.45;
 const HOTSPOT_SPARSE_FROM = 0.55;
 const HOTSPOT_DENSE_FROM = 0.25;
 const HOTSPOT_FULL_DENSITY_HEAT = 1.5;
