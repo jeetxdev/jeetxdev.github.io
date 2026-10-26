@@ -27,7 +27,7 @@ export function Clock() {
 
   return (
     <span
-      className="ml-auto hidden tabular-nums text-muted sm:inline"
+      className="hidden px-2 tabular-nums text-muted sm:inline"
       aria-label="Time in Bangalore"
     >
       {label}

@@ -14,7 +14,7 @@ const THEME_COLOR_META_SELECTOR = 'meta[name="theme-color"]';
 /** Browser chrome tint, matched to each theme's page background. */
 const THEME_COLORS: Record<Theme, string> = {
   light: "#faf8f5",
-  dark: "#161410",
+  dark: "#131209",
 };
 
 /** The pre-paint script already resolved the theme, so the attribute is the truth. */

@@ -3,7 +3,7 @@ import type { Theme } from "@/lib/theme";
 import { createValueNoise } from "@/lib/valueNoise";
 
 const GLYPHS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-const FONT_FAMILY = '"JetBrains Mono", ui-monospace, monospace';
+const FONT_FAMILY = '"Geist Mono", ui-monospace, monospace';
 const FONT_SIZE_PX = 12;
 const LINE_HEIGHT_PX = 15;
 const MAX_DPR = 2;

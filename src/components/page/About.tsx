@@ -10,7 +10,7 @@ export function About() {
     <section
       id="about"
       aria-labelledby="about-heading"
-      className="reveal grid scroll-mt-20 grid-cols-12 gap-x-4 md:gap-x-8 gap-y-6 border-t border-rule py-14"
+      className="reveal grid scroll-mt-20 grid-cols-12 gap-x-4 gap-y-6 border-t border-rule pt-12 pb-16 md:gap-x-8"
     >
       <SectionHeading
         id="about-heading"
@@ -36,7 +36,7 @@ export function About() {
           />
         </div>
       </figure>
-      <div className="col-span-12 max-w-measure space-y-5 text-[1.18rem] leading-[1.65] md:col-span-7">
+      <div className="col-span-12 max-w-measure space-y-4 text-lg md:col-span-7">
         <Bio />
       </div>
     </section>

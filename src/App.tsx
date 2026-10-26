@@ -16,8 +16,8 @@ export function App() {
       </a>
       <MenuBar theme={theme} onToggleTheme={() => setTheme(theme === "dark" ? "light" : "dark")} />
       <CharField theme={theme} reduceMotion={reduceMotion} />
-      <main id="main" className="mx-auto max-w-page px-5 sm:px-8">
-        <PageView reduceMotion={reduceMotion} />
+      <main id="main" className="mx-auto max-w-page px-4 sm:px-8">
+        <PageView />
       </main>
       <Footer />
     </>
