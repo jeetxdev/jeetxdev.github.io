@@ -60,12 +60,13 @@
          from src/lib/theme.ts because this has to run ahead of the bundle. -->
     <script>
       (function () {
-        /* Day is the default. Night applies only once a visitor picks it. */
-        var theme = "light";
+        /* A stored choice wins. Otherwise the system preference decides. */
+        var theme = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
         try {
-          if (localStorage.getItem("jeetxdev-theme") === "dark") theme = "dark";
+          var stored = localStorage.getItem("jeetxdev-theme");
+          if (stored === "dark" || stored === "light") theme = stored;
         } catch {
-          /* Blocked storage: keep the light default. */
+          /* Blocked storage: keep the system preference. */
         }
         document.documentElement.setAttribute("data-theme", theme);
         document

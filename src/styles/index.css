@@ -9,9 +9,7 @@
   --color-ink: var(--ink);
   --color-muted: var(--muted);
   --color-accent: var(--accent);
-  --color-on-accent: var(--on-accent);
   --color-marker: var(--marker);
-  --color-danger: var(--danger);
   --color-rule: var(--rule);
 }
 
@@ -33,10 +31,6 @@
   --ink: #22201c;
   --muted: #6e675c;
   --accent: #0f7a4a;
-  --on-accent: #faf8f5;
-  --marker: #f3e3a3;
-  --marker-ink: #22201c;
-  --danger: #9a3412;
   --rule: #e4ddd1;
   --hero-from: #000000;
   --hero-to: #666666;
@@ -51,14 +45,17 @@
   --ink: #ece6da;
   --muted: #a39b8c;
   --accent: #5cc995;
-  --on-accent: #131209;
-  --marker: #f3e3a3;
-  --marker-ink: #22201c;
-  --danger: #f08a5d;
   --rule: #34302a;
   --hero-from: #ffffff;
   --hero-to: #9b9b9b;
   color-scheme: dark;
+}
+
+/* Derived from the accent, so the highlighter never becomes a second accent
+   colour. Custom properties resolve per theme, so one rule serves both. */
+:root {
+  --marker: color-mix(in srgb, var(--accent) 20%, var(--paper));
+  --grain-opacity: 0.05;
 }
 
 body {
@@ -89,9 +86,20 @@ li {
   text-wrap: pretty;
 }
 
+/* A static grain under the character field, so the paper is never perfectly flat. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -20;
+  pointer-events: none;
+  opacity: var(--grain-opacity);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
 ::selection {
   background: var(--marker);
-  color: var(--marker-ink);
+  color: var(--ink);
 }
 
 :focus-visible {
@@ -129,25 +137,31 @@ button {
 
 .hl {
   background: var(--marker);
-  color: var(--marker-ink);
+  color: var(--ink);
   padding: 0 0.125rem;
   box-decoration-break: clone;
   -webkit-box-decoration-break: clone;
 }
 
 .ink-link {
+  display: inline-block;
   text-decoration: underline;
   text-decoration-color: var(--accent);
   text-decoration-thickness: 1px;
   text-underline-offset: 0.22em;
   transition:
     color 300ms var(--ease-base),
-    text-decoration-thickness 300ms var(--ease-base);
+    text-decoration-thickness 300ms var(--ease-base),
+    transform 500ms var(--ease-base);
 }
 
 .ink-link:hover {
   color: var(--accent);
   text-decoration-thickness: 2px;
+}
+
+.ink-link:active {
+  transform: translateY(1px);
 }
 
 /* Atkinson-dithered 1-bit portrait, pre-rendered per theme so pixels stay sharp. */
@@ -181,7 +195,7 @@ button {
   padding: 0.25rem 0.5rem;
   transition:
     background-color 300ms var(--ease-base),
-    transform 300ms var(--ease-base);
+    transform 500ms var(--ease-base);
 }
 
 .menu-item:hover {
@@ -190,6 +204,31 @@ button {
 
 .menu-item:active {
   transform: scale(0.98);
+}
+
+.job-toggle {
+  transition:
+    color 300ms var(--ease-base),
+    transform 500ms var(--ease-base);
+}
+
+.job-toggle:hover {
+  color: var(--accent);
+}
+
+.job-toggle:active {
+  transform: translateY(1px);
+}
+
+/* Runs each time the panel loses `hidden`, so every expand fades in. */
+.job-details {
+  animation: details-in 300ms var(--ease-base);
+}
+
+@keyframes details-in {
+  from {
+    opacity: 0;
+  }
 }
 
 /* Ripples stay at full strength in the margins and drop back behind the
@@ -222,7 +261,9 @@ button {
     transition: opacity 700ms var(--ease-base);
   }
 
-  .menu-item:active {
+  .menu-item:active,
+  .ink-link:active,
+  .job-toggle:active {
     transform: none;
   }
 }

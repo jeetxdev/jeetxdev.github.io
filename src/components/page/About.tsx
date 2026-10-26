@@ -10,7 +10,7 @@ export function About() {
     <section
       id="about"
       aria-labelledby="about-heading"
-      className="reveal grid scroll-mt-20 grid-cols-12 gap-x-4 gap-y-6 border-t border-rule pt-12 pb-16 md:gap-x-8"
+      className="reveal grid grid-cols-12 gap-x-4 gap-y-6 border-t border-rule pt-12 pb-16 md:gap-x-8"
     >
       <SectionHeading
         id="about-heading"

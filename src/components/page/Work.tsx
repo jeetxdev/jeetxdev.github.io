@@ -21,11 +21,11 @@ export function Work() {
     <section
       id="work"
       aria-labelledby="work-heading"
-      className="reveal grid scroll-mt-20 grid-cols-12 gap-x-4 gap-y-6 border-t border-rule pt-12 pb-16 md:gap-x-8"
+      className="reveal grid grid-cols-12 gap-x-4 gap-y-6 border-t border-rule pt-12 pb-16 md:gap-x-8"
     >
       <div className="col-span-12 md:col-span-3">
         <SectionHeading id="work-heading" command="$ ls " path="~/work" />
-        <p className="mt-1 font-mono text-xs text-muted">
+        <p className="mt-1 font-mono text-xs tracking-wide text-muted">
           {JOBS.length} teams · {CAREER_START} to now · no gaps
         </p>
       </div>
@@ -47,7 +47,7 @@ export function Work() {
             >
               <p
                 className={cn(
-                  "font-mono text-xs font-medium tabular-nums",
+                  "font-mono text-xs font-medium tracking-wide tabular-nums",
                   index === 0 ? "text-accent" : "text-muted",
                 )}
               >
@@ -60,7 +60,7 @@ export function Work() {
                     aria-expanded={isOpen}
                     aria-controls={detailsId}
                     onClick={() => toggle(job.slug)}
-                    className="group flex w-full items-baseline gap-2 text-left transition duration-300 ease-base hover:text-accent active:translate-y-px"
+                    className="job-toggle group flex w-full items-baseline gap-2 text-left"
                   >
                     <span
                       aria-hidden="true"
@@ -71,16 +71,16 @@ export function Work() {
                     {job.company}
                   </button>
                 </h3>
-                <p className="pl-10 font-mono text-xs text-muted">
+                <p className="pl-10 font-mono text-xs tracking-wide text-muted">
                   {job.role} · {job.place}
                 </p>
-                <div id={detailsId} hidden={!isOpen} className="pl-10">
+                <div id={detailsId} hidden={!isOpen} className="job-details pl-10">
                   <ul className="mt-4 max-w-measure list-['·_'] space-y-2 pl-4 text-base">
                     {job.points.map((point) => (
                       <li key={point}>{point}</li>
                     ))}
                   </ul>
-                  <p className="mt-4 font-mono text-xs text-muted">
+                  <p className="mt-4 font-mono text-xs tracking-wide text-muted">
                     deps: {job.tech.join(", ")}
                   </p>
                 </div>

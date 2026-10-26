@@ -24,6 +24,21 @@ export function readPaintedTheme(): Theme {
     : "light";
 }
 
+const DARK_SCHEME_QUERY = "(prefers-color-scheme: dark)";
+
+export function readStoredTheme(): Theme | null {
+  try {
+    const stored = localStorage.getItem(THEME_STORAGE_KEY);
+    return stored === "dark" || stored === "light" ? stored : null;
+  } catch {
+    return null;
+  }
+}
+
+export function systemThemeQuery(): MediaQueryList {
+  return window.matchMedia(DARK_SCHEME_QUERY);
+}
+
 export function storeTheme(theme: Theme): void {
   try {
     localStorage.setItem(THEME_STORAGE_KEY, theme);

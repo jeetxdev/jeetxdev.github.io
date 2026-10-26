@@ -19,7 +19,7 @@ export function Contact() {
     <section
       id="contact"
       aria-labelledby="contact-heading"
-      className="reveal grid scroll-mt-20 grid-cols-12 gap-x-4 gap-y-6 border-t border-ink pt-20 pb-24 md:gap-x-8"
+      className="reveal grid grid-cols-12 gap-x-4 gap-y-6 border-t border-ink pt-20 pb-24 md:gap-x-8"
     >
       <SectionHeading
         id="contact-heading"
@@ -41,7 +41,7 @@ export function Contact() {
         >
           {EMAIL}
         </a>
-        <p className="mt-8 font-mono text-xs text-muted">
+        <p className="mt-8 font-mono text-xs tracking-wide text-muted">
           talk to me about: {INTERESTS.join(" · ")}
         </p>
         <ul className="mt-8 flex flex-wrap gap-x-8 gap-y-3 font-mono text-sm">
@@ -55,7 +55,7 @@ export function Contact() {
           ))}
           <li>
             <a className="ink-link" {...RESUME_LINK_PROPS}>
-              resume.pdf
+              Résumé
             </a>
           </li>
         </ul>

@@ -11,11 +11,12 @@
     <!-- Same storage key as src/lib/theme.ts, so the visitor's theme carries over. -->
     <script>
       (function () {
-        var theme = "light";
+        var theme = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
         try {
-          if (localStorage.getItem("jeetxdev-theme") === "dark") theme = "dark";
+          var stored = localStorage.getItem("jeetxdev-theme");
+          if (stored === "dark" || stored === "light") theme = stored;
         } catch {
-          /* Blocked storage: keep the light default. */
+          /* Blocked storage: keep the system preference. */
         }
         document.documentElement.setAttribute("data-theme", theme);
         document
@@ -25,6 +26,21 @@
     </script>
 
     <style>
+      /* public/ is served as is, so this page loads its font files directly. */
+      @font-face {
+        font-family: "Geist Mono";
+        font-weight: 400;
+        font-display: swap;
+        src: url("/fonts/geist-mono-latin-400-normal.woff2") format("woff2");
+      }
+
+      @font-face {
+        font-family: "Geist Mono";
+        font-weight: 700;
+        font-display: swap;
+        src: url("/fonts/geist-mono-latin-700-normal.woff2") format("woff2");
+      }
+
       [data-theme="light"] {
         --paper: #faf8f5;
         --ink: #22201c;
@@ -87,6 +103,7 @@
       }
 
       a {
+        display: inline-block;
         color: inherit;
         text-decoration: underline;
         text-decoration-color: var(--accent);
@@ -97,6 +114,10 @@
       a:hover {
         color: var(--accent);
         text-decoration-thickness: 2px;
+      }
+
+      a:active {
+        transform: translateY(1px);
       }
 
       a:focus-visible {
