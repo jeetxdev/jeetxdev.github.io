@@ -1,8 +1,14 @@
 export type Theme = "light" | "dark";
 
-export const THEME_LABELS: Record<Theme, string> = {
-  light: "day",
-  dark: "night",
+/** "system" is never stored: an empty key means the page follows the OS. */
+export type ThemePreference = Theme | "system";
+
+export const THEME_PREFERENCES: readonly ThemePreference[] = ["light", "dark", "system"];
+
+export const PREFERENCE_LABELS: Record<ThemePreference, string> = {
+  light: "Day",
+  dark: "Night",
+  system: "Auto",
 };
 
 /** Kept in sync with the pre-paint script in index.html. */
@@ -39,9 +45,19 @@ export function systemThemeQuery(): MediaQueryList {
   return window.matchMedia(DARK_SCHEME_QUERY);
 }
 
-export function storeTheme(theme: Theme): void {
+export function readPreference(): ThemePreference {
+  return readStoredTheme() ?? "system";
+}
+
+export function resolveTheme(preference: ThemePreference): Theme {
+  if (preference !== "system") return preference;
+  return systemThemeQuery().matches ? "dark" : "light";
+}
+
+export function storePreference(preference: ThemePreference): void {
   try {
-    localStorage.setItem(THEME_STORAGE_KEY, theme);
+    if (preference === "system") localStorage.removeItem(THEME_STORAGE_KEY);
+    else localStorage.setItem(THEME_STORAGE_KEY, preference);
   } catch {
     // Private browsing or blocked storage: the choice lasts for this visit only.
   }

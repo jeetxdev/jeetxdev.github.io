@@ -195,11 +195,28 @@ button {
   padding: 0.25rem 0.5rem;
   transition:
     background-color 300ms var(--ease-base),
+    color 300ms var(--ease-base),
     transform 500ms var(--ease-base);
 }
 
 .menu-item:hover {
   background: var(--rule);
+}
+
+/* Hover takes half the selected fill, so it never reads as the selection. */
+.theme-option {
+  color: var(--muted);
+}
+
+.theme-option:hover {
+  background: color-mix(in srgb, var(--rule) 50%, transparent);
+  color: var(--ink);
+}
+
+.theme-option[aria-pressed="true"] {
+  background: var(--rule);
+  color: var(--ink);
+  font-weight: 600;
 }
 
 .menu-item:active {

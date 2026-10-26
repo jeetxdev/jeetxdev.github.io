@@ -7,14 +7,14 @@ import { useTheme } from "@/hooks/useTheme";
 
 export function App() {
   const reduceMotion = useReducedMotion();
-  const { theme, setTheme } = useTheme();
+  const { theme, preference, setPreference } = useTheme();
 
   return (
     <>
       <a href="#main" className="skip-link">
         Skip to content
       </a>
-      <MenuBar theme={theme} onToggleTheme={() => setTheme(theme === "dark" ? "light" : "dark")} />
+      <MenuBar preference={preference} onChangePreference={setPreference} />
       <CharField theme={theme} reduceMotion={reduceMotion} />
       <main id="main" className="mx-auto max-w-page px-4 sm:px-8">
         <PageView />
