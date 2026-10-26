@@ -6,25 +6,41 @@
     <meta name="robots" content="noindex" />
     <meta name="theme-color" content="#faf8f5" />
     <link rel="icon" href="/favicon.svg?v=2" type="image/svg+xml" />
-    <title>Not found - Jeet Mukherjee</title>
+    <title>Not found · Jeet Mukherjee</title>
 
     <!-- Same storage key as src/lib/theme.ts, so the visitor's theme carries over. -->
     <script>
       (function () {
-        var theme = "light";
+        var theme = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
         try {
-          if (localStorage.getItem("jeetxdev-theme") === "dark") theme = "dark";
+          var stored = localStorage.getItem("jeetxdev-theme");
+          if (stored === "dark" || stored === "light") theme = stored;
         } catch {
-          /* Blocked storage: keep the light default. */
+          /* Blocked storage: keep the system preference. */
         }
         document.documentElement.setAttribute("data-theme", theme);
         document
           .querySelector('meta[name="theme-color"]')
-          .setAttribute("content", theme === "light" ? "#faf8f5" : "#161410");
+          .setAttribute("content", theme === "light" ? "#faf8f5" : "#131209");
       })();
     </script>
 
     <style>
+      /* public/ is served as is, so this page loads its font files directly. */
+      @font-face {
+        font-family: "Geist Mono";
+        font-weight: 400;
+        font-display: swap;
+        src: url("/fonts/geist-mono-latin-400-normal.woff2") format("woff2");
+      }
+
+      @font-face {
+        font-family: "Geist Mono";
+        font-weight: 700;
+        font-display: swap;
+        src: url("/fonts/geist-mono-latin-700-normal.woff2") format("woff2");
+      }
+
       [data-theme="light"] {
         --paper: #faf8f5;
         --ink: #22201c;
@@ -34,7 +50,7 @@
       }
 
       [data-theme="dark"] {
-        --paper: #161410;
+        --paper: #131209;
         --ink: #ece6da;
         --muted: #a39b8c;
         --accent: #5cc995;
@@ -43,16 +59,16 @@
 
       body {
         margin: 0;
-        min-height: 100vh;
+        min-height: 100dvh;
         display: grid;
         place-items: center;
-        padding: 1.25rem;
+        padding: 1rem;
         box-sizing: border-box;
         background: var(--paper);
         color: var(--ink);
-        font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
-        font-size: 14px;
-        line-height: 1.7;
+        font-family: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 0.875rem;
+        line-height: 1.25rem;
       }
 
       main {
@@ -62,14 +78,24 @@
 
       h1 {
         margin: 0 0 1.5rem;
-        font-size: clamp(2.5rem, 10vw, 4.5rem);
+        font-size: 3.75rem;
         line-height: 1;
-        font-weight: 800;
-        letter-spacing: -0.045em;
+        font-weight: 700;
+        letter-spacing: -0.05em;
+      }
+
+      @media (min-width: 40rem) {
+        h1 {
+          font-size: 4.5rem;
+        }
       }
 
       p {
         margin: 0;
+      }
+
+      .back {
+        margin-top: 1.5rem;
       }
 
       .muted {
@@ -77,10 +103,12 @@
       }
 
       a {
+        display: inline-block;
         color: inherit;
         text-decoration: underline;
         text-decoration-color: var(--accent);
         text-underline-offset: 0.22em;
+        transition: color 300ms cubic-bezier(0.22, 1, 0.36, 1);
       }
 
       a:hover {
@@ -88,9 +116,13 @@
         text-decoration-thickness: 2px;
       }
 
+      a:active {
+        transform: translateY(1px);
+      }
+
       a:focus-visible {
         outline: 2px solid var(--accent);
-        outline-offset: 3px;
+        outline-offset: 4px;
       }
     </style>
   </head>
@@ -99,7 +131,7 @@
       <h1>404</h1>
       <p><span class="muted">$ cd </span><span id="path">this-page</span></p>
       <p class="muted">cd: no such file or directory</p>
-      <p style="margin-top: 1.5rem">
+      <p class="back">
         <span class="muted">$ </span><a href="/">cd ~</a>
       </p>
     </main>

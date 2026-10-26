@@ -1,19 +1,45 @@
-import { useCallback, useState } from "react";
-import { applyTheme, readPaintedTheme, storeTheme, type Theme } from "@/lib/theme";
+import { useCallback, useEffect, useState } from "react";
+import {
+  applyTheme,
+  readPaintedTheme,
+  readPreference,
+  resolveTheme,
+  storePreference,
+  systemThemeQuery,
+  type Theme,
+  type ThemePreference,
+} from "@/lib/theme";
 
 type UseTheme = {
   theme: Theme;
-  setTheme: (next: Theme) => void;
+  preference: ThemePreference;
+  setPreference: (next: ThemePreference) => void;
 };
 
 export function useTheme(): UseTheme {
+  const [preference, setPreferenceState] = useState<ThemePreference>(readPreference);
   const [theme, setThemeState] = useState<Theme>(readPaintedTheme);
 
-  const setTheme = useCallback((next: Theme) => {
-    applyTheme(next);
-    storeTheme(next);
-    setThemeState(next);
+  // On Auto, the page follows system changes live.
+  useEffect(() => {
+    if (preference !== "system") return;
+    const query = systemThemeQuery();
+    const onChange = () => {
+      const next = resolveTheme("system");
+      applyTheme(next);
+      setThemeState(next);
+    };
+    query.addEventListener("change", onChange);
+    return () => query.removeEventListener("change", onChange);
+  }, [preference]);
+
+  const setPreference = useCallback((next: ThemePreference) => {
+    const resolved = resolveTheme(next);
+    storePreference(next);
+    applyTheme(resolved);
+    setPreferenceState(next);
+    setThemeState(resolved);
   }, []);
 
-  return { theme, setTheme };
+  return { theme, preference, setPreference };
 }

@@ -2,9 +2,9 @@ export function Bio() {
   return (
     <>
       <p>
-        Mostly I build the parts users touch - lately the banking interfaces at{" "}
-        <strong className="font-semibold">Standard Chartered</strong>, where a
-        dropdown that misbehaves is a customer who gives up{" "}
+        Mostly I build the parts users touch. Lately that means the banking
+        interfaces at <strong className="font-semibold">Standard Chartered</strong>,
+        where a dropdown that misbehaves is a customer who gives up{" "}
         <span className="hl">three steps in</span>.
       </p>
       <p>

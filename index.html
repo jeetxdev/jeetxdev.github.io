@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#faf8f5" />
     <meta
       name="description"
-      content="Jeet Mukherjee - senior full-stack developer in Bangalore, India. __CAREER_YEARS__ years shipping React/Node platforms for fintech and developer tooling."
+      content="Jeet Mukherjee, senior full stack developer in Bangalore, India. __CAREER_YEARS__ years shipping React/Node platforms for fintech and developer tooling."
     />
     <link rel="canonical" href="https://jeetm.dev/" />
 
@@ -16,7 +16,7 @@
     <meta property="og:url" content="https://jeetm.dev/" />
     <meta
       property="og:title"
-      content="Jeet Mukherjee - Senior Full-Stack Developer"
+      content="Jeet Mukherjee, senior full stack developer"
     />
     <meta
       property="og:description"
@@ -32,14 +32,14 @@
     <meta name="twitter:card" content="summary" />
 
     <link rel="icon" href="/favicon.svg?v=2" type="image/svg+xml" />
-    <title>Jeet Mukherjee - Senior Full-Stack Developer</title>
+    <title>Jeet Mukherjee, senior full stack developer</title>
 
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
         "@type": "Person",
         "name": "Jeet Mukherjee",
-        "jobTitle": "Senior Full-Stack Developer",
+        "jobTitle": "Senior Full Stack Developer",
         "url": "https://jeetm.dev/",
         "image": "https://jeetm.dev/profile.jpeg",
         "email": "mailto:jeetmukherjee100@gmail.com",
@@ -60,17 +60,18 @@
          from src/lib/theme.ts because this has to run ahead of the bundle. -->
     <script>
       (function () {
-        /* Day is the default. Night applies only once a visitor picks it. */
-        var theme = "light";
+        /* A stored choice wins. Otherwise the system preference decides. */
+        var theme = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
         try {
-          if (localStorage.getItem("jeetxdev-theme") === "dark") theme = "dark";
+          var stored = localStorage.getItem("jeetxdev-theme");
+          if (stored === "dark" || stored === "light") theme = stored;
         } catch {
-          /* Blocked storage: keep the light default. */
+          /* Blocked storage: keep the system preference. */
         }
         document.documentElement.setAttribute("data-theme", theme);
         document
           .querySelector('meta[name="theme-color"]')
-          ?.setAttribute("content", theme === "light" ? "#faf8f5" : "#161410");
+          ?.setAttribute("content", theme === "light" ? "#faf8f5" : "#131209");
       })();
     </script>
   </head>

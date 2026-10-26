@@ -40,9 +40,9 @@ export const JOBS: Job[] = [
     points: [
       "Built and maintained React fintech dashboards inside the Fiserv AppMarket, used daily by enterprise banking partners.",
       "Shipped an embedded API explorer that lets clients visualise and test APIs right in the browser.",
-      "Wrapped API products in developer-friendly UIs with product and API teams, cutting partner onboarding time.",
+      "Wrapped API products in interfaces built for developers, working with product and API teams, which cut partner onboarding time.",
       "Raised maintainability and performance with reusable component patterns, lazy loading and sane state management.",
-      "Contributed to internal API-documentation tooling, trimming manual testing and tightening release cycles.",
+      "Contributed to internal tooling for API documentation, trimming manual testing and tightening release cycles.",
     ],
   },
   {
@@ -55,8 +55,8 @@ export const JOBS: Job[] = [
     tech: ["React.js", "PHP", "MySQL", "jQuery", "CodeIgniter", "REST API"],
     points: [
       "Owned requirements through delivery for applications across several company websites.",
-      "Added multilingual support and prepared the web-services framework for cross-market launches.",
-      "Extended the in-house admin portal and campaign management system - PHP MVC back end, React front end.",
+      "Added multilingual support and prepared the web services framework for launches in new markets.",
+      "Extended the internal admin portal and campaign management system, with a PHP MVC back end and a React front end.",
       "Built REST APIs on CodeIgniter and MySQL for the mobile apps.",
     ],
   },
@@ -70,8 +70,8 @@ export const JOBS: Job[] = [
     tech: ["JavaScript", "PHP", "MySQL", "Laravel", "Bootstrap", "REST API"],
     points: [
       "Designed a merchant portal end to end, from login flow to financial report generation.",
-      "Built an e-commerce site with a team of five, pulling per-seller listings via the Amazon Marketplace API.",
-      "Turned mock-ups into HTML, JavaScript, AJAX and JSON; kept it working across Chrome, Firefox and Safari.",
+      "Built an ecommerce site with a team of five, pulling each seller's listings through the Amazon Marketplace API.",
+      "Turned mockups into HTML, JavaScript, AJAX and JSON, and kept the result working across Chrome, Firefox and Safari.",
     ],
   },
   {
@@ -84,9 +84,9 @@ export const JOBS: Job[] = [
     tech: ["JavaScript", "PHP", "MySQL", "jQuery", "CodeIgniter", "Git"],
     points: [
       "Researched and prototyped new technology for ConvergeHub CRM.",
-      "Implemented back-end APIs for the Android and iOS apps, plus a Swagger UI documentation site.",
-      "Added Dropbox-style storage with sync to Dropbox, Google Drive and Box.",
-      "Built a Zapier app for the CRM and a Mailchimp-powered campaign management system.",
+      "Implemented backend APIs for the Android and iOS apps, plus a Swagger UI documentation site.",
+      "Added file storage that syncs with Dropbox, Google Drive and Box.",
+      "Built a Zapier app for the CRM and a campaign management system on top of Mailchimp.",
     ],
   },
 ];

@@ -18,8 +18,6 @@ export const RESUME_LINK_PROPS = {
   rel: "noopener noreferrer",
 } as const;
 
-export const HOME_ZONE = "Asia/Kolkata";
-
 export const AVAILABILITY = "available · senior roles & select freelance";
 
 export const INTERESTS = [

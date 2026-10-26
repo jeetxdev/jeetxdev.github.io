@@ -19,7 +19,7 @@ export function Contact() {
     <section
       id="contact"
       aria-labelledby="contact-heading"
-      className="reveal grid scroll-mt-20 grid-cols-12 gap-x-4 md:gap-x-8 gap-y-6 border-t border-ink py-20"
+      className="reveal grid grid-cols-12 gap-x-4 gap-y-6 border-t border-ink pt-20 pb-24 md:gap-x-8"
     >
       <SectionHeading
         id="contact-heading"
@@ -28,24 +28,23 @@ export function Contact() {
         className="col-span-12 md:col-span-3"
       />
       <div className="col-span-12 md:col-span-9">
-        <p className="font-mono text-3xl leading-tight font-extrabold tracking-[-0.04em] sm:text-5xl">
-          Got something worth{" "}
-          <span className="font-serif font-normal tracking-normal italic">building?</span>
+        <p className="font-mono text-3xl font-bold tracking-tighter sm:text-5xl">
+          Got something worth <span className="text-accent">building?</span>
         </p>
-        <p className="mt-5 max-w-measure text-[1.15rem] leading-relaxed text-muted">
-          A role to fill, a product to ship, or just an opinion about state management - all
-          welcome.
+        <p className="mt-6 max-w-measure text-lg text-muted">
+          A role to fill, a product to ship, or an opinion about state management. I read
+          every one.
         </p>
         <a
           href={`mailto:${EMAIL}`}
-          className="ink-link mt-10 inline-block font-serif text-[1.9rem] leading-tight break-all italic sm:text-5xl"
+          className="ink-link mt-10 inline-block text-3xl font-medium tracking-tight break-all sm:text-5xl"
         >
           {EMAIL}
         </a>
-        <p className="mt-8 font-mono text-[12px] text-muted">
+        <p className="mt-8 font-mono text-xs tracking-wide text-muted">
           talk to me about: {INTERESTS.join(" · ")}
         </p>
-        <ul className="mt-8 flex flex-wrap gap-x-8 gap-y-3 font-mono text-[14px]">
+        <ul className="mt-8 flex flex-wrap gap-x-8 gap-y-3 font-mono text-sm">
           {EXTERNAL_LINKS.map(({ href, label }) => (
             <li key={href}>
               <a className="ink-link" href={href} target="_blank" rel="noopener noreferrer">
@@ -56,7 +55,7 @@ export function Contact() {
           ))}
           <li>
             <a className="ink-link" {...RESUME_LINK_PROPS}>
-              resume.pdf
+              Résumé
             </a>
           </li>
         </ul>

@@ -1,36 +1,40 @@
 import { EMAIL, RESUME_LINK_PROPS } from "@/data/profile";
-import { THEME_LABELS, type Theme } from "@/lib/theme";
-import { Clock } from "./Clock";
+import { PREFERENCE_LABELS, THEME_PREFERENCES, type ThemePreference } from "@/lib/theme";
 
 type MenuBarProps = {
-  theme: Theme;
-  onToggleTheme: () => void;
+  preference: ThemePreference;
+  onChangePreference: (next: ThemePreference) => void;
 };
 
-export function MenuBar({ theme, onToggleTheme }: MenuBarProps) {
+export function MenuBar({ preference, onChangePreference }: MenuBarProps) {
   return (
-    <header className="sticky top-0 z-40 border-b border-rule bg-surface">
+    // The header spans the viewport, so it lets clicks through to the page beside the menu.
+    <header className="pointer-events-none sticky top-2 z-40 mt-2 px-4">
       <nav
         aria-label="Menu"
-        className="flex h-8 items-center gap-2 px-3 font-mono text-[12px] sm:gap-4 sm:px-5"
+        className="pointer-events-auto mx-auto flex w-fit items-center gap-1 rounded-lg border border-rule bg-surface/80 p-1 font-mono text-sm backdrop-blur-md"
       >
-        <span className="pr-1 font-bold">jeet</span>
-        <button
-          type="button"
-          className="menu-item"
-          aria-pressed={theme === "dark"}
-          onClick={onToggleTheme}
-        >
-          <span className="hidden text-muted sm:inline">Theme: </span>
-          <span className="capitalize">{THEME_LABELS[theme]}</span>
-        </button>
-        <a className="menu-item" href={`mailto:${EMAIL}`}>
+        <span className="hidden px-2 font-bold sm:inline">jeet</span>
+        <div role="group" aria-label="Theme" className="flex items-center gap-1">
+          {THEME_PREFERENCES.map((option) => (
+            <button
+              key={option}
+              type="button"
+              aria-pressed={preference === option}
+              onClick={() => onChangePreference(option)}
+              className="menu-item theme-option rounded-sm"
+            >
+              {PREFERENCE_LABELS[option]}
+            </button>
+          ))}
+        </div>
+        <span aria-hidden="true" className="mx-1 h-4 w-px bg-rule" />
+        <a className="menu-item rounded-sm font-semibold" href={`mailto:${EMAIL}`}>
           Mail
         </a>
-        <a className="menu-item" {...RESUME_LINK_PROPS}>
+        <a className="menu-item rounded-sm font-semibold" {...RESUME_LINK_PROPS}>
           Résumé
         </a>
-        <Clock />
       </nav>
     </header>
   );
