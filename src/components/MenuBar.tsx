@@ -1,6 +1,5 @@
 import { EMAIL, RESUME_LINK_PROPS } from "@/data/profile";
 import { THEME_LABELS, type Theme } from "@/lib/theme";
-import { Clock } from "./Clock";
 
 type MenuBarProps = {
   theme: Theme;
@@ -31,7 +30,6 @@ export function MenuBar({ theme, onToggleTheme }: MenuBarProps) {
         <a className="menu-item rounded-sm font-semibold" {...RESUME_LINK_PROPS}>
           Résumé
         </a>
-        <Clock />
       </nav>
     </header>
   );
