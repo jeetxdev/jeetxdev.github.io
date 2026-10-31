@@ -48,7 +48,7 @@ export function Timeline() {
               </p>
               <p
                 className={cn(
-                  "mt-2 font-display text-[1.1875rem] leading-[1.05] font-semibold uppercase hyphens-auto",
+                  "mt-2 font-display text-[1.1875rem] leading-[1.05] font-bold uppercase hyphens-auto",
                   isNarrow && "xl:text-[0.875rem]",
                 )}
               >

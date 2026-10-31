@@ -11,9 +11,9 @@
   --color-rule: rgb(234 242 255 / 0.5);
   --color-trace: rgb(234 242 255 / 0.7);
 
-  --font-sans: "Barlow", system-ui, sans-serif;
-  --font-display: "Barlow Condensed", "Arial Narrow", sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --font-sans: "Sofia Sans", system-ui, sans-serif;
+  --font-display: "Big Shoulders Display", "Arial Narrow", sans-serif;
+  --font-mono: "Martian Mono", ui-monospace, monospace;
 
   --container-sheet: 75rem;
   --container-measure: 62ch;

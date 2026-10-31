@@ -28,7 +28,7 @@ export function TitleBlock() {
       <div className="min-w-0">
         <h2
           id="contact-heading"
-          className="font-display text-[clamp(2.25rem,4.6vw,3.5rem)] leading-none font-semibold uppercase"
+          className="font-display text-[clamp(2.25rem,4.6vw,3.5rem)] leading-none font-bold uppercase"
         >
           Got something to build?
         </h2>

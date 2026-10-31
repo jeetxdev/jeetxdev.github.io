@@ -23,7 +23,7 @@ export function LayersDiagram() {
         <Fragment key={layer}>
           {index > 0 && <DownArrow />}
           <div className="flex items-baseline justify-between gap-4 border-2 border-ink bg-paper/85 px-6 py-4">
-            <span className="font-display text-[1.625rem] font-semibold uppercase">{label}</span>
+            <span className="font-display text-[1.625rem] font-bold uppercase">{label}</span>
             <span className="text-right font-mono text-xs text-muted">
               {toolsFor(layer).join(" · ")}
             </span>

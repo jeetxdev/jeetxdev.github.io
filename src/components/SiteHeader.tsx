@@ -11,9 +11,11 @@ export function SiteHeader() {
     // Bleeds over the sheet's side padding so the sticky bar covers the grid edge to edge.
     // On phones the résumé button shares the first row with the drawing number and the
     // section links take the second row. From lg up everything sits on one row.
-    <header className="sticky top-0 z-40 -mx-6 flex flex-wrap items-center gap-x-6 gap-y-2 border-b border-rule bg-paper px-6 py-4 font-mono text-[0.8125rem] uppercase sm:-mx-12 sm:px-12">
+    <header className="sticky top-0 z-40 -mx-6 flex flex-wrap items-center gap-x-6 gap-y-2 border-b border-rule bg-paper px-6 py-4 font-mono text-xs uppercase sm:-mx-12 sm:px-12">
       <a href="#main" className="nav-link">
-        {DRAWING_NUMBER_PREFIX}-{new Date().getFullYear()} · Portfolio
+        {DRAWING_NUMBER_PREFIX}-{new Date().getFullYear()}
+        {/* Dropped on phones so the résumé button fits beside the drawing number. */}
+        <span className="hidden sm:inline"> · Portfolio</span>
       </a>
       <nav aria-label="Sections" className="order-last w-full lg:order-none lg:ml-auto lg:w-auto">
         <ul className="flex flex-wrap gap-6">

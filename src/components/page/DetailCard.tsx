@@ -23,7 +23,7 @@ export function DetailCard({ job, letter }: DetailCardProps) {
       </p>
       <h3
         id={headingId}
-        className="mt-2 font-display text-[1.875rem] leading-none font-semibold uppercase"
+        className="mt-2 font-display text-[1.875rem] leading-none font-bold uppercase"
       >
         {job.company}
       </h3>
