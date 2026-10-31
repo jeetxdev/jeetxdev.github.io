@@ -22,7 +22,7 @@ export function LayersDiagram() {
       {DIAGRAM_LAYERS.map(({ layer, label }, index) => (
         <Fragment key={layer}>
           {index > 0 && <DownArrow />}
-          <div className="flex items-baseline justify-between gap-4 border-2 border-ink bg-paper/85 px-5 py-4">
+          <div className="flex items-baseline justify-between gap-4 border-2 border-ink bg-paper/85 px-6 py-4">
             <span className="font-display text-[1.625rem] font-semibold uppercase">{label}</span>
             <span className="text-right font-mono text-xs text-muted">
               {toolsFor(layer).join(" · ")}
@@ -30,7 +30,7 @@ export function LayersDiagram() {
           </div>
         </Fragment>
       ))}
-      <figcaption id="layers-caption" className="mt-3.5 font-mono text-xs text-muted uppercase">
+      <figcaption id="layers-caption" className="mt-4 font-mono text-xs text-muted uppercase">
         Note: I work across all three layers.
         {craft.length > 0 && ` Craft: ${craft.join(", ")}.`}
       </figcaption>

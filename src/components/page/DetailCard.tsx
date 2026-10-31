@@ -13,7 +13,8 @@ export function DetailCard({ job, letter }: DetailCardProps) {
       aria-labelledby={headingId}
       className="relative border-[1.5px] border-dashed border-trace p-6"
     >
-      {/* Sits on the dashed border, so it needs the paper colour behind it. */}
+      {/* Sits on the dashed border, so it needs the paper colour behind it.
+          left-4 plus px-2 lines its text up with the card's 24px padding. */}
       <span className="absolute -top-3 left-4 bg-paper px-2 font-mono text-xs text-accent uppercase">
         Detail {letter}
       </span>
@@ -26,13 +27,13 @@ export function DetailCard({ job, letter }: DetailCardProps) {
       >
         {job.company}
       </h3>
-      <p className="mt-1.5 text-[0.9375rem] text-soft">{job.role}</p>
-      <ul className="mt-4 grid list-disc gap-1 pl-[1.125rem] text-base leading-relaxed">
+      <p className="mt-2 text-[0.9375rem] text-soft">{job.role}</p>
+      <ul className="mt-4 grid list-disc gap-2 pl-4 text-base leading-relaxed">
         {job.points.map((point) => (
           <li key={point}>{point}</li>
         ))}
       </ul>
-      <p className="mt-3.5 font-mono text-xs text-muted uppercase">
+      <p className="mt-4 font-mono text-xs text-muted uppercase">
         Materials: {job.tech.join(", ")}
       </p>
     </article>

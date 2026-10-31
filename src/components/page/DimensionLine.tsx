@@ -12,7 +12,7 @@ export function DimensionLine({ label, className }: DimensionLineProps) {
       <span aria-hidden="true" className="h-[22px] w-0.5 bg-ink" />
       <ArrowHead pointsLeft />
       <span aria-hidden="true" className="h-0.5 flex-1 bg-ink" />
-      <span className="px-3.5 text-accent uppercase">{label}</span>
+      <span className="px-3 text-accent uppercase">{label}</span>
       <span aria-hidden="true" className="h-0.5 flex-1 bg-ink" />
       <ArrowHead />
       <span aria-hidden="true" className="h-[22px] w-0.5 bg-ink" />

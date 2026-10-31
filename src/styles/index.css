@@ -21,6 +21,11 @@
   --ease-base: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+/* Spacing scale. Keep every padding, margin and gap on one of these steps:
+   2 (8px) tight pairs and list gaps · 3 (12px) padding in small items
+   4 (16px) related groups in a block · 6 (24px) cards, grids, label to content
+   12 (48px) section padding, big column gaps, sheet sides from sm up. */
+
 :root {
   --grid-major: rgb(234 242 255 / 0.13);
   --grid-minor: rgb(234 242 255 / 0.05);

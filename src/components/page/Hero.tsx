@@ -5,12 +5,12 @@ import { LayersDiagram } from "./LayersDiagram";
 
 export function Hero() {
   return (
-    <section aria-labelledby="hero-heading" className="flex flex-wrap gap-12 py-14">
+    <section aria-labelledby="hero-heading" className="flex flex-wrap gap-12 py-12">
       <div className="min-w-0 flex-[1_1_26rem]">
         <FigureLabel figure={1} title="General arrangement" />
         <h1
           id="hero-heading"
-          className="mt-4 font-display text-[clamp(3.5rem,7.6vw,6.5rem)] leading-[0.92] font-semibold tracking-[0.01em] uppercase"
+          className="mt-6 font-display text-[clamp(3.5rem,7.6vw,6.5rem)] leading-[0.92] font-semibold tracking-[0.01em] uppercase"
         >
           {NAME},
           <br />

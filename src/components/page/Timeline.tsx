@@ -21,7 +21,7 @@ export function Timeline() {
     <section
       id={TIMELINE_ID}
       aria-labelledby="timeline-heading"
-      className="reveal scroll-mt-24 border-t border-rule pt-8 pb-12"
+      className="reveal scroll-mt-24 border-t border-rule py-12"
     >
       <FigureLabel as="h2" id="timeline-heading" figure={2} title="Career timeline" />
       <DimensionLine
@@ -29,8 +29,8 @@ export function Timeline() {
         label={`${years} years · ${CAREER_START} to ${CAREER_START + years}`}
       />
       {/* Drawn to scale only where a one-year column is wide enough for a company
-          name. Narrower screens list the jobs instead. */}
-      <ol className="mt-4 grid grid-cols-1 gap-1.5 lg:grid-cols-(--cols)" style={gridVars}>
+          name with the standard bar padding. Narrower screens list the jobs instead. */}
+      <ol className="mt-4 grid grid-cols-1 gap-2 xl:grid-cols-(--cols)" style={gridVars}>
         {bars.map(({ job, spanYears, isCurrent }) => {
           const spanVars: GridVars = { "--span": spanYears };
           const isNarrow = spanYears <= NARROW_SPAN_YEARS;
@@ -39,18 +39,17 @@ export function Timeline() {
               key={job.slug}
               style={spanVars}
               className={cn(
-                "min-h-[4.75rem] border-2 p-3 lg:col-span-(--span)",
-                isNarrow && "lg:px-2",
+                "min-h-[4.75rem] border-2 p-3 xl:col-span-(--span)",
                 isCurrent ? "border-accent" : "border-ink",
               )}
             >
-              <p className={cn("font-mono text-xs text-muted", isNarrow && "lg:text-[0.6875rem]")}>
+              <p className={cn("font-mono text-xs text-muted", isNarrow && "xl:text-[0.6875rem]")}>
                 {job.from}→{job.to}
               </p>
               <p
                 className={cn(
-                  "mt-1.5 font-display text-[1.1875rem] leading-[1.05] font-semibold uppercase hyphens-auto",
-                  isNarrow && "lg:text-[0.875rem]",
+                  "mt-2 font-display text-[1.1875rem] leading-[1.05] font-semibold uppercase hyphens-auto",
+                  isNarrow && "xl:text-[0.875rem]",
                 )}
               >
                 {job.company}

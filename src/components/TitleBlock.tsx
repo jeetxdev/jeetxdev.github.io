@@ -23,7 +23,7 @@ export function TitleBlock() {
     <footer
       id={CONTACT_ID}
       aria-labelledby="contact-heading"
-      className="flex scroll-mt-24 flex-wrap items-end justify-between gap-6 border-t border-rule pt-8 pb-10"
+      className="flex scroll-mt-24 flex-wrap items-end justify-between gap-x-12 gap-y-6 border-t border-rule py-12"
     >
       <div className="min-w-0">
         <h2
@@ -34,7 +34,7 @@ export function TitleBlock() {
         </h2>
         <a
           href={`mailto:${EMAIL}`}
-          className="sheet-link mt-3 inline-block font-mono text-[1.0625rem] break-all"
+          className="sheet-link mt-4 inline-block font-mono text-[1.0625rem] break-all"
         >
           {EMAIL}
         </a>
