@@ -1,3 +1,4 @@
+import { RESUME_LINK_PROPS } from "@/data/profile";
 import { useActiveSection } from "@/hooks/useActiveSection";
 import { NAV_IDS, NAV_ITEMS } from "@/lib/sections";
 
@@ -12,7 +13,7 @@ export function SiteHeader() {
       <a href="#main" className="nav-link">
         {DRAWING_NUMBER_PREFIX}-{new Date().getFullYear()} · Portfolio
       </a>
-      <nav aria-label="Sections">
+      <nav aria-label="Main">
         <ul className="flex flex-wrap gap-6">
           {NAV_ITEMS.map(({ id, label }) => (
             <li key={id}>
@@ -25,6 +26,12 @@ export function SiteHeader() {
               </a>
             </li>
           ))}
+          {/* A download, not a section, so it never takes part in the highlight. */}
+          <li>
+            <a className="nav-link" {...RESUME_LINK_PROPS}>
+              Résumé
+            </a>
+          </li>
         </ul>
       </nav>
     </header>
