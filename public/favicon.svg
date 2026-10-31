@@ -1,8 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
-  <!-- The terminal window: charcoal face over a hard green offset shadow. -->
-  <rect x="4" y="4" width="28" height="28" rx="3" fill="#0f7a4a" />
-  <rect x="0" y="0" width="28" height="28" rx="3" fill="#22201c" />
-  <!-- Paths, not text, because a favicon cannot load web fonts. -->
-  <path d="M6 8.5 L12.5 14 L6 19.5" fill="none" stroke="#5cc995" stroke-width="3" stroke-linecap="square" stroke-linejoin="miter" />
-  <rect x="14.5" y="18" width="8" height="3" fill="#ece6da" />
+  <!-- A blueprint sheet: blue paper, a white drawing border and the three stacked layers. -->
+  <rect width="32" height="32" rx="4" fill="#123a75" />
+  <rect x="3" y="3" width="26" height="26" fill="none" stroke="#eaf2ff" stroke-width="1.5" />
+  <rect x="8" y="7.5" width="16" height="4" fill="none" stroke="#ffd166" stroke-width="1.5" />
+  <rect x="8" y="14" width="16" height="4" fill="none" stroke="#eaf2ff" stroke-width="1.5" />
+  <rect x="8" y="20.5" width="16" height="4" fill="none" stroke="#eaf2ff" stroke-width="1.5" />
 </svg>

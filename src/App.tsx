@@ -1,25 +1,23 @@
-import { CharField } from "@/components/CharField";
-import { Footer } from "@/components/Footer";
-import { MenuBar } from "@/components/MenuBar";
+import { SiteHeader } from "@/components/SiteHeader";
+import { TitleBlock } from "@/components/TitleBlock";
 import { PageView } from "@/components/page/PageView";
-import { useReducedMotion } from "@/hooks/useReducedMotion";
-import { useTheme } from "@/hooks/useTheme";
 
 export function App() {
-  const reduceMotion = useReducedMotion();
-  const { theme, preference, setPreference } = useTheme();
-
   return (
     <>
       <a href="#main" className="skip-link">
         Skip to content
       </a>
-      <MenuBar preference={preference} onChangePreference={setPreference} />
-      <CharField theme={theme} reduceMotion={reduceMotion} />
-      <main id="main" className="mx-auto max-w-page px-4 sm:px-8">
-        <PageView />
-      </main>
-      <Footer />
+      <div className="px-4 py-6 sm:px-6">
+        {/* The drawing border: everything on the page sits inside one sheet. */}
+        <div className="mx-auto max-w-sheet border-2 border-ink px-5 sm:px-10">
+          <SiteHeader />
+          <main id="main">
+            <PageView />
+          </main>
+          <TitleBlock />
+        </div>
+      </div>
     </>
   );
 }
