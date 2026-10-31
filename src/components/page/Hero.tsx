@@ -18,7 +18,7 @@ export function Hero() {
         </h1>
         <p className="mt-6 max-w-[29rem] text-[1.1875rem] leading-relaxed text-soft">
           Senior developer in Bangalore. {yearsOfExperienceInWords()} years designing and
-          building every layer of fintech products, from the interface down to the data.
+          building web products end to end, from the interface down to the data.
         </p>
         <p className="mt-6 font-mono text-[0.8125rem] uppercase">
           <span className="text-accent">Status:</span> {AVAILABILITY}

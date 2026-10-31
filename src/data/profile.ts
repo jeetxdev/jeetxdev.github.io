@@ -18,7 +18,7 @@ export const RESUME_LINK_PROPS = {
   rel: "noopener noreferrer",
 } as const;
 
-export const AVAILABILITY = "available · senior roles & select freelance";
+export const AVAILABILITY = "open to frontend, backend & full stack roles · select freelance";
 
 export const INTERESTS = [
   "scalable web apps",
