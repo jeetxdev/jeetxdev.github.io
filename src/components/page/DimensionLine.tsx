@@ -8,7 +8,7 @@ type DimensionLineProps = {
 /** A drafting dimension: end ticks, arrowheads and the measurement in the middle. */
 export function DimensionLine({ label, className }: DimensionLineProps) {
   return (
-    <div className={cn("flex items-center font-mono text-[0.8125rem]", className)}>
+    <div className={cn("flex items-center font-mono text-xs", className)}>
       <span aria-hidden="true" className="h-[22px] w-0.5 bg-ink" />
       <ArrowHead pointsLeft />
       <span aria-hidden="true" className="h-0.5 flex-1 bg-ink" />
