@@ -1,14 +1,10 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 
-// Only the weights the page renders. Neither family is ever italic.
-import "@fontsource/geist/latin-400.css";
-import "@fontsource/geist/latin-500.css";
-import "@fontsource/geist/latin-600.css";
-import "@fontsource/geist-mono/latin-400.css";
-import "@fontsource/geist-mono/latin-500.css";
-import "@fontsource/geist-mono/latin-600.css";
-import "@fontsource/geist-mono/latin-700.css";
+// Only the weights the page renders. No family is ever italic.
+import "@fontsource/barlow/latin-400.css";
+import "@fontsource/barlow-condensed/latin-600.css";
+import "@fontsource/jetbrains-mono/latin-400.css";
 
 import "./styles/index.css";
 import { App } from "./App";

@@ -1,78 +1,62 @@
 @import "tailwindcss";
 
-/* `inline` makes every utility read the raw custom property at use-site, so
-   the colours follow whichever theme is active. */
-@theme inline {
-  --color-*: initial;
-  --color-paper: var(--paper);
-  --color-surface: var(--surface);
-  --color-ink: var(--ink);
-  --color-muted: var(--muted);
-  --color-accent: var(--accent);
-  --color-marker: var(--marker);
-  --color-rule: var(--rule);
-}
-
+/* One fixed palette: the page is a single blueprint sheet, so there is no theme switch. */
 @theme {
-  --font-mono: "Geist Mono", ui-monospace, monospace;
-  --font-sans: "Geist", system-ui, sans-serif;
+  --color-*: initial;
+  --color-paper: #123a75;
+  --color-ink: #eaf2ff;
+  --color-soft: #d3e1f7;
+  --color-muted: #a9c1e8;
+  --color-accent: #ffd166;
+  --color-rule: rgb(234 242 255 / 0.5);
+  --color-trace: rgb(234 242 255 / 0.7);
 
-  --container-page: 75rem;
-  --container-hero: 42.5rem;
+  --font-sans: "Barlow", system-ui, sans-serif;
+  --font-display: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  --container-sheet: 75rem;
   --container-measure: 62ch;
 
   --ease-base: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-:root,
-[data-theme="light"] {
-  --paper: #faf8f5;
-  --surface: #f2eee6;
-  --ink: #22201c;
-  --muted: #6e675c;
-  --accent: #0f7a4a;
-  --rule: #e4ddd1;
-  --hero-from: #000000;
-  --hero-to: #666666;
-  color-scheme: light;
-}
+/* Spacing scale. Keep every padding, margin and gap on one of these steps:
+   2 (8px) tight pairs and list gaps · 3 (12px) padding in small items
+   4 (16px) related groups in a block · 6 (24px) cards, grids, label to content
+   12 (48px) section padding, big column gaps, sheet sides from sm up. */
 
-/* The menu floats over the page, so night has one surface and the menu
-   separates itself with a border instead of a second shade. */
-[data-theme="dark"] {
-  --paper: #131209;
-  --surface: #131209;
-  --ink: #ece6da;
-  --muted: #a39b8c;
-  --accent: #5cc995;
-  --rule: #34302a;
-  --hero-from: #ffffff;
-  --hero-to: #9b9b9b;
+:root {
+  --grid-major: rgb(234 242 255 / 0.13);
+  --grid-minor: rgb(234 242 255 / 0.05);
+  --grid-major-size: 120px;
+  --grid-minor-size: 24px;
   color-scheme: dark;
 }
 
-/* Derived from the accent, so the highlighter never becomes a second accent
-   colour. Custom properties resolve per theme, so one rule serves both. */
-:root {
-  --marker: color-mix(in srgb, var(--accent) 20%, var(--paper));
-  --grain-opacity: 0.05;
+html {
+  background-color: var(--color-paper);
 }
 
+/* Drafting paper: a major grid every 120px over a minor grid every 24px. */
 body {
-  background: var(--paper);
-  color: var(--ink);
+  background-color: var(--color-paper);
+  background-image:
+    linear-gradient(var(--grid-major) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-major) 1px, transparent 1px),
+    linear-gradient(var(--grid-minor) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-minor) 1px, transparent 1px);
+  background-size:
+    var(--grid-major-size) var(--grid-major-size),
+    var(--grid-major-size) var(--grid-major-size),
+    var(--grid-minor-size) var(--grid-minor-size),
+    var(--grid-minor-size) var(--grid-minor-size);
+  color: var(--color-ink);
   font-family: var(--font-sans);
   font-feature-settings: "kern", "liga";
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-}
-
-/* On macOS, antialiased smoothing draws dark-on-light text visibly thinner,
-   so day mode keeps the default smoothing. */
-[data-theme="light"] body {
-  -webkit-font-smoothing: auto;
-  -moz-osx-font-smoothing: auto;
 }
 
 h1,
@@ -86,29 +70,14 @@ li {
   text-wrap: pretty;
 }
 
-/* A static grain under the character field, so the paper is never perfectly flat. */
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: -20;
-  pointer-events: none;
-  opacity: var(--grain-opacity);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-}
-
 ::selection {
-  background: var(--marker);
-  color: var(--ink);
+  background: var(--color-accent);
+  color: var(--color-paper);
 }
 
 :focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--color-accent);
   outline-offset: 4px;
-}
-
-button {
-  cursor: pointer;
 }
 
 .skip-link {
@@ -117,8 +86,8 @@ button {
   top: -4rem;
   z-index: 50;
   padding: 0.5rem 0.75rem;
-  background: var(--ink);
-  color: var(--paper);
+  background: var(--color-accent);
+  color: var(--color-paper);
   font-family: var(--font-mono);
   font-size: 0.75rem;
   line-height: 1rem;
@@ -128,54 +97,31 @@ button {
   top: 1rem;
 }
 
-.hero-gradient {
-  background-image: linear-gradient(to right, var(--hero-from), var(--hero-to));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-
-.hl {
-  background: var(--marker);
-  color: var(--ink);
-  padding: 0 0.125rem;
-  box-decoration-break: clone;
-  -webkit-box-decoration-break: clone;
-}
-
-.ink-link {
-  display: inline-block;
+.sheet-link {
+  color: var(--color-accent);
   text-decoration: underline;
-  text-decoration-color: var(--accent);
   text-decoration-thickness: 1px;
   text-underline-offset: 0.22em;
-  transition:
-    color 300ms var(--ease-base),
-    text-decoration-thickness 300ms var(--ease-base),
-    transform 500ms var(--ease-base);
+  transition: text-decoration-thickness 300ms var(--ease-base);
 }
 
-.ink-link:hover {
-  color: var(--accent);
+.sheet-link:hover {
   text-decoration-thickness: 2px;
 }
 
-.ink-link:active {
-  transform: translateY(1px);
+.nav-link {
+  text-decoration: none;
+  transition: color 300ms var(--ease-base);
 }
 
-/* Atkinson-dithered 1-bit portrait, pre-rendered per theme so pixels stay sharp. */
-.dither img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  image-rendering: pixelated;
+.nav-link:hover,
+.nav-link[aria-current="location"] {
+  color: var(--color-accent);
 }
 
-[data-theme="light"] .dither-night,
-[data-theme="dark"] .dither-day {
-  display: none;
+.nav-link[aria-current="location"] {
+  text-decoration: underline;
+  text-underline-offset: 0.4em;
 }
 
 .reveal {
@@ -191,80 +137,6 @@ button {
   transform: none;
 }
 
-.menu-item {
-  padding: 0.25rem 0.5rem;
-  transition:
-    background-color 300ms var(--ease-base),
-    color 300ms var(--ease-base),
-    transform 500ms var(--ease-base);
-}
-
-.menu-item:hover {
-  background: var(--rule);
-}
-
-/* Hover takes half the selected fill, so it never reads as the selection. */
-.theme-option {
-  color: var(--muted);
-}
-
-.theme-option:hover {
-  background: color-mix(in srgb, var(--rule) 50%, transparent);
-  color: var(--ink);
-}
-
-.theme-option[aria-pressed="true"] {
-  background: var(--rule);
-  color: var(--ink);
-  font-weight: 600;
-}
-
-.menu-item:active {
-  transform: scale(0.98);
-}
-
-.job-toggle {
-  transition:
-    color 300ms var(--ease-base),
-    transform 500ms var(--ease-base);
-}
-
-.job-toggle:hover {
-  color: var(--accent);
-}
-
-.job-toggle:active {
-  transform: translateY(1px);
-}
-
-/* Runs each time the panel loses `hidden`, so every expand fades in. */
-.job-details {
-  animation: details-in 300ms var(--ease-base);
-}
-
-@keyframes details-in {
-  from {
-    opacity: 0;
-  }
-}
-
-/* Ripples stay at full strength in the margins and drop back behind the
-   content column, so body text never competes with the characters. On narrow
-   screens the column fills the viewport, so the whole field stays dimmed. */
-.char-field {
-  --content-edge: calc(50% - var(--container-page) / 2);
-  --content-dim: rgb(0 0 0 / 0.5);
-  --field-mask: linear-gradient(
-    to right,
-    #000 calc(var(--content-edge) - 3rem),
-    var(--content-dim) calc(var(--content-edge) + 3rem),
-    var(--content-dim) calc(100% - var(--content-edge) - 3rem),
-    #000 calc(100% - var(--content-edge) + 3rem)
-  );
-  -webkit-mask-image: var(--field-mask);
-  mask-image: var(--field-mask);
-}
-
 @media (prefers-reduced-motion: no-preference) {
   html {
     scroll-behavior: smooth;
@@ -276,11 +148,5 @@ button {
   .reveal {
     transform: none;
     transition: opacity 700ms var(--ease-base);
-  }
-
-  .menu-item:active,
-  .ink-link:active,
-  .job-toggle:active {
-    transform: none;
   }
 }

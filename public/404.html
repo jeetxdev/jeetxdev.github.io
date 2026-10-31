@@ -1,59 +1,37 @@
 <!doctype html>
-<html lang="en" data-theme="light">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex" />
-    <meta name="theme-color" content="#faf8f5" />
-    <link rel="icon" href="/favicon.svg?v=2" type="image/svg+xml" />
+    <meta name="theme-color" content="#123a75" />
+    <link rel="icon" href="/favicon.svg?v=3" type="image/svg+xml" />
     <title>Not found · Jeet Mukherjee</title>
-
-    <!-- Same storage key as src/lib/theme.ts, so the visitor's theme carries over. -->
-    <script>
-      (function () {
-        var theme = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-        try {
-          var stored = localStorage.getItem("jeetxdev-theme");
-          if (stored === "dark" || stored === "light") theme = stored;
-        } catch {
-          /* Blocked storage: keep the system preference. */
-        }
-        document.documentElement.setAttribute("data-theme", theme);
-        document
-          .querySelector('meta[name="theme-color"]')
-          .setAttribute("content", theme === "light" ? "#faf8f5" : "#131209");
-      })();
-    </script>
 
     <style>
       /* public/ is served as is, so this page loads its font files directly. */
       @font-face {
-        font-family: "Geist Mono";
+        font-family: "JetBrains Mono";
         font-weight: 400;
         font-display: swap;
-        src: url("/fonts/geist-mono-latin-400-normal.woff2") format("woff2");
+        src: url("/fonts/jetbrains-mono-latin-400-normal.woff2") format("woff2");
       }
 
       @font-face {
-        font-family: "Geist Mono";
-        font-weight: 700;
+        font-family: "Barlow Condensed";
+        font-weight: 600;
         font-display: swap;
-        src: url("/fonts/geist-mono-latin-700-normal.woff2") format("woff2");
+        src: url("/fonts/barlow-condensed-latin-600-normal.woff2") format("woff2");
       }
 
-      [data-theme="light"] {
-        --paper: #faf8f5;
-        --ink: #22201c;
-        --muted: #6e675c;
-        --accent: #0f7a4a;
-        color-scheme: light;
-      }
-
-      [data-theme="dark"] {
-        --paper: #131209;
-        --ink: #ece6da;
-        --muted: #a39b8c;
-        --accent: #5cc995;
+      /* Same palette and drafting grid as src/styles/index.css. */
+      :root {
+        --paper: #123a75;
+        --ink: #eaf2ff;
+        --muted: #a9c1e8;
+        --accent: #ffd166;
+        --grid-major: rgb(234 242 255 / 0.13);
+        --grid-minor: rgb(234 242 255 / 0.05);
         color-scheme: dark;
       }
 
@@ -64,60 +42,64 @@
         place-items: center;
         padding: 1rem;
         box-sizing: border-box;
-        background: var(--paper);
+        background-color: var(--paper);
+        background-image:
+          linear-gradient(var(--grid-major) 1px, transparent 1px),
+          linear-gradient(90deg, var(--grid-major) 1px, transparent 1px),
+          linear-gradient(var(--grid-minor) 1px, transparent 1px),
+          linear-gradient(90deg, var(--grid-minor) 1px, transparent 1px);
+        background-size: 120px 120px, 120px 120px, 24px 24px, 24px 24px;
         color: var(--ink);
-        font-family: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
         font-size: 0.875rem;
-        line-height: 1.25rem;
+        line-height: 1.5;
       }
 
       main {
         max-width: 36rem;
         width: 100%;
+        box-sizing: border-box;
+        border: 2px solid var(--ink);
+        padding: 1.5rem;
+      }
+
+      .label {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.8125rem;
+        text-transform: uppercase;
       }
 
       h1 {
-        margin: 0 0 1.5rem;
-        font-size: 3.75rem;
-        line-height: 1;
-        font-weight: 700;
-        letter-spacing: -0.05em;
-      }
-
-      @media (min-width: 40rem) {
-        h1 {
-          font-size: 4.5rem;
-        }
+        margin: 1.5rem 0;
+        font-family: "Barlow Condensed", "Arial Narrow", sans-serif;
+        font-size: 4.5rem;
+        font-weight: 600;
+        line-height: 0.92;
+        text-transform: uppercase;
       }
 
       p {
         margin: 0;
       }
 
+      #path {
+        color: var(--accent);
+        word-break: break-all;
+      }
+
       .back {
         margin-top: 1.5rem;
       }
 
-      .muted {
-        color: var(--muted);
-      }
-
       a {
-        display: inline-block;
-        color: inherit;
+        color: var(--accent);
         text-decoration: underline;
-        text-decoration-color: var(--accent);
         text-underline-offset: 0.22em;
-        transition: color 300ms cubic-bezier(0.22, 1, 0.36, 1);
       }
 
       a:hover {
-        color: var(--accent);
         text-decoration-thickness: 2px;
-      }
-
-      a:active {
-        transform: translateY(1px);
       }
 
       a:focus-visible {
@@ -128,12 +110,10 @@
   </head>
   <body>
     <main>
-      <h1>404</h1>
-      <p><span class="muted">$ cd </span><span id="path">this-page</span></p>
-      <p class="muted">cd: no such file or directory</p>
-      <p class="back">
-        <span class="muted">$ </span><a href="/">cd ~</a>
-      </p>
+      <p class="label">Error 404 · Sheet not found</p>
+      <h1>No drawing<br />at this address.</h1>
+      <p>Requested: <span id="path">this page</span></p>
+      <p class="back"><a href="/">Return to sheet 1</a></p>
     </main>
     <script>
       document.getElementById("path").textContent = location.pathname;
