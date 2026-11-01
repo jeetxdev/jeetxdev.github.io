@@ -13,7 +13,7 @@ export function Details() {
       className="reveal scroll-mt-24 border-t border-rule py-12"
     >
       <FigureLabel as="h2" id="details-heading" figure={3} title="Details" />
-      <div className="mt-6 grid grid-cols-1 items-start gap-6 md:grid-cols-2">
+      <div className="mt-6 grid gap-8">
         {JOBS.map((job, index) => (
           <DetailCard
             key={job.slug}
