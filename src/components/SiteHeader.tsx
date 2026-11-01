@@ -32,10 +32,10 @@ export function SiteHeader() {
           ))}
         </ul>
       </nav>
-      {/* -my-2 cancels the button's own padding, so the header keeps its height. */}
+      {/* On the single-row layout, -my-2 cancels the button's own padding so the header keeps its height. */}
       <a
         {...RESUME_LINK_PROPS}
-        className="-my-2 ml-auto inline-flex items-center gap-2 border-[1.5px] border-accent px-3 py-2 text-accent transition-colors duration-300 ease-base hover:bg-accent hover:text-paper lg:ml-0"
+        className="ml-auto inline-flex items-center gap-2 border-[1.5px] border-accent px-3 py-2 text-accent transition-colors duration-300 ease-base hover:bg-accent hover:text-paper lg:-my-2 lg:ml-0"
       >
         <DownloadIcon />
         Résumé
