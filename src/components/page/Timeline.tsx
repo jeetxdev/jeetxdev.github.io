@@ -1,27 +1,30 @@
 import type { CSSProperties } from "react";
 import { CAREER_START } from "@/data/career";
+import { useScene } from "@/hooks/useScene";
 import { TIMELINE_ID } from "@/lib/sections";
 import { timelineBars, timelineYears } from "@/lib/timeline";
 import { cn } from "@/lib/utils";
 import { DimensionLine } from "./DimensionLine";
 import { FigureLabel } from "./FigureLabel";
 
-/** Column count and spans come from the data, so they travel as CSS variables. */
-type GridVars = CSSProperties & { "--cols"?: string; "--span"?: number };
+/** Column count, spans and reveal order come from the data, so they travel as CSS variables. */
+type GridVars = CSSProperties & { "--cols"?: string; "--span"?: number; "--bar-index"?: number };
 
 /** One-year bars get a smaller label so long words like "Chartered" still fit. */
 const NARROW_SPAN_YEARS = 1;
 
 export function Timeline() {
+  const { sceneRef } = useScene<HTMLElement>();
   const years = timelineYears();
   const bars = timelineBars();
   const gridVars: GridVars = { "--cols": `repeat(${years}, minmax(0, 1fr))` };
 
   return (
     <section
+      ref={sceneRef}
       id={TIMELINE_ID}
       aria-labelledby="timeline-heading"
-      className="reveal scroll-mt-24 border-t border-rule py-12"
+      className="reveal scene scroll-mt-24 border-t border-rule py-12"
     >
       <FigureLabel as="h2" id="timeline-heading" figure={2} title="Career timeline" />
       <DimensionLine
@@ -31,15 +34,15 @@ export function Timeline() {
       {/* Drawn to scale only where a one-year column is wide enough for a company
           name with the standard bar padding. Narrower screens list the jobs instead. */}
       <ol className="mt-4 grid grid-cols-1 gap-2 xl:grid-cols-(--cols)" style={gridVars}>
-        {bars.map(({ job, spanYears, isCurrent }) => {
-          const spanVars: GridVars = { "--span": spanYears };
+        {bars.map(({ job, spanYears, isCurrent }, index) => {
+          const spanVars: GridVars = { "--span": spanYears, "--bar-index": index };
           const isNarrow = spanYears <= NARROW_SPAN_YEARS;
           return (
             <li
               key={job.slug}
               style={spanVars}
               className={cn(
-                "min-h-[4.75rem] border-2 p-3 xl:col-span-(--span)",
+                "timeline-bar min-h-[4.75rem] border-2 p-3 xl:col-span-(--span)",
                 isCurrent ? "border-accent" : "border-ink",
               )}
             >

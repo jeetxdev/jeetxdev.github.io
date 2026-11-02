@@ -19,6 +19,8 @@
   --container-measure: 62ch;
 
   --ease-base: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-plot: cubic-bezier(0.45, 0, 0.55, 1);
+  --ease-stamp: cubic-bezier(0.3, 1.6, 0.5, 1);
 }
 
 /* Spacing scale. Keep every padding, margin and gap on one of these steps:
@@ -32,6 +34,35 @@
   --grid-major-size: 120px;
   --grid-minor-size: 24px;
   color-scheme: dark;
+
+  /* Load sequence, in order: sheet border, header, headline, copy, diagram, diagram loop. */
+  --intro-edge-duration: 700ms;
+  --intro-side-delay: 550ms;
+  --intro-side-duration: 1000ms;
+  --intro-header-delay: 400ms;
+  --intro-plot-delay: 800ms;
+  --intro-plot-duration: 1400ms;
+  --intro-copy-delay: 1700ms;
+  --intro-diagram-delay: 1900ms;
+  --intro-rise-duration: 700ms;
+
+  --layers-cycle: 4800ms;
+  --layers-loop-delay: 2600ms;
+
+  --dimension-duration: 700ms;
+  --timeline-bars-delay: 500ms;
+  --timeline-bar-stagger: 140ms;
+
+  --trace-dash: 6px;
+  --trace-dash-period: 10px;
+  --trace-side-duration: 350ms;
+
+  /* Left-to-right wipe. The polygon overshoots the box so glyph overhang is never clipped. */
+  --wipe-from: polygon(-5% -50%, -5% -50%, -5% 150%, -5% 150%);
+  --wipe-to: polygon(-5% -50%, 105% -50%, 105% 150%, -5% 150%);
+
+  --lamp-size: 280px;
+  --lamp-line: color-mix(in srgb, var(--color-accent) 45%, transparent);
 }
 
 html {
@@ -148,5 +179,464 @@ li {
   .reveal {
     transform: none;
     transition: opacity 700ms var(--ease-base);
+  }
+}
+
+/* Headline plotting: the outline only shows while the fill is being drawn. */
+.plot-outline {
+  color: transparent;
+  -webkit-text-stroke: 1px var(--color-trace);
+  opacity: 0;
+}
+
+.plot-pen,
+.layer-packet {
+  opacity: 0;
+}
+
+.layer-arrow-line {
+  stroke-dasharray: 4 4;
+}
+
+/* Detail card outline, dashed with gradients so each side can be drawn and marched. */
+.trace-edge-x {
+  background: linear-gradient(90deg, var(--color-trace) var(--trace-dash), transparent 0) 0 0 /
+    var(--trace-dash-period) 100% repeat-x;
+}
+
+.trace-edge-y {
+  background: linear-gradient(180deg, var(--color-trace) var(--trace-dash), transparent 0) 0 0 /
+    100% var(--trace-dash-period) repeat-y;
+}
+
+/* Sits on the page grid: the background offset cancels the move so its lines match the body grid. */
+.grid-lamp {
+  width: var(--lamp-size);
+  height: var(--lamp-size);
+  background-image:
+    linear-gradient(var(--lamp-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--lamp-line) 1px, transparent 1px);
+  background-size: var(--grid-minor-size) var(--grid-minor-size);
+  background-position:
+    calc(var(--lamp-size) / 2 - var(--lamp-x, 0px))
+    calc(var(--lamp-size) / 2 - var(--lamp-y, 0px));
+  transform: translate(
+    calc(var(--lamp-x, 0px) - var(--lamp-size) / 2),
+    calc(var(--lamp-y, 0px) - var(--lamp-size) / 2)
+  );
+  mask-image: radial-gradient(closest-side, #000, transparent);
+  opacity: 0;
+  transition: opacity 300ms var(--ease-base);
+}
+
+.grid-lamp.is-lit {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Once on load: the sheet border and sticky header stay on screen while scrolling, and on
+     phones the diagram sits far below the headline, so none of them replay.
+     Sides draw one screen's worth, then complete off screen. */
+  .sheet-edge-top {
+    animation: grow-x var(--intro-edge-duration) var(--ease-base) backwards;
+  }
+
+  .sheet-edge-side {
+    animation: trace-down var(--intro-side-duration) var(--ease-base) var(--intro-side-delay)
+      backwards;
+  }
+
+  .intro-header {
+    animation: fade 600ms ease var(--intro-header-delay) backwards;
+  }
+
+  .intro-diagram {
+    animation: rise var(--intro-rise-duration) var(--ease-base) var(--intro-diagram-delay)
+      backwards;
+  }
+
+  /* Scenes play when they scroll into view and run backwards when they leave (useScene).
+     Their animations fill both ways so a finished one can still be reversed, and these
+     hidden states match each animation's first frame. */
+  .scene:not(.is-visible) :is(.intro-label, .intro-copy, .dim-label, .dim-cap) {
+    opacity: 0;
+  }
+
+  .scene:not(.is-visible) :is(.plot-fill, .timeline-bar) {
+    clip-path: var(--wipe-from);
+  }
+
+  .scene:not(.is-visible) .dim-line {
+    transform: scaleX(0);
+  }
+
+  .trace-card:not(.is-visible) :is(.trace-edge, .trace-label, .trace-content) {
+    visibility: hidden;
+  }
+
+  .approval-stamp:not(.is-visible) {
+    opacity: 0;
+  }
+
+  /* A + F: hero label, headline plotted behind a pen line, then the copy. */
+  .scene.is-visible .intro-label {
+    animation: fade 600ms ease var(--intro-header-delay) both;
+  }
+
+  .scene.is-visible .intro-copy {
+    animation: rise var(--intro-rise-duration) var(--ease-base) var(--intro-copy-delay) both;
+  }
+
+  .scene.is-visible .plot-outline {
+    animation: outline-hold calc(var(--intro-plot-delay) + var(--intro-plot-duration)) linear both;
+  }
+
+  .scene.is-visible .plot-fill {
+    animation: wipe var(--intro-plot-duration) var(--ease-plot) var(--intro-plot-delay) both;
+  }
+
+  .scene.is-visible .plot-pen {
+    animation: pen var(--intro-plot-duration) var(--ease-plot) var(--intro-plot-delay) both;
+  }
+
+  /* C: a request travels down the layers and the response comes back up. Loops from load. */
+  .layer-arrow-line {
+    animation: march-dash 600ms linear infinite;
+  }
+
+  .layer-box {
+    animation: var(--layers-cycle) linear var(--layers-loop-delay) infinite both;
+  }
+
+  .layer-box[data-layer="frontend"] {
+    animation-name: layer-hit-interface;
+  }
+
+  .layer-box[data-layer="backend"] {
+    animation-name: layer-hit-api;
+  }
+
+  .layer-box[data-layer="data"] {
+    animation-name: layer-hit-data;
+  }
+
+  .layer-packet {
+    animation: var(--layers-cycle) var(--ease-base) var(--layers-loop-delay) infinite both;
+  }
+
+  .layer-packet[data-segment="upper"] {
+    animation-name: packet-upper;
+  }
+
+  .layer-packet[data-segment="lower"] {
+    animation-name: packet-lower;
+  }
+
+  /* D: dimension line grows out from its label, then the bars are wiped in. */
+  .dim-line-start {
+    transform-origin: right;
+  }
+
+  .dim-line-end {
+    transform-origin: left;
+  }
+
+  .scene.is-visible .dim-line {
+    animation: grow-x var(--dimension-duration) var(--ease-base) both;
+  }
+
+  .scene.is-visible .dim-label {
+    animation: fade 400ms ease both;
+  }
+
+  .scene.is-visible .dim-cap {
+    animation: fade 300ms ease var(--dimension-duration) both;
+  }
+
+  .scene.is-visible .timeline-bar {
+    animation: wipe 600ms var(--ease-base) both;
+    animation-delay: calc(
+      var(--timeline-bars-delay) + var(--bar-index, 0) * var(--timeline-bar-stagger)
+    );
+  }
+
+  /* E: card outline drawn clockwise, label stamped, content raised. */
+  .trace-edge-top {
+    transform-origin: left;
+  }
+
+  .trace-edge-right {
+    transform-origin: top;
+  }
+
+  .trace-edge-bottom {
+    transform-origin: right;
+  }
+
+  .trace-edge-left {
+    transform-origin: bottom;
+  }
+
+  .trace-card.is-visible .trace-edge-top {
+    animation: grow-x var(--trace-side-duration) linear both;
+  }
+
+  .trace-card.is-visible .trace-edge-right {
+    animation: grow-y var(--trace-side-duration) linear var(--trace-side-duration) both;
+  }
+
+  .trace-card.is-visible .trace-edge-bottom {
+    animation: grow-x var(--trace-side-duration) linear calc(2 * var(--trace-side-duration)) both;
+  }
+
+  .trace-card.is-visible .trace-edge-left {
+    animation: grow-y var(--trace-side-duration) linear calc(3 * var(--trace-side-duration)) both;
+  }
+
+  .trace-card.is-visible .trace-label {
+    animation: stamp 350ms var(--ease-base) calc(4 * var(--trace-side-duration)) both;
+  }
+
+  .trace-card.is-visible .trace-content {
+    animation: rise 600ms var(--ease-base) calc(4 * var(--trace-side-duration)) both;
+  }
+
+  /* G: the availability stamp lands on the title block. */
+  .approval-stamp.is-visible {
+    animation: stamp 500ms var(--ease-stamp) 300ms both;
+  }
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(1rem);
+  }
+}
+
+/* Keeps the outline up while the fill is drawn, then hides it under the finished text. */
+@keyframes outline-hold {
+  from,
+  99% {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes grow-x {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+@keyframes grow-y {
+  from {
+    transform: scaleY(0);
+  }
+}
+
+@keyframes wipe {
+  from {
+    clip-path: var(--wipe-from);
+  }
+
+  to {
+    clip-path: var(--wipe-to);
+  }
+}
+
+/* Stops one screen down, then jumps to full length where nobody is looking yet. */
+@keyframes trace-down {
+  from {
+    clip-path: inset(0 0 100% 0);
+  }
+
+  99% {
+    clip-path: inset(0 0 calc(100% - 100svh) 0);
+  }
+
+  to {
+    clip-path: inset(0);
+  }
+}
+
+@keyframes pen {
+  from {
+    left: 0;
+    opacity: 0;
+  }
+
+  5%,
+  92% {
+    opacity: 1;
+  }
+
+  to {
+    left: 100%;
+    opacity: 0;
+  }
+}
+
+@keyframes stamp {
+  from {
+    opacity: 0;
+    scale: 2.4;
+  }
+}
+
+@keyframes march-dash {
+  to {
+    stroke-dashoffset: -8;
+  }
+}
+
+/* One cycle: request down interface → API → data, response back up.
+   Box windows and packet windows share these percentages. */
+@keyframes layer-hit-interface {
+  0%,
+  8%,
+  86%,
+  100% {
+    border-color: var(--color-accent);
+  }
+
+  11%,
+  83% {
+    border-color: var(--color-ink);
+  }
+}
+
+@keyframes layer-hit-api {
+  0%,
+  17%,
+  33%,
+  63%,
+  77%,
+  100% {
+    border-color: var(--color-ink);
+  }
+
+  20%,
+  30%,
+  66%,
+  74% {
+    border-color: var(--color-accent);
+  }
+}
+
+@keyframes layer-hit-data {
+  0%,
+  39%,
+  57%,
+  100% {
+    border-color: var(--color-ink);
+  }
+
+  42%,
+  54% {
+    border-color: var(--color-accent);
+  }
+}
+
+@keyframes packet-upper {
+  0%,
+  7.9% {
+    top: 0;
+    opacity: 0;
+    rotate: 0deg;
+  }
+
+  8% {
+    top: 0;
+    opacity: 1;
+    rotate: 0deg;
+  }
+
+  20% {
+    top: 100%;
+    opacity: 1;
+    rotate: 0deg;
+  }
+
+  20.1%,
+  73.9% {
+    top: 100%;
+    opacity: 0;
+    rotate: 45deg;
+  }
+
+  74% {
+    top: 100%;
+    opacity: 1;
+    rotate: 45deg;
+  }
+
+  86% {
+    top: 0;
+    opacity: 1;
+    rotate: 45deg;
+  }
+
+  86.1%,
+  100% {
+    top: 0;
+    opacity: 0;
+    rotate: 45deg;
+  }
+}
+
+@keyframes packet-lower {
+  0%,
+  29.9% {
+    top: 0;
+    opacity: 0;
+    rotate: 0deg;
+  }
+
+  30% {
+    top: 0;
+    opacity: 1;
+    rotate: 0deg;
+  }
+
+  42% {
+    top: 100%;
+    opacity: 1;
+    rotate: 0deg;
+  }
+
+  42.1%,
+  53.9% {
+    top: 100%;
+    opacity: 0;
+    rotate: 45deg;
+  }
+
+  54% {
+    top: 100%;
+    opacity: 1;
+    rotate: 45deg;
+  }
+
+  66% {
+    top: 0;
+    opacity: 1;
+    rotate: 45deg;
+  }
+
+  66.1%,
+  100% {
+    top: 0;
+    opacity: 0;
+    rotate: 45deg;
   }
 }
