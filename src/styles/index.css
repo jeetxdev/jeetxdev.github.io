@@ -19,8 +19,6 @@
   --container-measure: 62ch;
 
   --ease-base: cubic-bezier(0.22, 1, 0.36, 1);
-  --ease-plot: cubic-bezier(0.45, 0, 0.55, 1);
-  --ease-stamp: cubic-bezier(0.3, 1.6, 0.5, 1);
 }
 
 /* Spacing scale. Keep every padding, margin and gap on one of these steps:
@@ -35,34 +33,30 @@
   --grid-minor-size: 24px;
   color-scheme: dark;
 
-  /* Load sequence, in order: sheet border, header, headline, copy, diagram, diagram loop. */
+  /* Load only: the sheet border, then the header. */
   --intro-edge-duration: 700ms;
   --intro-side-delay: 550ms;
   --intro-side-duration: 1000ms;
   --intro-header-delay: 400ms;
-  --intro-plot-delay: 800ms;
-  --intro-plot-duration: 1400ms;
-  --intro-copy-delay: 1700ms;
-  --intro-diagram-delay: 1900ms;
-  --intro-rise-duration: 700ms;
 
-  --layers-cycle: 4800ms;
-  --layers-loop-delay: 2600ms;
-
-  --dimension-duration: 700ms;
-  --timeline-bars-delay: 500ms;
-  --timeline-bar-stagger: 140ms;
-
+  /* Every scene uses the same two moves: lines are traced, then the text inside fades in. */
+  --trace-side-duration: 350ms;
+  --trace-box-duration: calc(4 * var(--trace-side-duration));
+  --rule-duration: 700ms;
+  --fade-duration: 500ms;
+  --fade-stagger: 120ms;
   --trace-dash: 6px;
   --trace-dash-period: 10px;
-  --trace-side-duration: 350ms;
 
-  /* Left-to-right wipe. The polygon overshoots the box so glyph overhang is never clipped. */
-  --wipe-from: polygon(-5% -50%, -5% -50%, -5% 150%, -5% 150%);
-  --wipe-to: polygon(-5% -50%, 105% -50%, 105% 150%, -5% 150%);
+  /* The loop starts once all three layers are drawn and labelled. */
+  --layer-stagger: 200ms;
+  --layers-cycle: 4800ms;
+  --layers-loop-delay: calc(
+    2 * var(--layer-stagger) + var(--trace-box-duration) + var(--fade-duration)
+  );
 
-  --lamp-size: 280px;
-  --lamp-line: color-mix(in srgb, var(--color-accent) 45%, transparent);
+  --timeline-bars-delay: 400ms;
+  --timeline-bar-stagger: 140ms;
 }
 
 html {
@@ -155,41 +149,141 @@ li {
   text-underline-offset: 0.4em;
 }
 
-.reveal {
-  opacity: 0;
-  transform: translateY(1rem);
-  transition:
-    opacity 700ms var(--ease-base),
-    transform 700ms var(--ease-base);
-}
-
-.reveal.is-visible {
-  opacity: 1;
-  transform: none;
-}
-
 @media (prefers-reduced-motion: no-preference) {
   html {
     scroll-behavior: smooth;
   }
 }
 
-/* Movement becomes a plain fade. */
-@media (prefers-reduced-motion: reduce) {
-  .reveal {
-    transform: none;
-    transition: opacity 700ms var(--ease-base);
-  }
+/* Registered so the layer loop can fade a box's edges between colours.
+   Must be a literal: initial-value cannot reference --color-ink. */
+@property --edge-color {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #eaf2ff;
 }
 
-/* Headline plotting: the outline only shows while the fill is being drawn. */
-.plot-outline {
-  color: transparent;
-  -webkit-text-stroke: 1px var(--color-trace);
-  opacity: 0;
+/* A box whose border is drawn by TracedEdges. The transparent border keeps the box's size. */
+.traced {
+  --edge-width: 2px;
+  --edge-color: var(--color-ink);
+  position: relative;
+  border: var(--edge-width) solid transparent;
 }
 
-.plot-pen,
+.traced-thin {
+  --edge-width: 1.5px;
+}
+
+.traced-accent {
+  --edge-color: var(--color-accent);
+}
+
+.traced-faint {
+  --edge-color: var(--color-trace);
+}
+
+.edge {
+  position: absolute;
+  pointer-events: none;
+  background-color: var(--edge-color);
+}
+
+.edge-top,
+.edge-bottom {
+  left: calc(-1 * var(--edge-width));
+  right: calc(-1 * var(--edge-width));
+  height: var(--edge-width);
+}
+
+.edge-left,
+.edge-right {
+  top: calc(-1 * var(--edge-width));
+  bottom: calc(-1 * var(--edge-width));
+  width: var(--edge-width);
+}
+
+/* Origins run clockwise, so the four sides draw one continuous line. */
+.edge-top {
+  top: calc(-1 * var(--edge-width));
+  transform-origin: left;
+}
+
+.edge-right {
+  right: calc(-1 * var(--edge-width));
+  transform-origin: top;
+}
+
+.edge-bottom {
+  bottom: calc(-1 * var(--edge-width));
+  transform-origin: right;
+}
+
+.edge-left {
+  left: calc(-1 * var(--edge-width));
+  transform-origin: bottom;
+}
+
+/* Dashes come from gradients so each side can still be scaled in. */
+.traced-dashed .edge {
+  background-color: transparent;
+}
+
+.traced-dashed :is(.edge-top, .edge-bottom) {
+  background-image: linear-gradient(90deg, var(--edge-color) var(--trace-dash), transparent 0);
+  background-size: var(--trace-dash-period) 100%;
+  background-repeat: repeat-x;
+}
+
+.traced-dashed :is(.edge-left, .edge-right) {
+  background-image: linear-gradient(180deg, var(--edge-color) var(--trace-dash), transparent 0);
+  background-size: 100% var(--trace-dash-period);
+  background-repeat: repeat-y;
+}
+
+.scene-rule {
+  transform-origin: left;
+}
+
+.dim-line-start {
+  transform-origin: right;
+}
+
+.dim-line-end {
+  transform-origin: left;
+}
+
+.fade-step-1 {
+  --fade-delay: var(--fade-stagger);
+}
+
+.fade-step-2 {
+  --fade-delay: calc(2 * var(--fade-stagger));
+}
+
+.fade-step-3 {
+  --fade-delay: calc(3 * var(--fade-stagger));
+}
+
+.fade-after-rule {
+  --fade-delay: var(--rule-duration);
+}
+
+/* Layers are traced one after another, top to bottom. */
+.layer-box[data-layer="backend"] {
+  --trace-delay: var(--layer-stagger);
+}
+
+.layer-box[data-layer="data"] {
+  --trace-delay: calc(2 * var(--layer-stagger));
+}
+
+.timeline-bar {
+  --trace-delay: calc(
+    var(--timeline-bars-delay) + var(--bar-index, 0) * var(--timeline-bar-stagger)
+  );
+}
+
 .layer-packet {
   opacity: 0;
 }
@@ -198,45 +292,9 @@ li {
   stroke-dasharray: 4 4;
 }
 
-/* Detail card outline, dashed with gradients so each side can be drawn and marched. */
-.trace-edge-x {
-  background: linear-gradient(90deg, var(--color-trace) var(--trace-dash), transparent 0) 0 0 /
-    var(--trace-dash-period) 100% repeat-x;
-}
-
-.trace-edge-y {
-  background: linear-gradient(180deg, var(--color-trace) var(--trace-dash), transparent 0) 0 0 /
-    100% var(--trace-dash-period) repeat-y;
-}
-
-/* Sits on the page grid: the background offset cancels the move so its lines match the body grid. */
-.grid-lamp {
-  width: var(--lamp-size);
-  height: var(--lamp-size);
-  background-image:
-    linear-gradient(var(--lamp-line) 1px, transparent 1px),
-    linear-gradient(90deg, var(--lamp-line) 1px, transparent 1px);
-  background-size: var(--grid-minor-size) var(--grid-minor-size);
-  background-position:
-    calc(var(--lamp-size) / 2 - var(--lamp-x, 0px))
-    calc(var(--lamp-size) / 2 - var(--lamp-y, 0px));
-  transform: translate(
-    calc(var(--lamp-x, 0px) - var(--lamp-size) / 2),
-    calc(var(--lamp-y, 0px) - var(--lamp-size) / 2)
-  );
-  mask-image: radial-gradient(closest-side, #000, transparent);
-  opacity: 0;
-  transition: opacity 300ms var(--ease-base);
-}
-
-.grid-lamp.is-lit {
-  opacity: 1;
-}
-
 @media (prefers-reduced-motion: no-preference) {
-  /* Once on load: the sheet border and sticky header stay on screen while scrolling, and on
-     phones the diagram sits far below the headline, so none of them replay.
-     Sides draw one screen's worth, then complete off screen. */
+  /* Once on load: the sheet border and sticky header stay on screen while scrolling, so they
+     never replay. Sides draw one screen's worth, then complete off screen. */
   .sheet-edge-top {
     animation: grow-x var(--intro-edge-duration) var(--ease-base) backwards;
   }
@@ -247,187 +305,93 @@ li {
   }
 
   .intro-header {
-    animation: fade 600ms ease var(--intro-header-delay) backwards;
+    animation: fade var(--fade-duration) ease var(--intro-header-delay) backwards;
   }
 
-  .intro-diagram {
-    animation: rise var(--intro-rise-duration) var(--ease-base) var(--intro-diagram-delay)
-      backwards;
-  }
-
-  /* Scenes play when they scroll into view and run backwards when they leave (useScene).
-     Their animations fill both ways so a finished one can still be reversed, and these
-     hidden states match each animation's first frame. */
-  .scene:not(.is-visible) :is(.intro-label, .intro-copy, .dim-label, .dim-cap) {
+  /* Scenes play once, the first time they scroll into view (useScene). Until then they
+     hold these hidden states, which match each animation's first frame. */
+  .scene:not(.is-visible) :is(.scene-fade, .traced-fill) {
     opacity: 0;
   }
 
-  .scene:not(.is-visible) :is(.plot-fill, .timeline-bar) {
-    clip-path: var(--wipe-from);
-  }
-
-  .scene:not(.is-visible) .dim-line {
-    transform: scaleX(0);
-  }
-
-  .trace-card:not(.is-visible) :is(.trace-edge, .trace-label, .trace-content) {
+  .scene:not(.is-visible) .edge {
     visibility: hidden;
   }
 
-  .approval-stamp:not(.is-visible) {
-    opacity: 0;
+  .scene:not(.is-visible) :is(.scene-rule, .dim-line) {
+    transform: scaleX(0);
   }
 
-  /* A + F: hero label, headline plotted behind a pen line, then the copy. */
-  .scene.is-visible .intro-label {
-    animation: fade 600ms ease var(--intro-header-delay) both;
+  /* Lines: box sides are traced clockwise, rules grow out from their origin. */
+  .scene.is-visible .edge-top {
+    animation: grow-x var(--trace-side-duration) linear var(--trace-delay, 0ms) backwards;
   }
 
-  .scene.is-visible .intro-copy {
-    animation: rise var(--intro-rise-duration) var(--ease-base) var(--intro-copy-delay) both;
+  .scene.is-visible .edge-right {
+    animation: grow-y var(--trace-side-duration) linear
+      calc(var(--trace-delay, 0ms) + var(--trace-side-duration)) backwards;
   }
 
-  .scene.is-visible .plot-outline {
-    animation: outline-hold calc(var(--intro-plot-delay) + var(--intro-plot-duration)) linear both;
+  .scene.is-visible .edge-bottom {
+    animation: grow-x var(--trace-side-duration) linear
+      calc(var(--trace-delay, 0ms) + 2 * var(--trace-side-duration)) backwards;
   }
 
-  .scene.is-visible .plot-fill {
-    animation: wipe var(--intro-plot-duration) var(--ease-plot) var(--intro-plot-delay) both;
+  .scene.is-visible .edge-left {
+    animation: grow-y var(--trace-side-duration) linear
+      calc(var(--trace-delay, 0ms) + 3 * var(--trace-side-duration)) backwards;
   }
 
-  .scene.is-visible .plot-pen {
-    animation: pen var(--intro-plot-duration) var(--ease-plot) var(--intro-plot-delay) both;
+  .scene.is-visible :is(.scene-rule, .dim-line) {
+    animation: grow-x var(--rule-duration) var(--ease-base) backwards;
   }
 
-  /* C: a request travels down the layers and the response comes back up. Loops from load. */
+  /* Text: fades in once the lines around it are drawn. */
+  .scene.is-visible .traced-fill {
+    animation: fade var(--fade-duration) ease
+      calc(var(--trace-delay, 0ms) + var(--trace-box-duration)) backwards;
+  }
+
+  .scene.is-visible .scene-fade {
+    animation: fade var(--fade-duration) ease var(--fade-delay, 0ms) backwards;
+  }
+
+  /* The one loop on the page: a request travels down the layers and the response comes back. */
   .layer-arrow-line {
     animation: march-dash 600ms linear infinite;
   }
 
-  .layer-box {
+  .scene.is-visible .layer-box {
     animation: var(--layers-cycle) linear var(--layers-loop-delay) infinite both;
   }
 
-  .layer-box[data-layer="frontend"] {
+  .scene.is-visible .layer-box[data-layer="frontend"] {
     animation-name: layer-hit-interface;
   }
 
-  .layer-box[data-layer="backend"] {
+  .scene.is-visible .layer-box[data-layer="backend"] {
     animation-name: layer-hit-api;
   }
 
-  .layer-box[data-layer="data"] {
+  .scene.is-visible .layer-box[data-layer="data"] {
     animation-name: layer-hit-data;
   }
 
-  .layer-packet {
+  .scene.is-visible .layer-packet {
     animation: var(--layers-cycle) var(--ease-base) var(--layers-loop-delay) infinite both;
   }
 
-  .layer-packet[data-segment="upper"] {
+  .scene.is-visible .layer-packet[data-segment="upper"] {
     animation-name: packet-upper;
   }
 
-  .layer-packet[data-segment="lower"] {
+  .scene.is-visible .layer-packet[data-segment="lower"] {
     animation-name: packet-lower;
-  }
-
-  /* D: dimension line grows out from its label, then the bars are wiped in. */
-  .dim-line-start {
-    transform-origin: right;
-  }
-
-  .dim-line-end {
-    transform-origin: left;
-  }
-
-  .scene.is-visible .dim-line {
-    animation: grow-x var(--dimension-duration) var(--ease-base) both;
-  }
-
-  .scene.is-visible .dim-label {
-    animation: fade 400ms ease both;
-  }
-
-  .scene.is-visible .dim-cap {
-    animation: fade 300ms ease var(--dimension-duration) both;
-  }
-
-  .scene.is-visible .timeline-bar {
-    animation: wipe 600ms var(--ease-base) both;
-    animation-delay: calc(
-      var(--timeline-bars-delay) + var(--bar-index, 0) * var(--timeline-bar-stagger)
-    );
-  }
-
-  /* E: card outline drawn clockwise, label stamped, content raised. */
-  .trace-edge-top {
-    transform-origin: left;
-  }
-
-  .trace-edge-right {
-    transform-origin: top;
-  }
-
-  .trace-edge-bottom {
-    transform-origin: right;
-  }
-
-  .trace-edge-left {
-    transform-origin: bottom;
-  }
-
-  .trace-card.is-visible .trace-edge-top {
-    animation: grow-x var(--trace-side-duration) linear both;
-  }
-
-  .trace-card.is-visible .trace-edge-right {
-    animation: grow-y var(--trace-side-duration) linear var(--trace-side-duration) both;
-  }
-
-  .trace-card.is-visible .trace-edge-bottom {
-    animation: grow-x var(--trace-side-duration) linear calc(2 * var(--trace-side-duration)) both;
-  }
-
-  .trace-card.is-visible .trace-edge-left {
-    animation: grow-y var(--trace-side-duration) linear calc(3 * var(--trace-side-duration)) both;
-  }
-
-  .trace-card.is-visible .trace-label {
-    animation: stamp 350ms var(--ease-base) calc(4 * var(--trace-side-duration)) both;
-  }
-
-  .trace-card.is-visible .trace-content {
-    animation: rise 600ms var(--ease-base) calc(4 * var(--trace-side-duration)) both;
-  }
-
-  /* G: the availability stamp lands on the title block. */
-  .approval-stamp.is-visible {
-    animation: stamp 500ms var(--ease-stamp) 300ms both;
   }
 }
 
 @keyframes fade {
   from {
-    opacity: 0;
-  }
-}
-
-@keyframes rise {
-  from {
-    opacity: 0;
-    transform: translateY(1rem);
-  }
-}
-
-/* Keeps the outline up while the fill is drawn, then hides it under the finished text. */
-@keyframes outline-hold {
-  from,
-  99% {
-    opacity: 1;
-  }
-
-  to {
     opacity: 0;
   }
 }
@@ -441,16 +405,6 @@ li {
 @keyframes grow-y {
   from {
     transform: scaleY(0);
-  }
-}
-
-@keyframes wipe {
-  from {
-    clip-path: var(--wipe-from);
-  }
-
-  to {
-    clip-path: var(--wipe-to);
   }
 }
 
@@ -469,30 +423,6 @@ li {
   }
 }
 
-@keyframes pen {
-  from {
-    left: 0;
-    opacity: 0;
-  }
-
-  5%,
-  92% {
-    opacity: 1;
-  }
-
-  to {
-    left: 100%;
-    opacity: 0;
-  }
-}
-
-@keyframes stamp {
-  from {
-    opacity: 0;
-    scale: 2.4;
-  }
-}
-
 @keyframes march-dash {
   to {
     stroke-dashoffset: -8;
@@ -506,12 +436,12 @@ li {
   8%,
   86%,
   100% {
-    border-color: var(--color-accent);
+    --edge-color: var(--color-accent);
   }
 
   11%,
   83% {
-    border-color: var(--color-ink);
+    --edge-color: var(--color-ink);
   }
 }
 
@@ -522,14 +452,14 @@ li {
   63%,
   77%,
   100% {
-    border-color: var(--color-ink);
+    --edge-color: var(--color-ink);
   }
 
   20%,
   30%,
   66%,
   74% {
-    border-color: var(--color-accent);
+    --edge-color: var(--color-accent);
   }
 }
 
@@ -538,12 +468,12 @@ li {
   39%,
   57%,
   100% {
-    border-color: var(--color-ink);
+    --edge-color: var(--color-ink);
   }
 
   42%,
   54% {
-    border-color: var(--color-accent);
+    --edge-color: var(--color-accent);
   }
 }
 

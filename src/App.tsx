@@ -1,4 +1,3 @@
-import { GridLamp } from "@/components/GridLamp";
 import { SheetBorder } from "@/components/SheetBorder";
 import { SiteHeader } from "@/components/SiteHeader";
 import { TitleBlock } from "@/components/TitleBlock";
@@ -10,9 +9,7 @@ export function App() {
       <a href="#main" className="skip-link">
         Skip to content
       </a>
-      {/* Isolated so the lamp's negative z-index stays above the body grid. */}
-      <div className="relative isolate p-4 sm:p-6">
-        <GridLamp />
+      <div className="p-4 sm:p-6">
         {/* The drawing border: everything on the page sits inside one sheet. */}
         <div className="relative mx-auto max-w-sheet border-2 border-transparent px-6 sm:px-12">
           <SheetBorder />

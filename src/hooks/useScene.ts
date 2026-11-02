@@ -1,41 +1,39 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 
-const SCENE_SELECTOR = ".scene";
 const VISIBLE_CLASS = "is-visible";
-/** Only the middle of the viewport counts, so a scene starts reversing while its edge is still on screen. */
-const SCENE_ROOT_MARGIN = "-12% 0px -12% 0px";
-const FORWARD_PLAYBACK_RATE = 1;
-/** Leaving plays the entrance backwards, a little faster than it came in. */
-const REVERSE_PLAYBACK_RATE = -1.5;
+/** Scenes that come into view together start this far apart, top to bottom. */
+const SCENE_STAGGER_MS = 400;
 
-/** The scene's own finite CSS animations: loops and nested scenes are left alone. */
-function entranceAnimations(scene: HTMLElement): Animation[] {
-  return scene.getAnimations({ subtree: true }).filter((animation) => {
-    if (!(animation instanceof CSSAnimation)) return false;
-    const { effect } = animation;
-    if (!(effect instanceof KeyframeEffect) || !effect.target) return false;
-    if (effect.getComputedTiming().iterations === Infinity) return false;
-    return effect.target.closest(SCENE_SELECTOR) === scene;
-  });
-}
+let entering: HTMLElement[] = [];
+let flushFrame = 0;
 
-function playAt(animations: Animation[], rate: number) {
-  animations.forEach((animation) => {
-    animation.playbackRate = rate;
-    animation.play();
-  });
+function inDocumentOrder(a: HTMLElement, b: HTMLElement): number {
+  return a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1;
 }
 
 /**
- * Adds `is-visible` to a `.scene` element when it scrolls into view, which starts its
- * CSS animations. When it leaves, those animations run backwards and the class comes off
- * once they finish, so the scene replays on every visit. The trigger, if attached, decides
- * visibility instead of the scene itself. `visit` counts the times the scene has entered.
+ * Starts every scene that entered in the same frame. Batching by frame staggers the ones
+ * on screen at load, while scenes reached by scrolling start straight away.
  */
-export function useScene<S extends HTMLElement, T extends HTMLElement = S>() {
+function startEntering() {
+  flushFrame = 0;
+  entering.sort(inDocumentOrder).forEach((scene, index) => {
+    window.setTimeout(() => scene.classList.add(VISIBLE_CLASS), index * SCENE_STAGGER_MS);
+  });
+  entering = [];
+}
+
+function queueStart(scene: HTMLElement) {
+  entering.push(scene);
+  if (!flushFrame) flushFrame = requestAnimationFrame(startEntering);
+}
+
+/**
+ * Adds `is-visible` to a `.scene` element the first time any of it scrolls into view, which
+ * starts its CSS animations. It plays once and stays. Scenes must not be nested.
+ */
+export function useScene<S extends HTMLElement>() {
   const sceneRef = useRef<S>(null);
-  const triggerRef = useRef<T>(null);
-  const [visit, setVisit] = useState(0);
 
   useEffect(() => {
     const scene = sceneRef.current;
@@ -45,45 +43,14 @@ export function useScene<S extends HTMLElement, T extends HTMLElement = S>() {
       return;
     }
 
-    let reversing: Animation[] = [];
-
-    const enter = () => {
-      setVisit((count) => count + 1);
-      // Caught mid-reverse: turn the same animations around instead of restarting them.
-      if (reversing.length > 0) {
-        playAt(reversing, FORWARD_PLAYBACK_RATE);
-        reversing = [];
-        return;
-      }
-      scene.classList.add(VISIBLE_CLASS);
-    };
-
-    const leave = () => {
-      const animations = entranceAnimations(scene);
-      if (animations.length === 0) {
-        scene.classList.remove(VISIBLE_CLASS);
-        return;
-      }
-      playAt(animations, REVERSE_PLAYBACK_RATE);
-      reversing = animations;
-      Promise.all(animations.map((animation) => animation.finished)).then(
-        () => {
-          if (reversing !== animations) return;
-          reversing = [];
-          scene.classList.remove(VISIBLE_CLASS);
-        },
-        // Cancelled, which only happens when the scene is torn down.
-        () => {},
-      );
-    };
-
-    const observer = new IntersectionObserver(
-      ([entry]) => (entry.isIntersecting ? enter() : leave()),
-      { rootMargin: SCENE_ROOT_MARGIN },
-    );
-    observer.observe(triggerRef.current ?? scene);
+    const observer = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting) return;
+      observer.disconnect();
+      queueStart(scene);
+    });
+    observer.observe(scene);
     return () => observer.disconnect();
   }, []);
 
-  return { sceneRef, triggerRef, visit };
+  return { sceneRef };
 }
