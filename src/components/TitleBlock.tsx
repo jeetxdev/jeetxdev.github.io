@@ -7,12 +7,12 @@ import {
   NAME,
   RESUME_LINK_PROPS,
 } from "@/data/profile";
+import { SectionRule } from "@/components/SectionRule";
 import { useScene } from "@/hooks/useScene";
 import { CONTACT_ID } from "@/lib/sections";
 
 const PROJECT_NAME = "jeetm.dev";
 const SHEET_NUMBER = "1 of 1";
-const STAMP_TEXT = "Available";
 
 const EXTERNAL_LINKS = [
   { href: GITHUB_URL, label: "GitHub" },
@@ -21,35 +21,35 @@ const EXTERNAL_LINKS = [
 
 /** The contact section, drawn as the title block in a drawing's bottom corner. */
 export function TitleBlock() {
-  // The table triggers the stamp: the stamp alone sits too close to the page bottom
-  // to reach the middle of the viewport.
-  const { sceneRef, triggerRef } = useScene<HTMLSpanElement, HTMLTableElement>();
+  const { sceneRef } = useScene<HTMLElement>();
 
   return (
     <footer
+      ref={sceneRef}
       id={CONTACT_ID}
       aria-labelledby="contact-heading"
-      className="flex scroll-mt-24 flex-wrap items-end justify-between gap-x-12 gap-y-6 border-t border-rule py-12"
+      className="scene relative flex scroll-mt-24 flex-wrap items-end justify-between gap-x-12 gap-y-6 py-12"
     >
+      <SectionRule />
       <div className="min-w-0">
         <h2
           id="contact-heading"
-          className="font-display text-[clamp(2.25rem,4.6vw,3.5rem)] leading-none font-bold uppercase"
+          className="scene-fade font-display text-[clamp(2.25rem,4.6vw,3.5rem)] leading-none font-bold uppercase"
         >
           Got something to build?
         </h2>
         <a
           href={`mailto:${EMAIL}`}
-          className="sheet-link mt-4 inline-block font-mono text-[1.0625rem] break-all"
+          className="sheet-link scene-fade fade-step-1 mt-4 inline-block font-mono text-[1.0625rem] break-all"
         >
           {EMAIL}
         </a>
-        <p className="mt-4 max-w-measure font-mono text-xs text-muted uppercase">
+        <p className="scene-fade fade-step-2 mt-4 max-w-measure font-mono text-xs text-muted uppercase">
           Talk to me about: {INTERESTS.join(" · ")}
         </p>
       </div>
 
-      <table ref={triggerRef} className="min-w-[18.75rem] border-collapse font-mono text-xs">
+      <table className="scene-fade fade-step-3 min-w-[18.75rem] border-collapse font-mono text-xs">
         <caption className="sr-only">Title block</caption>
         <tbody>
           <TitleRow label="Project">{PROJECT_NAME}</TitleRow>
@@ -70,14 +70,6 @@ export function TitleBlock() {
           </TitleRow>
           <TitleRow label="Sheet">
             {SHEET_NUMBER} · Rev {new Date().getFullYear()}
-          </TitleRow>
-          <TitleRow label="Status">
-            <span
-              ref={sceneRef}
-              className="scene approval-stamp inline-block -rotate-6 border-[3px] border-double border-accent px-2 py-1 font-display text-base leading-none font-bold text-accent uppercase"
-            >
-              {STAMP_TEXT}
-            </span>
           </TitleRow>
         </tbody>
       </table>

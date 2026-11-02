@@ -1,5 +1,7 @@
 import type { CSSProperties } from "react";
 import { CAREER_START } from "@/data/career";
+import { SectionRule } from "@/components/SectionRule";
+import { TracedEdges } from "@/components/TracedEdges";
 import { useScene } from "@/hooks/useScene";
 import { TIMELINE_ID } from "@/lib/sections";
 import { timelineBars, timelineYears } from "@/lib/timeline";
@@ -24,9 +26,16 @@ export function Timeline() {
       ref={sceneRef}
       id={TIMELINE_ID}
       aria-labelledby="timeline-heading"
-      className="reveal scene scroll-mt-24 border-t border-rule py-12"
+      className="scene relative scroll-mt-24 py-12"
     >
-      <FigureLabel as="h2" id="timeline-heading" figure={2} title="Career timeline" />
+      <SectionRule />
+      <FigureLabel
+        as="h2"
+        id="timeline-heading"
+        figure={2}
+        title="Career timeline"
+        className="scene-fade"
+      />
       <DimensionLine
         className="mt-6"
         label={`${years} years · ${CAREER_START} to ${CAREER_START + years}`}
@@ -42,16 +51,17 @@ export function Timeline() {
               key={job.slug}
               style={spanVars}
               className={cn(
-                "timeline-bar min-h-[4.75rem] border-2 p-3 xl:col-span-(--span)",
-                isCurrent ? "border-accent" : "border-ink",
+                "timeline-bar traced min-h-[4.75rem] p-3 xl:col-span-(--span)",
+                isCurrent && "traced-accent",
               )}
             >
-              <p className={cn("font-mono text-xs text-muted", isNarrow && "xl:text-[0.6875rem]")}>
+              <TracedEdges />
+              <p className={cn("traced-fill font-mono text-xs text-muted", isNarrow && "xl:text-[0.6875rem]")}>
                 {job.from}→{job.to}
               </p>
               <p
                 className={cn(
-                  "mt-2 font-display text-[1.1875rem] leading-[1.05] font-bold uppercase hyphens-auto",
+                  "traced-fill mt-2 font-display text-[1.1875rem] leading-[1.05] font-bold uppercase hyphens-auto",
                   isNarrow && "xl:text-[0.875rem]",
                 )}
               >

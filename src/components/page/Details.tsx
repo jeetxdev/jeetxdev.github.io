@@ -1,4 +1,5 @@
 import { JOBS } from "@/data/jobs";
+import { SectionRule } from "@/components/SectionRule";
 import { useScene } from "@/hooks/useScene";
 import { DETAILS_ID } from "@/lib/sections";
 import { DetailCard } from "./DetailCard";
@@ -7,16 +8,25 @@ import { FigureLabel } from "./FigureLabel";
 const FIRST_DETAIL_CODE = "A".charCodeAt(0);
 
 export function Details() {
-  const { sceneRef } = useScene<HTMLElement>();
+  // Only the heading is a scene: each card is its own, and scenes must not nest.
+  const { sceneRef } = useScene<HTMLDivElement>();
 
   return (
     <section
-      ref={sceneRef}
       id={DETAILS_ID}
       aria-labelledby="details-heading"
-      className="reveal scene scroll-mt-24 border-t border-rule py-12"
+      className="scroll-mt-24 pb-12"
     >
-      <FigureLabel as="h2" id="details-heading" figure={3} title="Details" />
+      <div ref={sceneRef} className="scene relative pt-12">
+        <SectionRule />
+        <FigureLabel
+          as="h2"
+          id="details-heading"
+          figure={3}
+          title="Details"
+          className="scene-fade"
+        />
+      </div>
       <div className="mt-6 grid gap-8">
         {JOBS.map((job, index) => (
           <DetailCard
