@@ -1,4 +1,5 @@
 import type { Job } from "@/data/jobs";
+import { useScene } from "@/hooks/useScene";
 
 type DetailCardProps = {
   job: Job;
@@ -6,19 +7,23 @@ type DetailCardProps = {
 };
 
 export function DetailCard({ job, letter }: DetailCardProps) {
+  const { sceneRef } = useScene<HTMLElement>();
   const headingId = `detail-${job.slug}`;
 
   return (
+    // The transparent border reserves the space the traced edges are drawn over.
     <article
+      ref={sceneRef}
       aria-labelledby={headingId}
-      className="relative border-[1.5px] border-dashed border-trace p-6 md:grid md:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] md:gap-x-10"
+      className="scene trace-card relative border-[1.5px] border-transparent p-6 md:grid md:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] md:gap-x-10"
     >
+      <TracedEdges />
       {/* Sits on the dashed border, so it needs the paper colour behind it.
           left-4 plus px-2 lines its text up with the card's 24px padding. */}
-      <span className="absolute -top-3 left-4 bg-paper px-2 font-mono text-xs text-accent uppercase">
+      <span className="trace-label absolute -top-3 left-4 bg-paper px-2 font-mono text-xs text-accent uppercase">
         Detail {letter}
       </span>
-      <header>
+      <header className="trace-content">
         <p className="font-mono text-xs text-muted">
           {job.from} to {job.to} · {job.place}
         </p>
@@ -30,7 +35,7 @@ export function DetailCard({ job, letter }: DetailCardProps) {
         </h3>
         <p className="mt-2 text-[0.9375rem] text-soft">{job.role}</p>
       </header>
-      <div>
+      <div className="trace-content">
         <ul className="mt-4 grid list-disc gap-2 pl-4 text-base leading-relaxed md:mt-0">
           {job.points.map((point) => (
             <li key={point}>{point}</li>
@@ -41,5 +46,29 @@ export function DetailCard({ job, letter }: DetailCardProps) {
         </p>
       </div>
     </article>
+  );
+}
+
+/** The card's dashed outline as four sides, drawn clockwise when the card comes into view. */
+function TracedEdges() {
+  return (
+    <>
+      <span
+        aria-hidden="true"
+        className="trace-edge trace-edge-x trace-edge-top pointer-events-none absolute -inset-x-[1.5px] -top-[1.5px] h-[1.5px]"
+      />
+      <span
+        aria-hidden="true"
+        className="trace-edge trace-edge-y trace-edge-right pointer-events-none absolute -inset-y-[1.5px] -right-[1.5px] w-[1.5px]"
+      />
+      <span
+        aria-hidden="true"
+        className="trace-edge trace-edge-x trace-edge-bottom pointer-events-none absolute -inset-x-[1.5px] -bottom-[1.5px] h-[1.5px]"
+      />
+      <span
+        aria-hidden="true"
+        className="trace-edge trace-edge-y trace-edge-left pointer-events-none absolute -inset-y-[1.5px] -left-[1.5px] w-[1.5px]"
+      />
+    </>
   );
 }

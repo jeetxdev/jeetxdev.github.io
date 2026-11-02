@@ -7,10 +7,12 @@ import {
   NAME,
   RESUME_LINK_PROPS,
 } from "@/data/profile";
+import { useScene } from "@/hooks/useScene";
 import { CONTACT_ID } from "@/lib/sections";
 
 const PROJECT_NAME = "jeetm.dev";
 const SHEET_NUMBER = "1 of 1";
+const STAMP_TEXT = "Available";
 
 const EXTERNAL_LINKS = [
   { href: GITHUB_URL, label: "GitHub" },
@@ -19,6 +21,10 @@ const EXTERNAL_LINKS = [
 
 /** The contact section, drawn as the title block in a drawing's bottom corner. */
 export function TitleBlock() {
+  // The table triggers the stamp: the stamp alone sits too close to the page bottom
+  // to reach the middle of the viewport.
+  const { sceneRef, triggerRef } = useScene<HTMLSpanElement, HTMLTableElement>();
+
   return (
     <footer
       id={CONTACT_ID}
@@ -43,7 +49,7 @@ export function TitleBlock() {
         </p>
       </div>
 
-      <table className="min-w-[18.75rem] border-collapse font-mono text-xs">
+      <table ref={triggerRef} className="min-w-[18.75rem] border-collapse font-mono text-xs">
         <caption className="sr-only">Title block</caption>
         <tbody>
           <TitleRow label="Project">{PROJECT_NAME}</TitleRow>
@@ -64,6 +70,14 @@ export function TitleBlock() {
           </TitleRow>
           <TitleRow label="Sheet">
             {SHEET_NUMBER} · Rev {new Date().getFullYear()}
+          </TitleRow>
+          <TitleRow label="Status">
+            <span
+              ref={sceneRef}
+              className="scene approval-stamp inline-block -rotate-6 border-[3px] border-double border-accent px-2 py-1 font-display text-base leading-none font-bold text-accent uppercase"
+            >
+              {STAMP_TEXT}
+            </span>
           </TitleRow>
         </tbody>
       </table>
