@@ -1,5 +1,5 @@
 export const NAME = "Jeet Mukherjee";
-export const EMAIL = "jeetmukherjee100@gmail.com";
+export const EMAIL = "jeetxdev@gmail.com";
 export const GITHUB_URL = "https://github.com/jeetxdev";
 export const GITHUB_LABEL = "github/jeetxdev";
 export const LINKEDIN_URL = "https://www.linkedin.com/in/jeetm";
@@ -18,7 +18,8 @@ export const RESUME_LINK_PROPS = {
   rel: "noopener noreferrer",
 } as const;
 
-export const AVAILABILITY = "open to frontend, backend & full stack roles · select freelance";
+export const AVAILABILITY =
+  "open to frontend, backend & full stack roles · select freelance";
 
 export const INTERESTS = [
   "scalable web apps",
@@ -35,7 +36,15 @@ export type StackLayer = {
 export const STACK: StackLayer[] = [
   {
     layer: "frontend",
-    tools: ["React.js", "Next.js", "Redux", "TypeScript", "Tailwind CSS", "SCSS", "Vite"],
+    tools: [
+      "React.js",
+      "Next.js",
+      "Redux",
+      "TypeScript",
+      "Tailwind CSS",
+      "SCSS",
+      "Vite",
+    ],
   },
   {
     layer: "backend",
@@ -44,6 +53,12 @@ export const STACK: StackLayer[] = [
   { layer: "data", tools: ["PostgreSQL", "MySQL"] },
   {
     layer: "craft",
-    tools: ["REST API design", "component architecture", "performance", "CI/CD", "containerization"],
+    tools: [
+      "REST API design",
+      "component architecture",
+      "performance",
+      "CI/CD",
+      "containerization",
+    ],
   },
 ];
