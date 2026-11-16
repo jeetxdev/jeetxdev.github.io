@@ -31,14 +31,14 @@ export const PROJECTS: Project[] = [
     status: "live",
     liveUrl: "https://angaar.modularhq.app",
     highlights: ["Online table booking", "Menu and photo gallery"],
-    tech: [],
+    tech: ["ReactJS", "Vite"],
     swatch: "#0f3b36",
   },
 ];
 
-/** Shown wherever projects are listed, so nobody mistakes them for client work. */
+/** Shown wherever projects are listed, so nobody mistakes them for work done for an employer. */
 export const PROJECTS_NOTE =
-  "My day job is internal banking software that I can't show publicly. These projects are my own, made to show how I work. They are not client work.";
+  "My day job is internal banking software that I can't show publicly. I built these on my own time. They are not work I did for any company I work or worked for.";
 
 const FIRST_PROJECT_CODE = "A".charCodeAt(0);
 
