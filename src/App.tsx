@@ -1,25 +1,22 @@
-import { SheetBorder } from "@/components/SheetBorder";
+import { Sheet } from "@/components/Sheet";
 import { SiteHeader } from "@/components/SiteHeader";
 import { TitleBlock } from "@/components/TitleBlock";
 import { PageView } from "@/components/page/PageView";
+import { HOME_LINKS, HOME_SECTION_IDS, PROJECTS_URL } from "@/lib/sections";
 
 export function App() {
   return (
-    <>
-      <a href="#main" className="skip-link">
-        Skip to content
-      </a>
-      <div className="p-4 sm:p-6">
-        {/* The drawing border: everything on the page sits inside one sheet. */}
-        <div className="relative mx-auto max-w-sheet border-2 border-transparent px-6 sm:px-12">
-          <SheetBorder />
-          <SiteHeader />
-          <main id="main">
-            <PageView />
-          </main>
-          <TitleBlock />
-        </div>
-      </div>
-    </>
+    <Sheet
+      header={<SiteHeader title="Portfolio" links={HOME_LINKS} sectionIds={HOME_SECTION_IDS} />}
+      footer={
+        <TitleBlock
+          project="jeetm.dev"
+          sheet="1 of 2"
+          otherSheet={{ href: PROJECTS_URL, label: "Side projects (sheet 2)" }}
+        />
+      }
+    >
+      <PageView />
+    </Sheet>
   );
 }

@@ -140,11 +140,11 @@ li {
 }
 
 .nav-link:hover,
-.nav-link[aria-current="location"] {
+.nav-link[aria-current] {
   color: var(--color-accent);
 }
 
-.nav-link[aria-current="location"] {
+.nav-link[aria-current] {
   text-decoration: underline;
   text-underline-offset: 0.4em;
 }

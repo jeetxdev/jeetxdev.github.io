@@ -28,6 +28,11 @@ export default defineConfig({
     // bundled assets/index-*.js.
     sourcemap: false,
     rollupOptions: {
+      // One HTML file per sheet. projects/index.html is served at /projects/.
+      input: {
+        main: path.resolve(__dirname, "index.html"),
+        projects: path.resolve(__dirname, "projects/index.html"),
+      },
       output: {
         // Flat, hashed asset names: no directory names survive into dist/.
         entryFileNames: "assets/[hash].js",

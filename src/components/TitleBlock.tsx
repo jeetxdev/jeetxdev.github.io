@@ -11,16 +11,22 @@ import { SectionRule } from "@/components/SectionRule";
 import { useScene } from "@/hooks/useScene";
 import { CONTACT_ID } from "@/lib/sections";
 
-const PROJECT_NAME = "jeetm.dev";
-const SHEET_NUMBER = "1 of 1";
-
 const EXTERNAL_LINKS = [
   { href: GITHUB_URL, label: "GitHub" },
   { href: LINKEDIN_URL, label: "LinkedIn" },
 ];
 
+type TitleBlockProps = {
+  /** The address of this sheet, e.g. "jeetm.dev". */
+  project: string;
+  /** e.g. "1 of 2". */
+  sheet: string;
+  /** The link to the site's other sheet. */
+  otherSheet: { href: string; label: string };
+};
+
 /** The contact section, drawn as the title block in a drawing's bottom corner. */
-export function TitleBlock() {
+export function TitleBlock({ project, sheet, otherSheet }: TitleBlockProps) {
   const { sceneRef } = useScene<HTMLElement>();
 
   return (
@@ -52,7 +58,7 @@ export function TitleBlock() {
       <table className="scene-fade fade-step-3 min-w-[18.75rem] border-collapse font-mono text-xs">
         <caption className="sr-only">Title block</caption>
         <tbody>
-          <TitleRow label="Project">{PROJECT_NAME}</TitleRow>
+          <TitleRow label="Project">{project}</TitleRow>
           <TitleRow label="Drawn by">{NAME}</TitleRow>
           <TitleRow label="Links">
             {EXTERNAL_LINKS.map(({ href, label }) => (
@@ -68,8 +74,13 @@ export function TitleBlock() {
               Résumé
             </a>
           </TitleRow>
+          <TitleRow label="See also">
+            <a className="sheet-link" href={otherSheet.href}>
+              {otherSheet.label}
+            </a>
+          </TitleRow>
           <TitleRow label="Sheet">
-            {SHEET_NUMBER} · Rev {new Date().getFullYear()}
+            {sheet} · Rev {new Date().getFullYear()}
           </TitleRow>
         </tbody>
       </table>
