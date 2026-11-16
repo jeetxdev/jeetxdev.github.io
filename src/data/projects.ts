@@ -35,7 +35,14 @@ export const PROJECTS: Project[] = [
       "Menu with share, print and delivery links",
       "Photo gallery with filters and a larger view on click",
     ],
-    tech: ["ReactJS", "Vite"],
+    tech: [
+      "ReactJS",
+      "Vite",
+      "Cloudflare Pages",
+      "CSS Modules",
+      "TypeScript",
+      "React Router",
+    ],
     swatch: "#0f3b36",
   },
 ];
