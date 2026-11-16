@@ -390,33 +390,87 @@ li {
   }
 }
 
-/* The title block flashes when a contact link is clicked (TitleBlock). A colour change only,
-   so it plays with reduced motion too. The ids beat the scene fade rules on the same elements. */
+/* The title block blinks when a contact link is clicked (TitleBlock): three blinks, slower than
+   three a second. With reduced motion it is one steady highlight instead. The ids beat the
+   scene fade rules on the same elements. */
 #contact.contact-flash #contact-heading {
-  animation: contact-flash-text 2800ms ease;
+  animation: contact-flash-text 1800ms ease;
 }
 
 #contact.contact-flash table {
-  animation: contact-flash-outline 2800ms ease;
+  animation: contact-flash-box 1800ms ease;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  #contact.contact-flash #contact-heading {
+    animation: contact-blink-text 2400ms linear;
+  }
+
+  #contact.contact-flash table {
+    animation: contact-blink-box 2400ms linear;
+  }
 }
 
 @keyframes contact-flash-text {
   0%,
-  50% {
+  60% {
     color: var(--color-accent);
   }
 }
 
-@keyframes contact-flash-outline {
+@keyframes contact-flash-box {
   0%,
-  50% {
+  60% {
     outline: 2px solid var(--color-accent);
     outline-offset: 6px;
+    background-color: rgb(255 209 102 / 0.14);
   }
 
   to {
     outline: 2px solid transparent;
     outline-offset: 6px;
+  }
+}
+
+@keyframes contact-blink-text {
+  0%,
+  14%,
+  38%,
+  52%,
+  76%,
+  90% {
+    color: var(--color-accent);
+  }
+
+  22%,
+  30%,
+  60%,
+  68%,
+  100% {
+    color: var(--color-ink);
+  }
+}
+
+@keyframes contact-blink-box {
+  0%,
+  14%,
+  38%,
+  52%,
+  76%,
+  90% {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 6px;
+    background-color: rgb(255 209 102 / 0.14);
+  }
+
+  22%,
+  30%,
+  60%,
+  68%,
+  100% {
+    outline: 2px solid transparent;
+    outline-offset: 6px;
+    background-color: transparent;
   }
 }
 
