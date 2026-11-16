@@ -30,7 +30,11 @@ export const PROJECTS: Project[] = [
       "A website for a neighbourhood Indian restaurant. Guests can see the menu, browse photos and book a table online.",
     status: "live",
     liveUrl: "https://angaar.modularhq.app",
-    highlights: ["Online table booking", "Menu and photo gallery"],
+    highlights: [
+      "Table booking and contact through WhatsApp, with no backend",
+      "Menu with share, print and delivery links",
+      "Photo gallery with filters and a larger view on click",
+    ],
     tech: ["ReactJS", "Vite"],
     swatch: "#0f3b36",
   },
