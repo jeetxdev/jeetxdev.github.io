@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 import {
   EMAIL,
   GITHUB_URL,
@@ -10,6 +10,9 @@ import {
 import { SectionRule } from "@/components/SectionRule";
 import { useScene } from "@/hooks/useScene";
 import { CONTACT_ID } from "@/lib/sections";
+
+/** Added for one flash whenever a link to the contact section is clicked. */
+const FLASH_CLASS = "contact-flash";
 
 const EXTERNAL_LINKS = [
   { href: GITHUB_URL, label: "GitHub" },
@@ -28,6 +31,23 @@ type TitleBlockProps = {
 /** The contact section, drawn as the title block in a drawing's bottom corner. */
 export function TitleBlock({ project, sheet, otherSheet }: TitleBlockProps) {
   const { sceneRef } = useScene<HTMLElement>();
+
+  // The title block ends the page, so a jump to it can move the page only a little or not at
+  // all. A flash shows the reader where the link took them.
+  useEffect(() => {
+    const footer = sceneRef.current;
+    if (!footer) return;
+    const onClick = (event: MouseEvent) => {
+      if (!(event.target instanceof Element)) return;
+      if (!event.target.closest(`a[href="#${CONTACT_ID}"]`)) return;
+      footer.classList.remove(FLASH_CLASS);
+      // Reading the layout restarts the animation when the link is clicked again.
+      void footer.offsetWidth;
+      footer.classList.add(FLASH_CLASS);
+    };
+    document.addEventListener("click", onClick);
+    return () => document.removeEventListener("click", onClick);
+  }, [sceneRef]);
 
   return (
     <footer
