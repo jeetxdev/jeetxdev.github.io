@@ -393,11 +393,11 @@ li {
 /* The title block flashes when a contact link is clicked (TitleBlock). A colour change only,
    so it plays with reduced motion too. The ids beat the scene fade rules on the same elements. */
 #contact.contact-flash #contact-heading {
-  animation: contact-flash-text 1600ms ease;
+  animation: contact-flash-text 2800ms ease;
 }
 
 #contact.contact-flash table {
-  animation: contact-flash-outline 1600ms ease;
+  animation: contact-flash-outline 2800ms ease;
 }
 
 @keyframes contact-flash-text {
